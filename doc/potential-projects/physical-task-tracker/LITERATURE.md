@@ -38,6 +38,15 @@
   progress pages with photos).
   ([BuildLog.diy](https://buildlog.diy/), [Itermark](https://itermark.app/),
   [ProgressKit](https://www.progresskit.app/))
+- **Farm operations**: Agworld (spray/fertilizer logs, compliance records),
+  EOSDA Crop Monitoring (scouting tasks, growth-stage reports), Farmstand
+  (visual season timelines, same-angle weekly photos), Planfix-style photo
+  verification on task close, GRAS smallholder app (certification records).
+  ([Agworld](https://agworld.com/za/growers/digital-records-permanent/),
+  [EOSDA](https://www.appbrain.com/app/crop-monitoring/com.eos.scouting),
+  [Farmstand](https://www.farmstandapp.com/61920/how-to-incorporate-farm-observations-into-production-records/),
+  [Planfix](https://planfix.com/blog/industry-insights/real-time-monitoring-of-agricultural-projects-using-task-management-software/),
+  [GRAS](https://www.gras-system.org/service-competence/our-services/smallholder-monitoring/))
 
 ## Gap
 
@@ -49,6 +58,11 @@ changed since Tuesday"), links photos to plan steps, or briefs you on resume
 ("here is where things stand"). Research proves the vision side works; the
 opening is packaging it for non-industrial, handheld use — with a conversational
 layer that answers "what's next?" from actual observed state.
+
+Farm operations sharpen the gap: no Procore equivalent exists for small farms,
+record-keeping is paper and memory, and satellite/drone layers flag *where*
+while nothing phone-first tracks *what was done about it*. Patchy field
+connectivity makes offline-first a requirement, not a feature.
 
 ## Open problems
 
@@ -67,3 +81,6 @@ layer that answers "what's next?" from actual observed state.
 - **Privacy and dataset gaps.** People in frames; open datasets
   under-represent occlusion, lighting, and weather (OpenConstruction gap
   analysis).
+- **Offline-first, no-plan operations.** Fields lack connectivity and farms
+  have no digital twin; the tracker must work fully local and infer structure
+  without a pre-existing plan.
