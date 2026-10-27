@@ -20,3 +20,14 @@ records the state of the work itself across sessions, not just a checklist.
 Progress photos tied to steps, visual before/after comparison of the same spot
 (SAM-style segmentation can isolate exactly what changed), and continuity so
 any session starts with "here is where things stand" instead of archaeology.
+
+## Verticals
+
+- **Construction and renovation.** Punch lists, phased remodels, contractor
+  handoffs — photo-tied steps with resume briefings.
+- **Farm operations.** Everything maintaining a farm demands: recurring work
+  (irrigation, feeding, inspections), seasonal work (planting, harvest,
+  winterizing), equipment upkeep, infrastructure repair, and reactive work
+  (storms, breakdowns) — across fields, barns, and machines, with worker
+  handoffs and season-to-season continuity. This is operations tracking, not
+  crop or plant analysis.
