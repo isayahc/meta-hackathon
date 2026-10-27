@@ -1,0 +1,18 @@
+{
+  "name": "meta-hackathon",
+  "version": "0.1.0",
+  "description": "Build for the Meta Global AI Developer Hackathon 2026.",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.1.0",
+    "axios": "^1.7.9",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  }
+}
