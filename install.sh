@@ -12,8 +12,8 @@ cd "$MCP_DIR"
 
 # Clone the repository
 echo "📦 Cloning repository..."
-git clone https://github.com/yourusername/dexscreener-mcp-server.git
-cd dexscreener-mcp-server
+git clone https://github.com/yourusername/meta-hackathon.git
+cd meta-hackathon
 
 # Install dependencies and build
 echo "🔧 Installing dependencies..."

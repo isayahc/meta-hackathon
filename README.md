@@ -4,8 +4,19 @@ An MCP server implementation for accessing the DexScreener API, providing real-t
 
 One-line install (automatically adds to Claude Desktop):
 ```bash
-curl -L https://raw.githubusercontent.com/opensvm/dexscreener-mcp-server/main/install.sh | bash
+curl -L https://raw.githubusercontent.com/isayahc/meta-hackathon/main/install.sh | bash
 ```
+
+## Meta Global AI Developer Hackathon — Scope
+
+Built for the [Meta Global AI Developer Hackathon 2026](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) (Meta + Cerebral Valley, Oct 26 – Nov 4, 2026; submissions due Nov 4, 9:00 PM ET). Indie track: judged on creativity, technical ambition, and whether it works.
+
+Meta technologies available for this build:
+
+- **Meta Model API** — Muse Spark series, Muse Wonder, Muse Image, and SAM 3.1 ($150 API credits per selected participant)
+- **Meta open-weights models** — via partner credits: Baseten ($100 + 2M TPM rate limits), Modal ($100, plus serverless GPUs/sandboxes), Fireworks ($25 + workshop)
+- **Muse Code** — Meta's agentic coding agent, used to build this project
+- **Workshops + Discord office hours** — live support from Meta and partners during the build window
 
 ## Features
 

@@ -1,11 +1,11 @@
 {
-  "name": "dexscreener-mcp-server",
+  "name": "meta-hackathon",
   "version": "0.1.0",
   "description": "get access to onchain crypto markets on almost any blockchain, best for solana memecoins price api",
   "private": true,
   "type": "module",
   "bin": {
-    "dexscreener-mcp-server": "./build/index.js"
+    "meta-hackathon": "./build/index.js"
   },
   "files": [
     "build",

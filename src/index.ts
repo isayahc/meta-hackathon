@@ -88,7 +88,7 @@ Common chain IDs include:
     this.resources = resources;
     this.server = new Server(
       {
-        name: 'dexscreener-mcp-server',
+        name: 'meta-hackathon',
         version: '0.1.0',
       },
       {
