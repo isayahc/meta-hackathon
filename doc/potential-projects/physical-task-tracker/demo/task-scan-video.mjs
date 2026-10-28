@@ -17,9 +17,28 @@ import {
   DEFAULT_MAX_TOKENS,
   formatSrt,
   normalizeSegments,
+  classifySource,
+  getVideoMeta,
   loadSavedKey,
   saveKey,
 } from './analyze-response.mjs';
+
+// Inspect a clip without spending an API call:
+//   node task-scan-video.mjs --meta <video-file>
+if (process.argv.includes('--meta')) {
+  const target = process.argv.slice(2).find((a) => !a.startsWith('--'));
+  if (!target) {
+    console.error('Usage: node task-scan-video.mjs --meta <video-file>');
+    process.exit(1);
+  }
+  try {
+    console.log(JSON.stringify(await getVideoMeta(target), null, 2));
+  } catch (e) {
+    console.error(`ERROR: ${e.message}`);
+    process.exit(1);
+  }
+  process.exit(0);
+}
 
 const execFileAsync = promisify(execFile);
 
@@ -110,7 +129,9 @@ if (!st) {
 
 let framePaths = [];
 let tmpDir = null;
-if (st.isDirectory()) {
+if (classifySource(st.isDirectory(), extname(input)) === 'image') {
+  framePaths = [input];
+} else if (st.isDirectory()) {
   const files = (await readdir(input))
     .filter((f) => IMAGE_EXTS.has(extname(f).toLowerCase()))
     .sort()

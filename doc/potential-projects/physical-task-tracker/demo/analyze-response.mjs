@@ -100,6 +100,47 @@ function escapeXml(s) {
     .replace(/"/g, '&quot;');
 }
 
+// Single image files are single-frame visits; directories are frame sets;
+// anything else goes down the ffmpeg video path.
+export function classifySource(isDirectory, ext) {
+  if (!isDirectory && ['.jpg', '.jpeg', '.png', '.webp'].includes(String(ext).toLowerCase())) {
+    return 'image';
+  }
+  return isDirectory ? 'frames-dir' : 'video';
+}
+
+// Probe a video file with ffprobe. Returns
+// { duration, width, height, fps, codec } or throws with the ffprobe stderr.
+// execFile is injected so tests can stub it; defaults to node:child_process.
+export async function getVideoMeta(path, execFileImpl = null) {
+  const { execFile } = await import('node:child_process');
+  const run = execFileImpl ?? execFile;
+  const out = await new Promise((resolve, reject) => {
+    run(
+      'ffprobe',
+      [
+        '-v', 'error',
+        '-select_streams', 'v:0',
+        '-show_entries', 'stream=width,height,avg_frame_rate,codec_name:format=duration',
+        '-of', 'json',
+        path,
+      ],
+      (err, stdout, stderr) =>
+        err ? reject(new Error(`ffprobe failed: ${String(stderr).trim().slice(0, 200)}`)) : resolve(stdout)
+    );
+  });
+  const info = JSON.parse(out);
+  const stream = info.streams?.[0] ?? {};
+  const [num, den] = String(stream.avg_frame_rate ?? '0/1').split('/').map(Number);
+  return {
+    duration: Number(info.format?.duration ?? NaN),
+    width: Number(stream.width ?? NaN),
+    height: Number(stream.height ?? NaN),
+    fps: den ? num / den : NaN,
+    codec: stream.codec_name ?? null,
+  };
+}
+
 // Overlay SVG: mask paths translated by their bounds, boxes as rects.
 // paths: [{d, left, top}], boxes: [{left, top, right, bottom}].
 export function buildOverlaySvg({ width, height, imageHref, boxes = [], paths = [] }) {
@@ -131,24 +172,29 @@ export function buildRequestBody({
   prompt,
   imageUrl = null,
   imageUrls = [],
+  // Labeled follow-up sections: [{ label, imageUrls }] appended after the
+  // main images, e.g. a second visit to compare against the first.
+  sections = [],
   maxTokens = DEFAULT_MAX_TOKENS,
   reasoningEffort = null,
 }) {
   const urls = imageUrl ? [imageUrl, ...imageUrls] : imageUrls;
+  const content = [
+    { type: 'text', text: prompt },
+    ...urls.map((url) => ({ type: 'image_url', image_url: { url } })),
+  ];
+  for (const section of sections) {
+    content.push({ type: 'text', text: section.label });
+    for (const url of section.imageUrls ?? []) {
+      content.push({ type: 'image_url', image_url: { url } });
+    }
+  }
   const body = {
     model,
     // OpenAI-compatible token budget. If the provider instead expects
     // max_completion_tokens, adjust here.
     max_tokens: maxTokens,
-    messages: [
-      {
-        role: 'user',
-        content: [
-          { type: 'text', text: prompt },
-          ...urls.map((url) => ({ type: 'image_url', image_url: { url } })),
-        ],
-      },
-    ],
+    messages: [{ role: 'user', content }],
   };
   // Forwarded only when set: unknown params can get the request rejected,
   // so reasoning effort stays opt-in (e.g. REASONING_EFFORT=low).
