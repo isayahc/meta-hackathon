@@ -1,0 +1,28 @@
+{
+  "observed_task": "Manual hand-harvesting of row crops (appears to be carrots) and packing into wooden crates",
+  "workers_visible": 35,
+  "stage": "Active mid-harvest - crops pulled, laid in furrows, and being crated",
+  "progress_cues": [
+    "harvested crops with tops lying in long windrows in furrows",
+    "wooden crates labeled DAVID FREEDMAN & CO placed along rows, some filled, some empty/tipped",
+    "disturbed tilled soil and cleared furrows extending into distance",
+    "workers kneeling and handling produce along active harvest line"
+  ],
+  "safety_flags": [
+    "prolonged sun exposure - workers in open field with only hats",
+    "uneven furrowed terrain with trip hazard from crates and crop piles",
+    "manual repetitive bending/kneeling work"
+  ],
+  "suggested_next_steps": [
+    "continue filling empty crates with harvested crop",
+    "collect and stack full crates from furrows",
+    "move full crates to field edge for transport"
+  ],
+  "confidence": "medium",
+  "unknowns": [
+    "exact crop variety confirmation",
+    "total field size and percent complete",
+    "time of day and temperature conditions",
+    "exact count of distant workers"
+  ]
+}
