@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Field Ops — task tracker</title>
+<style>
+  :root {
+    --ink: #1d2118;
+    --muted: #5c6152;
+    --line: #d8d5c8;
+    --paper: #f4f2ea;
+    --panel: #fbfaf5;
+    --green: #2e7d32;
+    --amber: #b26a00;
+    --red: #b3261e;
+    --soil: #6d4c2f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; color: var(--ink); background: var(--paper);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 14px; line-height: 1.45;
+  }
+  header {
+    display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap;
+    padding: 10px 16px; background: var(--panel); border-bottom: 2px solid var(--soil);
+  }
+  header h1 { font-size: 17px; margin: 0; font-weight: 650; }
+  header .strip { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+  header .strip b { color: var(--ink); font-weight: 600; }
+  main {
+    display: grid; gap: 12px; padding: 12px 16px;
+    grid-template-columns: minmax(280px, 5fr) minmax(360px, 7fr);
+  }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
+  section h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 8px; font-weight: 650; }
+  #spots { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .spot { border: 1px solid var(--line); border-radius: 4px; padding: 8px; cursor: pointer; background: #fff; text-align: left; font: inherit; }
+  .spot:hover { border-color: var(--soil); }
+  .spot.sel { outline: 2px solid var(--soil); outline-offset: -2px; }
+  .spot .nm { font-weight: 650; display: flex; justify-content: space-between; gap: 6px; }
+  .spot .st { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex: none; margin-top: 5px; }
+  .dot.warn { background: var(--amber); }
+  .chip { display: inline-block; font-size: 11px; font-weight: 650; padding: 1px 7px; border-radius: 20px; background: #e4e1d3; }
+  .chip.done { background: #cfe3d0; color: var(--green); }
+  .chip.risk { background: #f3d9a7; color: var(--amber); }
+  ol.actions { margin: 0; padding-left: 20px; }
+  ol.actions li { margin-bottom: 8px; }
+  ol.actions .why { color: var(--muted); font-size: 13px; }
+  ol.actions button, .rowbtn {
+    font: inherit; font-size: 12px; padding: 2px 10px; margin-left: 8px;
+    border: 1px solid var(--line); border-radius: 4px; background: #fff; cursor: pointer;
+  }
+  ol.actions button:hover, .rowbtn:hover { border-color: var(--green); color: var(--green); }
+  details.deferred { margin-top: 6px; color: var(--muted); font-size: 13px; }
+  #feed { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow: auto; }
+  #feed li { padding: 4px 0; border-top: 1px dotted var(--line); font-size: 13px; }
+  #feed li:first-child { border-top: 0; }
+  #feed time { color: var(--muted); margin-right: 6px; font-variant-numeric: tabular-nums; }
+  #detail .sess { font-size: 13px; color: var(--muted); }
+  #detail ul { margin: 6px 0; padding-left: 18px; }
+  #toolbar { display: flex; gap: 8px; align-items: center; }
+  #toolbar button { font: inherit; font-size: 13px; padding: 4px 12px; border-radius: 4px; border: 1px solid var(--soil); background: var(--soil); color: #fff; cursor: pointer; }
+  #toolbar button:disabled { opacity: 0.55; cursor: wait; }
+  #status { font-size: 13px; color: var(--muted); }
+  #status.err { color: var(--red); }
+  @media (max-width: 760px) { main { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Field Ops</h1>
+  <div class="strip" id="strip"><span>loading…</span></div>
+  <div id="toolbar">
+    <button id="refresh" type="button">Re-run optimizer</button>
+    <span id="status" role="status"></span>
+  </div>
+</header>
+<main>
+  <div>
+    <section aria-label="Spots">
+      <h2>Spots</h2>
+      <div id="spots"></div>
+    </section>
+    <section aria-label="Briefing feed" style="margin-top:12px">
+      <h2>Briefing feed</h2>
+      <ol id="feed"></ol>
+    </section>
+  </div>
+  <div>
+    <section aria-label="Spot detail" id="detail"><h2>Spot detail</h2><p>Select a spot.</p></section>
+    <section aria-label="Next actions" style="margin-top:12px">
+      <h2>Next actions</h2>
+      <div id="actions"><p>No plan yet — run the optimizer.</p></div>
+    </section>
+  </div>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+let selected = null;
+let lastSeen = {};
+
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  if (!r.ok) throw new Error(`${opts?.method ?? 'GET'} ${path}: ${r.status}`);
+  return r.json();
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+function renderStrip(ov) {
+  const eco = ov.eco ? esc(ov.eco.split('.')[0]) : 'no ecology data';
+  const open = ov.goals.filter((g) => g.status !== 'done').length;
+  $('strip').innerHTML =
+    `<span>eco: <b>${eco}</b></span><span>goals: <b>${open} open / ${ov.goals.length}</b></span>` +
+    `<span>spots: <b>${ov.spots.length}</b></span><span>plan: <b>${ov.plan ? 'fresh' : 'none yet'}</b></span>`;
+}
+
+function renderSpots(ov) {
+  const box = $('spots');
+  box.innerHTML = '';
+  if (!selected || !ov.spots.some((s) => s.id === selected)) selected = ov.spots[0]?.id ?? null;
+  for (const s of ov.spots) {
+    const changed = lastSeen[s.id] && s.updated_at && s.updated_at > lastSeen[s.id];
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'spot' + (s.id === selected ? ' sel' : '');
+    b.innerHTML = `<span class="nm">${esc(s.name)}<span class="dot${s.open_issues?.length ? ' warn' : ''}" title="${(s.open_issues ?? []).length} open issues"></span></span>` +
+      `<span class="chip">${esc(s.stage ?? 'unknown')}</span>` +
+      `<div class="st">${esc((s.summary ?? '').slice(0, 90))}${changed ? ' · updated' : ''}</div>`;
+    b.addEventListener('click', () => { selected = s.id; lastSeen[s.id] = s.updated_at ?? lastSeen[s.id]; tick(false); });
+    box.appendChild(b);
+  }
+  if (!ov.spots.length) box.innerHTML = '<p>No spots yet — run a compare with --spot first.</p>';
+}
+
+function renderDetail(ov) {
+  const el = $('detail');
+  const s = ov.spots.find((x) => x.id === selected);
+  if (!s) { el.innerHTML = '<h2>Spot detail</h2><p>Select a spot.</p>'; return; }
+  const issues = (s.open_issues ?? []).map((i) => `<li>${esc(i)}</li>`).join('') || '<li>none recorded</li>';
+  const sessions = (s.recent_sessions ?? []).map((x) => `<li>${esc(x)}</li>`).join('') || '<li>no sessions yet</li>';
+  el.innerHTML = `<h2>Spot detail</h2><h3 style="margin:.2em 0">${esc(s.name)} <span class="chip">${esc(s.stage ?? 'unknown')}</span></h3>` +
+    `<p>${esc(s.summary ?? '(no standing state)')}</p>` +
+    `<h2>Open issues</h2><ul>${issues}</ul>` +
+    `<h2>Recent sessions</h2><ul class="sess">${sessions}</ul>` +
+    `<p class="sess">${s.session_count ?? 0} sessions · updated ${esc(s.updated_at ?? 'never')}</p>`;
+}
+
+function renderActions(ov) {
+  const el = $('actions');
+  const plan = ov.plan?.plan ?? ov.plan;
+  const ranked = plan?.ranked_actions ?? [];
+  if (!ranked.length) { el.innerHTML = '<p>No plan yet — run the optimizer.</p>'; return; }
+  el.innerHTML = '<ol class="actions">' + ranked.map((a, i) =>
+    `<li>${esc(a.action)} <span class="why">— ${esc(a.why)}${a.effort ? ` (${esc(a.effort)})` : ''}</span>` +
+    (a.goal_id ? ` <button type="button" data-goal="${esc(a.goal_id)}">done</button>` : '') + '</li>'
+  ).join('') + '</ol>' +
+    ((plan?.deferred ?? []).length ? `<details class="deferred"><summary>deferred (${plan.deferred.length})</summary><ul>` +
+      plan.deferred.map((d) => `<li>${esc(d.action)} — ${esc(d.why)}</li>`).join('') + '</ul></details>' : '');
+  el.querySelectorAll('button[data-goal]').forEach((b) =>
+    b.addEventListener('click', async () => {
+      b.disabled = true;
+      try { await api(`/api/goals/${encodeURIComponent(b.dataset.goal)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'done' }) }); }
+      catch (e) { setStatus(`goal update failed: ${e.message}`, true); }
+      tick(false);
+    }));
+}
+
+function renderFeed(ov) {
+  const el = $('feed');
+  el.innerHTML = (ov.feed ?? []).map((e) => `<li><time>${esc(e.at)}</time>${esc(e.text)}</li>`).join('') || '<li>No events yet.</li>';
+}
+
+let noticeUntil = 0;
+function setStatus(msg, isErr, stickyMs = 0) {
+  const el = $('status');
+  el.textContent = msg;
+  el.classList.toggle('err', !!isErr);
+  if (stickyMs) noticeUntil = Date.now() + stickyMs;
+}
+
+let lastJson = '';
+async function tick(markSeen = true) {
+  try {
+    const ov = await api('/api/overview');
+    // Skip re-render when nothing changed: rebuilding the spot buttons
+    // under the user's cursor would eat in-flight clicks.
+    const snapshot = JSON.stringify([selected, ov.spots, ov.goals, ov.plan, ov.eco, ov.feed]);
+    if (snapshot === lastJson) {
+      if (Date.now() > noticeUntil) setStatus(`updated ${new Date().toLocaleTimeString()}`, false);
+      return;
+    }
+    lastJson = snapshot;
+    renderStrip(ov);
+    renderSpots(ov);
+    renderDetail(ov);
+    renderActions(ov);
+    renderFeed(ov);
+    if (markSeen) for (const s of ov.spots) lastSeen[s.id] = lastSeen[s.id] ?? s.updated_at ?? null;
+    if (Date.now() > noticeUntil) setStatus(`updated ${new Date().toLocaleTimeString()}`, false);
+  } catch (e) { setStatus(`load failed: ${e.message}`, true); }
+}
+
+$('refresh').addEventListener('click', async () => {
+  const b = $('refresh');
+  b.disabled = true;
+  setStatus('optimizer running…', false);
+  try { await api('/api/refresh', { method: 'POST' }); setStatus('plan refreshed', false, 8000); }
+  catch (e) { setStatus(`refresh failed: ${e.message}`, true); }
+  b.disabled = false;
+  tick(false);
+});
+
+tick();
+setInterval(() => tick(), 5000);
+</script>
+</body>
+</html>
