@@ -178,6 +178,55 @@ export function buildBriefingPrompt(spots, goals = []) {
   );
 }
 
+// Optimizer prompt: rank what to do next from goals, spot states, and
+// constraints. goals: [{ id, text, deadline, weight 1-5, status }].
+// spots: same shape as buildBriefingPrompt. constraints: [strings] such as
+// weather windows, labor, daylight, equipment.
+export function buildOptimizerPrompt(goals, spots, constraints = []) {
+  const open = goals.filter((g) => g.status !== 'done');
+  const goalLines = open.length
+    ? open
+        .map(
+          (g) =>
+            `- [${g.id}] (weight ${g.weight}/5${g.deadline ? `, due ${g.deadline}` : ', no deadline'}) ${g.text} [${g.status}]`
+        )
+        .join('\n')
+    : '(no open goals — optimize for general upkeep and risk reduction)';
+  const spotLines = spots.length
+    ? spots
+        .map((s) => {
+          const issues =
+            s.open_issues?.length
+              ? s.open_issues.map((i) => `    ! ${i}`).join('\n')
+              : '    ! none recorded';
+          return (
+            `Spot "${s.id}" (${s.name ?? s.id}), stage: ${s.stage ?? 'unknown'}:\n` +
+            `  ${s.summary || '(no standing state)'}\n${issues}`
+          );
+        })
+        .join('\n\n')
+    : '(no spots observed yet)';
+  const constraintBlock = constraints.length
+    ? `\nHard constraints (never violate):\n${constraints.map((c) => `- ${c}`).join('\n')}\n`
+    : '';
+  return (
+    'You are the operations optimizer for a farm-operations task tracker. ' +
+    'Given the goals, the observed state of every spot, and the hard ' +
+    'constraints, decide what to do next. Reply with strict JSON, no markdown fences:\n' +
+    '{\n' +
+    '  "ranked_actions": [{"action": "concrete verb-first task", "why": "goal or risk it serves", "effort": "small|medium|large", "do_first_if": "condition that would reprioritize it"}],\n' +
+    '  "deferred": [{"action": "task", "why": "why it waits"}],\n' +
+    '  "goal_effects": [{"goal_id": "id", "effect": "advanced|at-risk|blocked|unaffected", "evidence": "one line"}]\n' +
+    '}\n' +
+    'Rules: order by goal weight divided by effort, soonest deadline first on ' +
+    'ties; every ranked action must name the goal or risk it serves; anything ' +
+    'violating a hard constraint goes in deferred with the reason.\n' +
+    `\nOpen goals:\n${goalLines}\n` +
+    `\nObserved spots:\n${spotLines}\n` +
+    constraintBlock
+  );
+}
+
 // Overlay SVG: mask paths translated by their bounds, boxes as rects.
 // paths: [{d, left, top}], boxes: [{left, top, right, bottom}].
 export function buildOverlaySvg({ width, height, imageHref, boxes = [], paths = [] }) {
