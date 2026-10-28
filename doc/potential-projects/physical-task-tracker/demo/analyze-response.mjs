@@ -141,6 +141,43 @@ export async function getVideoMeta(path, execFileImpl = null) {
   };
 }
 
+// Briefing prompt over spot states. spots: [{ id, name, stage, summary,
+// open_issues, session_count, updated_at }]. goals: [strings].
+export function buildBriefingPrompt(spots, goals = []) {
+  const lines = spots.map((s) => {
+    const issues =
+      s.open_issues?.length
+        ? s.open_issues.map((i) => `    - ${i}`).join('\n')
+        : '    - none recorded';
+    return (
+      `Spot "${s.id}" (${s.name ?? s.id}):\n` +
+      `  stage: ${s.stage ?? 'unknown'}\n` +
+      `  sessions: ${s.session_count ?? 0}, last update: ${s.updated_at ?? 'never'}\n` +
+      `  standing state: ${s.summary || '(none recorded)'}\n` +
+      `  open issues:\n${issues}`
+    );
+  });
+  const goalBlock = goals.length
+    ? `\nThe operator's stated goals:\n${goals.map((g) => `- ${g}`).join('\n')}\n` +
+      'For each goal, report on-track, at-risk, or unknown with one line of evidence.\n'
+    : '';
+  return (
+    'You are the resume briefer for a farm-operations task tracker. ' +
+    'Below are the standing states of every tracked spot. Brief the operator ' +
+    'as if they are starting a shift. Reply with strict JSON, no markdown fences:\n' +
+    '{\n' +
+    '  "overall": "two sentences: where things stand",\n' +
+    '  "per_spot": [{"id": "spot id", "status": "one line", "needs_attention": true}],\n' +
+    '  "blockers": ["anything stopping work"],\n' +
+    '  "next_actions": ["concrete actions ordered by urgency"]' +
+    (goals.length ? ',\n  "goal_status": [{"goal": "verbatim goal", "status": "on-track|at-risk|unknown", "evidence": "one line"}]' : '') +
+    '\n}\n' +
+    '\nSpots:\n' +
+    lines.join('\n\n') +
+    goalBlock
+  );
+}
+
 // Overlay SVG: mask paths translated by their bounds, boxes as rects.
 // paths: [{d, left, top}], boxes: [{left, top, right, bottom}].
 export function buildOverlaySvg({ width, height, imageHref, boxes = [], paths = [] }) {

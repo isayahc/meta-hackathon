@@ -104,6 +104,17 @@ node task-compare.mjs visit-a visit-b --spot ./my-farm/spots/north-fence
 ```
 
 Tests: `node --test spot-state.test.mjs`.
+## Resume briefing
+
+`task-briefing.mjs` reads every spot's state and briefs the operator —
+overall standing, per-spot status, blockers, next actions, and goal status:
+
+```bash
+node task-briefing.mjs ./my-farm [--goal "clean September harvest"] [--out briefing.json]
+```
+
+Text-only call (no images). Reads `spots/<id>/{spot.json,state.json}` as
+produced by the spots layer. Tests: `node --test briefing.test.mjs`.
 
 ## Sample
 
