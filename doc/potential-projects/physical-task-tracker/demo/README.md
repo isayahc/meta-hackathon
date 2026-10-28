@@ -131,6 +131,28 @@ node task-optimize.mjs ./my-farm --offline   # print the prompt, no API call
 
 Text-only call (no images). Works goals-only before any spots exist.
 Tests: `node --test goals.test.mjs`.
+## Live dashboard
+
+`serve-dashboard.mjs` is the run script for the Field Ops dashboard
+(`dashboard/index.html`, single file, no dependencies): spot grid with
+stage chips, text-first spot detail (state, open issues, recent sessions —
+sessions store analysis, not images, so there is no photo slider yet),
+optimizer-ranked next actions with done buttons that write back to
+`goals.json`, a briefing feed, and the eco strip. Polls `/api/overview`
+every 5s; "Re-run optimizer" shells to `task-optimize.mjs`
+(`--eco` passes through, Meta key required):
+
+```bash
+node task-optimize.mjs ./my-farm --out ./my-farm/plan.json   # optional, seeds the actions panel
+node serve-dashboard.mjs ./my-farm --port 8123
+# open http://localhost:8123 in a browser
+```
+
+With the ecology branch (#15): `node eco.mjs 38.5,-98.0 --out
+./my-farm/eco.json` powers the eco strip, and `--eco 38.5,-98.0` passes
+through to optimizer refreshes. Without it, those panels simply stay
+empty. Tests: `node --test dashboard.test.mjs` (HTTP tests skip where
+listen() is blocked and run on host).
 
 ## Sample
 
