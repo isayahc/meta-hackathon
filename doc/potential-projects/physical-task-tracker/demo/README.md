@@ -4,6 +4,41 @@ Sends a farm-work photo to a Muse model and gets back structured task state:
 what work is happening, what stage it's at, visible progress cues, safety
 flags, and suggested next steps as JSON.
 
+## Run the full loop
+
+Every command runs from this directory (`.../physical-task-tracker/demo`).
+Steps 1-3 and 5 need a Meta API key (hidden prompt, then remembered —
+see below); steps 4 and 6 need none.
+
+```bash
+# 1. Scan one visit (photo or video frames)
+node task-scan.mjs https://upload.wikimedia.org/wikipedia/commons/0/0a/Harvesting_carrots.jpg
+
+# 2. Compare two visits into a tracked spot (saves state + session)
+node task-compare.mjs <visit-a> <visit-b> --spot ./my-farm/spots/north-fence
+
+# 3. Brief + set goals + optimize into a plan
+node task-briefing.mjs ./my-farm --out briefing.json
+node task-optimize.mjs ./my-farm --goal "Transplant bed 3 by Friday" --weight 5 --out ./my-farm/plan.json
+
+# 4. (Optional, no key) Fuse weather + soil into the plan
+node eco.mjs 38.5,-98.0 --out ./my-farm/eco.json
+node task-optimize.mjs ./my-farm --eco 38.5,-98.0 --out ./my-farm/plan.json
+
+# 5. (Optional) Segment a field feature with SAM 3.1
+node sam-segment.mjs <image> "<noun>" --out segment.svg
+
+# 6. Open the live dashboard (no key to view; refresh needs one)
+node serve-dashboard.mjs ./my-farm --port 8123
+# open http://localhost:8123 in a browser
+```
+
+Key handling: `META_API_KEY` env → saved key, then hidden prompt. Say yes
+once and it's remembered in `%APPDATA%\meta-hackathon\demo-key.json`
+(outside the repo, never committed). `example.env` lists every variable
+(placeholders only). Run `node --test <name>.test.mjs` per script, or pass
+all test files in one `node --test` for the suite.
+
 ## Run
 
 ```bash
