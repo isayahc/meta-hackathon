@@ -17,13 +17,12 @@ Fastest start — dashboard up in two commands, no API key, no network:
 
 ```bash
 node task-optimize.mjs ./my-farm --goal "Transplant bed 3 by Friday" --weight 5 --offline
-node serve-dashboard.mjs ./my-farm --port 8123
-# open http://localhost:8123 in a browser
+node serve-dashboard.mjs ./my-farm --port 8123 --open
 ```
 
 The first command creates `./my-farm/goals.json`; the second serves the
-dashboard (spots/actions/eco panels fill in as you add data below).
-Stop the server with Ctrl+C.
+dashboard and loads http://localhost:8123 in your browser (spots/actions/eco
+panels fill in as you add data below). Stop the server with Ctrl+C.
 
 ## Run the full loop
 
@@ -49,8 +48,7 @@ node task-optimize.mjs ./my-farm --eco 38.5,-98.0 --out ./my-farm/plan.json
 node sam-segment.mjs <image> "<noun>" --out segment.svg
 
 # 6. Open the live dashboard (no key to view; refresh needs one)
-node serve-dashboard.mjs ./my-farm --port 8123
-# open http://localhost:8123 in a browser
+node serve-dashboard.mjs ./my-farm --port 8123 --open
 ```
 
 Key handling: `META_API_KEY` env → saved key, then hidden prompt. Say yes
@@ -201,8 +199,7 @@ every 5s; "Re-run optimizer" shells to `task-optimize.mjs`
 ```bash
 node task-optimize.mjs ./my-farm --out ./my-farm/plan.json   # optional, seeds the actions panel
 node eco.mjs 38.5,-98.0 --out ./my-farm/eco.json   # optional, powers the eco strip
-node serve-dashboard.mjs ./my-farm --port 8123 [--eco 38.5,-98.0]
-# open http://localhost:8123 in a browser
+node serve-dashboard.mjs ./my-farm --port 8123 [--eco 38.5,-98.0] --open
 ```
 
 Without `plan.json` / `eco.json`, those panels simply stay empty. Tests:

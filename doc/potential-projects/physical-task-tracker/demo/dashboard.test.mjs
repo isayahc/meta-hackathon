@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, rm, writeFile, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createServer, loadSpots, buildFeed } from './serve-dashboard.mjs';
+import { createServer, loadSpots, buildFeed, waitForOk } from './serve-dashboard.mjs';
 import { addGoal, listGoals } from './goals.mjs';
 
 async function scratch(t) {
@@ -74,6 +74,12 @@ test('buildFeed orders newest first and names spots', async (t) => {
   assert.ok(feed.length >= 2);
   assert.match(feed[0].text, /North fence/);
   for (let i = 1; i < feed.length; i++) assert.ok(feed[i - 1].sort >= feed[i].sort);
+});
+
+test('waitForOk gives up fast on a dead port (--open readiness probe)', async () => {
+  const t0 = Date.now();
+  assert.equal(await waitForOk('http://127.0.0.1:1/api/overview', 2, 10), false);
+  assert.ok(Date.now() - t0 < 2000);
 });
 
 test('dashboard page contains the app shell', async () => {
