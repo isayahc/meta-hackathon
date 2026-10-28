@@ -8,7 +8,7 @@
 
 import { readdir, readFile, mkdtemp, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, extname } from 'node:path';
+import { join, extname, basename, dirname } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import {
@@ -164,3 +164,12 @@ if (!result.ok) {
   process.exit(1);
 }
 console.log(JSON.stringify(result.analysis, null, 2));
+
+const spotFlag = flagValue('--spot', null);
+if (spotFlag) {
+  const { appendSession } = await import('./spot-state.mjs');
+  const id = basename(spotFlag);
+  const root = dirname(dirname(spotFlag));
+  const { sessionId } = await appendSession(root, id, result.analysis);
+  console.error(`Saved session ${sessionId} to ${spotFlag}.`);
+}
