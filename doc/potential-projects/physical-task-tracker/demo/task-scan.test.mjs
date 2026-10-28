@@ -1,0 +1,143 @@
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import {
+  buildRequestBody,
+  extractAnalysis,
+  DEFAULT_MAX_TOKENS,
+  loadSavedKey,
+  saveKey,
+} from './analyze-response.mjs';
+
+// Captured live failure: auth OK, but the model burned 798/800 tokens on
+// reasoning and returned finish_reason='length' with null content.
+const TRUNCATED_SHAPE = {
+  id: 'chatcmpl-demo',
+  choices: [
+    {
+      index: 0,
+      message: { role: 'assistant', content: null },
+      finish_reason: 'length',
+    },
+  ],
+  usage: {
+    prompt_tokens: 1200,
+    completion_tokens: 800,
+    total_tokens: 2000,
+    completion_tokens_details: { reasoning_tokens: 798 },
+  },
+};
+
+describe('extractAnalysis', () => {
+  it('rejects length-truncated responses as errors', () => {
+    const r = extractAnalysis(TRUNCATED_SHAPE);
+    assert.equal(r.ok, false);
+    assert.equal(r.code, 'truncated');
+    assert.match(r.error, /length/);
+  });
+
+  it('rejects null content as an error', () => {
+    const r = extractAnalysis({
+      choices: [{ message: { content: null }, finish_reason: 'stop' }],
+    });
+    assert.equal(r.ok, false);
+    assert.equal(r.code, 'empty_content');
+  });
+
+  it('rejects empty-string content as an error', () => {
+    const r = extractAnalysis({
+      choices: [{ message: { content: '   ' }, finish_reason: 'stop' }],
+    });
+    assert.equal(r.ok, false);
+    assert.equal(r.code, 'empty_content');
+  });
+
+  it('accepts a valid JSON task analysis', () => {
+    const r = extractAnalysis({
+      choices: [
+        {
+          message: { content: '{"observed_task":"harvesting carrots"}' },
+          finish_reason: 'stop',
+        },
+      ],
+    });
+    assert.equal(r.ok, true);
+    assert.equal(r.analysis.observed_task, 'harvesting carrots');
+  });
+
+  it('rejects free text instead of JSON', () => {
+    const r = extractAnalysis({
+      choices: [
+        { message: { content: 'The workers are harvesting.' }, finish_reason: 'stop' },
+      ],
+    });
+    assert.equal(r.ok, false);
+    assert.equal(r.code, 'not_json');
+  });
+
+  it('rejects responses with no choices', () => {
+    const r = extractAnalysis({ choices: [] });
+    assert.equal(r.ok, false);
+    assert.equal(r.code, 'empty_response');
+  });
+});
+
+describe('buildRequestBody', () => {
+  it('defaults to a 4096 token budget with no reasoning param', () => {
+    const b = buildRequestBody({ model: 'm', prompt: 'p', imageUrl: 'u' });
+    assert.equal(b.max_tokens, 4096);
+    assert.equal(b.max_tokens, DEFAULT_MAX_TOKENS);
+    assert.ok(!('reasoning_effort' in b));
+  });
+
+  it('forwards reasoning effort only when set', () => {
+    const b = buildRequestBody({
+      model: 'm',
+      prompt: 'p',
+      imageUrl: 'u',
+      reasoningEffort: 'low',
+    });
+    assert.equal(b.reasoning_effort, 'low');
+  });
+});
+
+describe('key persistence', () => {
+  // Redirect the config dir so tests never touch a real key file.
+  let dir;
+  let savedAppData;
+
+  it('round-trips a saved key', async (t) => {
+    dir = await mkdtemp(join(tmpdir(), 'task-scan-test-'));
+    t.after(async () => {
+      await rm(dir, { recursive: true, force: true });
+    });
+    savedAppData = process.env.APPDATA;
+    process.env.APPDATA = dir;
+    t.after(() => {
+      if (savedAppData === undefined) delete process.env.APPDATA;
+      else process.env.APPDATA = savedAppData;
+    });
+    assert.equal(await loadSavedKey(), null);
+    await saveKey('  test-key-123  ');
+    assert.equal(await loadSavedKey(), 'test-key-123');
+  });
+
+  it('returns null for corrupt key files', async (t) => {
+    dir = await mkdtemp(join(tmpdir(), 'task-scan-test-'));
+    t.after(async () => {
+      await rm(dir, { recursive: true, force: true });
+    });
+    savedAppData = process.env.APPDATA;
+    process.env.APPDATA = dir;
+    t.after(() => {
+      if (savedAppData === undefined) delete process.env.APPDATA;
+      else process.env.APPDATA = savedAppData;
+    });
+    await saveKey('placeholder');
+    const { configPath } = await import('./analyze-response.mjs');
+    await writeFile(configPath(), 'not-json{{{');
+    assert.equal(await loadSavedKey(), null);
+  });
+});
