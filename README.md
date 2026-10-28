@@ -3,6 +3,22 @@
 Project repo for the Meta Global AI Developer Hackathon 2026. Candidate builds
 are being evaluated under [doc/potential-projects](doc/potential-projects).
 
+## Run the demo
+
+Prerequisites: Node 18+ (`node --version`). No `npm install` — zero
+dependencies. The working build is the farm-operations task tracker:
+
+```bash
+cd C:\Users\isaya\meta-hackathon\doc\potential-projects\physical-task-tracker\demo
+node task-optimize.mjs ./my-farm --goal "Transplant bed 3 by Friday" --weight 5 --offline
+node serve-dashboard.mjs ./my-farm --port 8123
+# open http://localhost:8123 in a browser
+```
+
+Two commands, no API key, no network — dashboard up with a starter goal.
+Full loop (scan → compare → briefing → optimizer → ecology → dashboard)
+with per-step commands: [demo README](doc/potential-projects/physical-task-tracker/demo/README.md).
+
 ## Meta Global AI Developer Hackathon — Scope
 
 Built for the [Meta Global AI Developer Hackathon 2026](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) (Meta + Cerebral Valley, Oct 26 – Nov 4, 2026; submissions due Nov 4, 9:00 PM ET). Indie track: judged on creativity, technical ambition, and whether it works.
