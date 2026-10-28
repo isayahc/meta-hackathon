@@ -91,6 +91,20 @@ node task-compare.mjs <visit-a> <visit-b> [--frames 3] [--goal "established row 
 With `--goal`, every change is mapped to goal movement and risks. This is the
 tracking inflection point: single-visit analysis becomes longitudinal state.
 
+## Spots + state files
+
+A spot is a fixed viewpoint with a memory: `spots/<id>/spot.json`,
+`sessions/<timestamp>/analysis.json`, and a rolling `state.json` (stage,
+summary, open issues). `spot-state.mjs` implements init/read/append;
+`task-compare.mjs --spot <project>/spots/<id>` saves each run as a session
+and folds it into state (auto-creating the spot on first use):
+
+```bash
+node task-compare.mjs visit-a visit-b --spot ./my-farm/spots/north-fence
+```
+
+Tests: `node --test spot-state.test.mjs`.
+
 ## Sample
 
 "Harvesting carrots" — agricultural workers harvesting carrots into crates,
