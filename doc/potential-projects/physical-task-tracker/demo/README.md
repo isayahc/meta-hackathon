@@ -4,9 +4,29 @@ Sends a farm-work photo to a Muse model and gets back structured task state:
 what work is happening, what stage it's at, visible progress cues, safety
 flags, and suggested next steps as JSON.
 
+## Start here
+
+Prerequisites: Node 18+ (`node --version`). No `npm install` — zero
+dependencies. Every command runs from this directory:
+
+```bash
+cd C:\Users\isaya\meta-hackathon\doc\potential-projects\physical-task-tracker\demo
+```
+
+Fastest start — dashboard up in two commands, no API key, no network:
+
+```bash
+node task-optimize.mjs ./my-farm --goal "Transplant bed 3 by Friday" --weight 5 --offline
+node serve-dashboard.mjs ./my-farm --port 8123
+# open http://localhost:8123 in a browser
+```
+
+The first command creates `./my-farm/goals.json`; the second serves the
+dashboard (spots/actions/eco panels fill in as you add data below).
+Stop the server with Ctrl+C.
+
 ## Run the full loop
 
-Every command runs from this directory (`.../physical-task-tracker/demo`).
 Steps 1-3 and 5 need a Meta API key (hidden prompt, then remembered —
 see below); steps 4 and 6 need none.
 
