@@ -115,6 +115,22 @@ node task-briefing.mjs ./my-farm [--goal "clean September harvest"] [--out brief
 
 Text-only call (no images). Reads `spots/<id>/{spot.json,state.json}` as
 produced by the spots layer. Tests: `node --test briefing.test.mjs`.
+## Goals + optimizer
+
+Goals are first-class objects in `<project>/goals.json` — `{ id, text,
+deadline, weight 1-5, status }`, status moving `open -> at-risk -> done`.
+`task-optimize.mjs` ranks next actions from open goals, every spot's state,
+and hard constraints (never violated; conflicting work is deferred with a
+reason). Optimizer v1 is structured Muse reasoning, not a solver matrix:
+
+```bash
+node task-optimize.mjs ./my-farm --goal "Transplant bed 3 by Friday" --deadline 2026-10-31 --weight 5 --constraint "No watering after 10am heat" --out plan.json
+node task-optimize.mjs ./my-farm --set-status transplant-bed-3-by-friday-1=done
+node task-optimize.mjs ./my-farm --offline   # print the prompt, no API call
+```
+
+Text-only call (no images). Works goals-only before any spots exist.
+Tests: `node --test goals.test.mjs`.
 
 ## Sample
 
