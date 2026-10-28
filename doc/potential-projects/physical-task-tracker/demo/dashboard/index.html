@@ -114,7 +114,7 @@ function esc(s) {
 }
 
 function renderStrip(ov) {
-  const eco = ov.eco ? esc(ov.eco.split('.')[0]) : 'no ecology data';
+  const eco = ov.eco ? esc(ov.eco.split('. ')[0]) : 'no ecology data';
   const open = ov.goals.filter((g) => g.status !== 'done').length;
   $('strip').innerHTML =
     `<span>eco: <b>${eco}</b></span><span>goals: <b>${open} open / ${ov.goals.length}</b></span>` +
