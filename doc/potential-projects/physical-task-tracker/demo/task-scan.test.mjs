@@ -7,6 +7,9 @@ import {
   buildRequestBody,
   extractAnalysis,
   DEFAULT_MAX_TOKENS,
+  formatTimestamp,
+  formatSrt,
+  normalizeSegments,
   loadSavedKey,
   saveKey,
 } from './analyze-response.mjs';
@@ -101,6 +104,33 @@ describe('buildRequestBody', () => {
     });
     assert.equal(b.reasoning_effort, 'low');
   });
+
+  it('packs multiple frame images in order', () => {
+    const b = buildRequestBody({
+      model: 'm',
+      prompt: 'p',
+      imageUrls: ['f1', 'f2', 'f3'],
+    });
+    const imgs = b.messages[0].content.filter((c) => c.type === 'image_url');
+    assert.deepEqual(
+      imgs.map((c) => c.image_url.url),
+      ['f1', 'f2', 'f3']
+    );
+  });
+
+  it('combines a single image with an image list', () => {
+    const b = buildRequestBody({
+      model: 'm',
+      prompt: 'p',
+      imageUrl: 'u0',
+      imageUrls: ['f1', 'f2'],
+    });
+    const imgs = b.messages[0].content.filter((c) => c.type === 'image_url');
+    assert.deepEqual(
+      imgs.map((c) => c.image_url.url),
+      ['u0', 'f1', 'f2']
+    );
+  });
 });
 
 describe('key persistence', () => {
@@ -139,5 +169,48 @@ describe('key persistence', () => {
     const { configPath } = await import('./analyze-response.mjs');
     await writeFile(configPath(), 'not-json{{{');
     assert.equal(await loadSavedKey(), null);
+  });
+});
+
+describe('srt', () => {
+  it('formats SRT timestamps', () => {
+    assert.equal(formatTimestamp(0), '00:00:00,000');
+    assert.equal(formatTimestamp(65.5), '00:01:05,500');
+    assert.equal(formatTimestamp(3661.25), '01:01:01,250');
+  });
+
+  it('formats cues with numbering and arrows', () => {
+    const srt = formatSrt([
+      { start: 1.0, end: 3.2, label: 'run-up' },
+      { start: 3.2, end: 5.0, label: 'throw' },
+    ]);
+    assert.equal(
+      srt,
+      '1\n00:00:01,000 --> 00:00:03,200\nrun-up\n\n2\n00:00:03,200 --> 00:00:05,000\nthrow\n\n'
+    );
+  });
+
+  it('normalizes segments: sorts, drops bad rows, clamps to duration', () => {
+    const segs = normalizeSegments(
+      [
+        { start: 5, end: 9, label: 'b' },
+        { start: 1, end: 3, label: 'a' },
+        { start: 4, end: 4, label: 'zero-length' },
+        { start: -1, end: 2, label: 'negative' },
+        { start: 2, end: 3, label: '   ' },
+        { start: 'x', end: 3, label: 'nan' },
+      ],
+      6
+    );
+    assert.deepEqual(segs, [
+      { start: 1, end: 3, label: 'a' },
+      { start: 5, end: 6, label: 'b' },
+    ]);
+  });
+
+  it('returns null when nothing usable remains', () => {
+    assert.equal(normalizeSegments([], null), null);
+    assert.equal(normalizeSegments('nope', null), null);
+    assert.equal(normalizeSegments([{ start: 0, end: 0, label: 'x' }], null), null);
   });
 });
