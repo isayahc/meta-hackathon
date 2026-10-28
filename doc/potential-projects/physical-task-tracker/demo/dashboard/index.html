@@ -177,22 +177,33 @@ function renderFeed(ov) {
   el.innerHTML = (ov.feed ?? []).map((e) => `<li><time>${esc(e.at)}</time>${esc(e.text)}</li>`).join('') || '<li>No events yet.</li>';
 }
 
-function setStatus(msg, isErr) {
+let noticeUntil = 0;
+function setStatus(msg, isErr, stickyMs = 0) {
   const el = $('status');
   el.textContent = msg;
   el.classList.toggle('err', !!isErr);
+  if (stickyMs) noticeUntil = Date.now() + stickyMs;
 }
 
+let lastJson = '';
 async function tick(markSeen = true) {
   try {
     const ov = await api('/api/overview');
+    // Skip re-render when nothing changed: rebuilding the spot buttons
+    // under the user's cursor would eat in-flight clicks.
+    const snapshot = JSON.stringify([selected, ov.spots, ov.goals, ov.plan, ov.eco, ov.feed]);
+    if (snapshot === lastJson) {
+      if (Date.now() > noticeUntil) setStatus(`updated ${new Date().toLocaleTimeString()}`, false);
+      return;
+    }
+    lastJson = snapshot;
     renderStrip(ov);
     renderSpots(ov);
     renderDetail(ov);
     renderActions(ov);
     renderFeed(ov);
     if (markSeen) for (const s of ov.spots) lastSeen[s.id] = lastSeen[s.id] ?? s.updated_at ?? null;
-    setStatus(`updated ${new Date().toLocaleTimeString()}`, false);
+    if (Date.now() > noticeUntil) setStatus(`updated ${new Date().toLocaleTimeString()}`, false);
   } catch (e) { setStatus(`load failed: ${e.message}`, true); }
 }
 
@@ -200,7 +211,7 @@ $('refresh').addEventListener('click', async () => {
   const b = $('refresh');
   b.disabled = true;
   setStatus('optimizer running…', false);
-  try { await api('/api/refresh', { method: 'POST' }); setStatus('plan refreshed', false); }
+  try { await api('/api/refresh', { method: 'POST' }); setStatus('plan refreshed', false, 8000); }
   catch (e) { setStatus(`refresh failed: ${e.message}`, true); }
   b.disabled = false;
   tick(false);
