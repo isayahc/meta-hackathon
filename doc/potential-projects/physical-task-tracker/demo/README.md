@@ -34,6 +34,32 @@ node --test task-scan.test.mjs
 Covers the captured `length`/null-content failure shape plus the request
 builder defaults.
 
+## Video understanding test
+
+`task-scan-video.mjs` sends N time-ordered frames (default 4) and asks what
+changed between them — task progression, the tracker's core mechanic:
+
+```bash
+node task-scan-video.mjs <phone-video.mp4 | frames-dir> [--frames 6]
+```
+
+Video files need `ffmpeg` (`ffprobe` for duration); a directory of frame
+images skips that. Same key handling and env vars as above.
+
+## Action SRT
+
+Add `--srt` to get timestamped action segments as a subtitle file instead of
+the progression JSON (frame dirs also need `--duration SECS`):
+
+```bash
+node task-scan-video.mjs <phone-video.mp4> --frames 6 --srt
+```
+
+Writes `<video>.srt` (or `actions.srt` inside a frames dir). Try it on
+ActivityNet video 1 (javelin throw,
+[1QIUV7WYKXg](https://www.youtube.com/watch?v=1QIUV7WYKXg)) and compare the
+model's cues against the official temporal annotations.
+
 ## Sample
 
 "Harvesting carrots" — agricultural workers harvesting carrots into crates,

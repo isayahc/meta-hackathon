@@ -15,6 +15,11 @@ These datasets test components, not the complete product. None of the reviewed d
 | [EgoProceL](https://sid2697.github.io/egoprocel/) | 62 hours, 130 participants, 16 tasks; key-step labels including PC assembly/disassembly and tent assembly. | Procedural structure, missing/repeated steps. | Combines underlying datasets; check their conditions separately. Current page links Google Drive and a mirror; old OneDrive links are expired. |
 | [Manual strawberry harvesting operations](https://doi.org/10.5061/dryad.cvdncjtfm) | Published Dec 17, 2025; season-long cart GPS, IMU, harvest mass, tray records, Pick/NoPick labels; 7.63 GB listed. | Farm event tracking and measurable output; multimodal validation. | Sensor data, not imagery. Cart records do not uniquely identify workers. Dataset-specific license not independently confirmed in this review. |
 
+| [PhenoCam](https://phenocam.nau.edu/) | Fixed field cameras, ~30-minute cadence, multi-year per-site archive; [ORNL DAAC v3.0](https://doi.org/10.3334/ORNLDAAC/2364). | Same-spot progression across days and seasons. | Open. Vegetation phenology, not task-labeled. |
+| Mapillary ([Graph API](https://www.mapillary.com/developer/api-documentation/)) | Crowdsourced street photos with position and heading; query by area and date range. | Viewpoint-varied same-spot pairs. | Free token (OAuth); imagery/API under Mapillary terms. Urban, not farm. |
+| [LEVIR-CD](https://justchenhao.github.io/LEVIR/) | 637 bitemporal 1024×1024 pairs (0.5 m/px) with pixel-level change masks. | Scoring change callouts against masks. | Open via Drive download. Satellite building change, not handheld. |
+| [ActivityNet-QA](https://huggingface.co/datasets/lmms-eval/ActivityNetQA) | 8,000 test Q&A rows over ActivityNet v1.3 videos. | Video-understanding smoke tests with ground-truth answers. | Appearance-heavy questions; videos fetched separately via YouTube. |
+
 ## Supporting sources
 
 - [SceneDiff paper/project](https://yuqunw.github.io/SceneDiff/)
@@ -35,3 +40,28 @@ These datasets test components, not the complete product. None of the reviewed d
 4. Add **Ego4D** for historical evidence retrieval, **SPOC** for partial transformations, and **CSeg** for task-conditioned change detection as those capabilities become necessary.
 
 Use subsets and official splits first. Preserve source IDs, label provenance, and applicable terms. Do not present artificially sparsified continuous video as a real multi-day longitudinal dataset.
+
+## Fixture sets used so far
+
+### ActivityNet smoke set (10 points, test split offset 0)
+
+| # | Video | Question | Answer |
+|---|-------|----------|--------|
+| 1 | [1QIUV7WYKXg](https://www.youtube.com/watch?v=1QIUV7WYKXg) | is the athlete wearing trousers | no |
+| 2 | [9eniCub7u60](https://www.youtube.com/watch?v=9eniCub7u60) | does the girl in black clothes have long hair | yes |
+| 3 | [FADShG5lyB8](https://www.youtube.com/watch?v=FADShG5lyB8) | is the man wearing long sleeves | no |
+| 4 | [5k2Ot6-wOgc](https://www.youtube.com/watch?v=5k2Ot6-wOgc) | is the man in black outdoors | no |
+| 5 | [mV07bEBkIcM](https://www.youtube.com/watch?v=mV07bEBkIcM) | is the person in white a man | yes |
+| 6 | [X_K7Aa3Aa-E](https://www.youtube.com/watch?v=X_K7Aa3Aa-E) | is the person in white a man | no |
+| 7 | [X2toGKgWMpE](https://www.youtube.com/watch?v=X2toGKgWMpE) | is the person in white a man | yes |
+| 8 | [98ukqD62X5s](https://www.youtube.com/watch?v=98ukqD62X5s) | is the person in yellow clothes a man | yes |
+| 9 | [4LF0hL-mgks](https://www.youtube.com/watch?v=4LF0hL-mgks) | is the person first appears in the video outdoor | no |
+| 10 | [mUmSJps9WJI](https://www.youtube.com/watch?v=mUmSJps9WJI) | does the person in black have short hair | yes |
+
+Reproduce: `rows?dataset=lmms-eval/ActivityNetQA&config=default&split=test&offset=0&length=10` on `datasets-server.huggingface.co`.
+
+### Files in this repo
+
+- `demo/samples/activitynet-video1.srt` — model-generated action cues for video 1 (javelin throw, 9.88 s, 3 cues). Produced by `task-scan-video.mjs --srt`, not ground truth.
+
+Not yet sourced: the official ActivityNet v1.3 temporal annotations (`activity_net.v1-3.min.json`) — canonical host currently unreachable. Needed to score model-generated SRTs against ground-truth segments.

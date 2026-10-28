@@ -33,10 +33,12 @@ export async function saveKey(key) {
 export function buildRequestBody({
   model,
   prompt,
-  imageUrl,
+  imageUrl = null,
+  imageUrls = [],
   maxTokens = DEFAULT_MAX_TOKENS,
   reasoningEffort = null,
 }) {
+  const urls = imageUrl ? [imageUrl, ...imageUrls] : imageUrls;
   const body = {
     model,
     // OpenAI-compatible token budget. If the provider instead expects
@@ -47,7 +49,7 @@ export function buildRequestBody({
         role: 'user',
         content: [
           { type: 'text', text: prompt },
-          { type: 'image_url', image_url: { url: imageUrl } },
+          ...urls.map((url) => ({ type: 'image_url', image_url: { url } })),
         ],
       },
     ],
@@ -56,6 +58,46 @@ export function buildRequestBody({
   // so reasoning effort stays opt-in (e.g. REASONING_EFFORT=low).
   if (reasoningEffort) body.reasoning_effort = reasoningEffort;
   return body;
+}
+
+export function formatTimestamp(totalSeconds) {
+  const s = Math.max(0, Number(totalSeconds) || 0);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = Math.floor(s % 60);
+  const ms = Math.round((s - Math.floor(s)) * 1000);
+  const pad = (n, w = 2) => String(n).padStart(w, '0');
+  return `${pad(h)}:${pad(m)}:${pad(sec)},${pad(ms, 3)}`;
+}
+
+export function formatSrt(segments) {
+  return (
+    segments
+      .map(
+        (seg, i) =>
+          `${i + 1}\n${formatTimestamp(seg.start)} --> ${formatTimestamp(seg.end)}\n${seg.label}\n`
+      )
+      .join('\n') + '\n'
+  );
+}
+
+export function normalizeSegments(segments, duration = null) {
+  if (!Array.isArray(segments)) return null;
+  const clean = [];
+  for (const seg of segments) {
+    const start = Number(seg?.start);
+    const end = Number(seg?.end);
+    const label = String(seg?.label ?? '').trim();
+    if (!label || !Number.isFinite(start) || !Number.isFinite(end) || end <= start || start < 0)
+      continue;
+    clean.push({
+      start,
+      end: duration ? Math.min(end, duration) : end,
+      label,
+    });
+  }
+  clean.sort((a, b) => a.start - b.start);
+  return clean.length ? clean : null;
 }
 
 export function extractAnalysis(data) {
