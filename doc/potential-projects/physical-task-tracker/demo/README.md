@@ -60,6 +60,21 @@ ActivityNet video 1 (javelin throw,
 [1QIUV7WYKXg](https://www.youtube.com/watch?v=1QIUV7WYKXg)) and compare the
 model's cues against the official temporal annotations.
 
+## Field segmentation (SAM 3.1)
+
+`sam-segment.mjs` sends an image plus a short noun-phrase concept to SAM 3.1
+(via `/v1/responses` — the chat endpoint rejects SAM) and writes an SVG
+overlay of boxes + decoded mask paths:
+
+```bash
+node sam-segment.mjs samples/kansas-tile.jpg "center pivot irrigation field" --out pivots.svg
+```
+
+Prompts must be bare noun phrases (`agricultural field`), never instructions
+(`segment the fields`) — the latter returns nothing. Generic concepts merge
+everything into one mask; specific ones separate instances. Needs
+`@meta-sam/parser` (`npm install`). Tests: `node --test sam-segment.test.mjs`.
+
 ## Sample
 
 "Harvesting carrots" — agricultural workers harvesting carrots into crates,

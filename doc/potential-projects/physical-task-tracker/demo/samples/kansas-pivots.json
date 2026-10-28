@@ -1,0 +1,15 @@
+{
+  "source": "USGS NAIP tile z14, Finney County Kansas pivot country",
+  "tile": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/14/6319/3599",
+  "local_fixture": "kansas-tile.jpg",
+  "prompt": "center pivot irrigation field",
+  "model": "sam-3.1",
+  "boxes": [
+    { "id": "0", "left": 11, "top": 0, "right": 79, "bottom": 31 },
+    { "id": "1", "left": 169, "top": 224, "right": 215, "bottom": 256 },
+    { "id": "2", "left": 7, "top": 158, "right": 88, "bottom": 244 },
+    { "id": "3", "left": 115, "top": 0, "right": 211, "bottom": 31 },
+    { "id": "4", "left": 111, "top": 35, "right": 215, "bottom": 139 },
+    { "id": "5", "left": 5, "top": 34, "right": 108, "bottom": 137 }
+  ]
+}
