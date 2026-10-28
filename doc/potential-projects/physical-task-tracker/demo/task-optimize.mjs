@@ -3,7 +3,8 @@
 // state.json, and hard constraints (--constraint, repeatable).
 // Text-only call (no images). Node 18+.
 //   node task-optimize.mjs <project-root> [--goal "text" --deadline DATE --weight 1-5]
-//       [--set-status <id>=<open|at-risk|done>] [--constraint "..."] [--offline] [--out plan.json]
+//       [--set-status <id>=<open|at-risk|done>] [--constraint "..."]
+//       [--eco <lat,lon> | --eco-file samples/eco-x.json] [--offline] [--out plan.json]
 //
 // Same env and key handling as task-briefing.mjs.
 
@@ -17,6 +18,7 @@ import {
   resolveApiKey,
 } from './analyze-response.mjs';
 import { addGoal, listGoals, setGoalStatus } from './goals.mjs';
+import { fetchEco, normalizeSoil, ecoConstraints, summarizeEco } from './eco.mjs';
 
 const API_BASE = process.env.META_API_BASE ?? 'https://api.meta.ai/v1';
 const MODEL = process.env.MUSE_MODEL ?? 'muse-spark-1.1';
@@ -37,7 +39,8 @@ const offline = args.includes('--offline');
 if (!root) {
   console.error(
     'Usage: node task-optimize.mjs <project-root> [--goal "text" --deadline DATE --weight 1-5]\n' +
-      '       [--set-status <id>=<open|at-risk|done>] [--constraint "..."] [--offline] [--out plan.json]'
+      '       [--set-status <id>=<open|at-risk|done>] [--constraint "..."]\n' +
+      '       [--eco <lat,lon> | --eco-file samples/eco-x.json] [--offline] [--out plan.json]'
   );
   process.exit(1);
 }
@@ -64,6 +67,36 @@ if (assign) {
   console.error(`goal ${g.id} -> ${g.status}`);
 }
 const constraints = flagAll('--constraint');
+
+// Ecology fusion: live fetch (--eco lat,lon) or a saved capture
+// (--eco-file samples/eco-x.json, same shape as eco.mjs --out).
+let ecoSummary = null;
+const ecoLoc = flagValue('--eco', null);
+const ecoFile = flagValue('--eco-file', null);
+if (ecoLoc || ecoFile) {
+  const doc = ecoFile ? JSON.parse(await readFile(ecoFile, 'utf8')) : null;
+  const [lat, lon] = doc?.location
+    ? [doc.location.lat, doc.location.lon]
+    : (ecoLoc ?? ',').split(',').map(Number);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    console.error(`Bad location: want --eco <lat,lon> or an --eco-file with .location.`);
+    process.exit(1);
+  }
+  let weather, soil;
+  if (doc) {
+    weather = doc.weather;
+    soil = normalizeSoil(doc.soilDoc ?? doc.soil);
+  } else {
+    ({ weather, soil } = await fetchEco(lat, lon).catch((e) => {
+      console.error(`eco fetch failed: ${e.message}`);
+      process.exit(1);
+    }));
+  }
+  const ecoRules = ecoConstraints(weather, soil);
+  constraints.push(...ecoRules);
+  ecoSummary = summarizeEco(weather, soil, lat, lon);
+  console.error(`eco: ${lat},${lon} -> ${ecoRules.length} weather/soil constraints`);
+}
 
 let spotIds = [];
 try {
@@ -100,7 +133,7 @@ if (!spots.length && !goals.length) {
   console.error('Nothing to optimize: no spot state and no goals (add --goal to start).');
   process.exit(1);
 }
-const prompt = buildOptimizerPrompt(goals, spots, constraints);
+const prompt = buildOptimizerPrompt(goals, spots, constraints, ecoSummary);
 
 if (offline) {
   console.log(prompt);

@@ -181,8 +181,9 @@ export function buildBriefingPrompt(spots, goals = []) {
 // Optimizer prompt: rank what to do next from goals, spot states, and
 // constraints. goals: [{ id, text, deadline, weight 1-5, status }].
 // spots: same shape as buildBriefingPrompt. constraints: [strings] such as
-// weather windows, labor, daylight, equipment.
-export function buildOptimizerPrompt(goals, spots, constraints = []) {
+// weather windows, labor, daylight, equipment. ecoSummary: optional field-
+// conditions block (see eco.mjs summarizeEco), or null.
+export function buildOptimizerPrompt(goals, spots, constraints = [], ecoSummary = null) {
   const open = goals.filter((g) => g.status !== 'done');
   const goalLines = open.length
     ? open
@@ -223,6 +224,7 @@ export function buildOptimizerPrompt(goals, spots, constraints = []) {
     'violating a hard constraint goes in deferred with the reason.\n' +
     `\nOpen goals:\n${goalLines}\n` +
     `\nObserved spots:\n${spotLines}\n` +
+    (ecoSummary ? `\nField conditions (ecology data):\n${ecoSummary}\n` : '') +
     constraintBlock
   );
 }
