@@ -46,6 +46,9 @@ node task-scan-video.mjs <phone-video.mp4 | frames-dir> [--frames 6]
 Video files need `ffmpeg` (`ffprobe` for duration); a directory of frame
 images skips that. Same key handling and env vars as above.
 
+`--meta <video-file>` prints duration, dimensions, fps, and codec without
+spending an API call — useful for sizing `--frames` before a run.
+
 ## Action SRT
 
 Add `--srt` to get timestamped action segments as a subtitle file instead of
@@ -74,6 +77,19 @@ Prompts must be bare noun phrases (`agricultural field`), never instructions
 (`segment the fields`) — the latter returns nothing. Generic concepts merge
 everything into one mask; specific ones separate instances. Needs
 `@meta-sam/parser` (`npm install`). Tests: `node --test sam-segment.test.mjs`.
+
+## Compare mode (two visits, one diff)
+
+`task-compare.mjs` takes two visits to the same spot — videos or frame
+directories — and returns a structured diff: same-location evidence, changed
+vs unchanged, progress delta, new issues, and a suggested state update:
+
+```bash
+node task-compare.mjs <visit-a> <visit-b> [--frames 3] [--goal "established row before the dry spell"]
+```
+
+With `--goal`, every change is mapped to goal movement and risks. This is the
+tracking inflection point: single-visit analysis becomes longitudinal state.
 
 ## Sample
 

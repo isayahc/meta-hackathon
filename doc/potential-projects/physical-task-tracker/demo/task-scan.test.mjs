@@ -131,6 +131,68 @@ describe('buildRequestBody', () => {
       ['u0', 'f1', 'f2']
     );
   });
+
+  it('appends labeled sections after the main images', () => {
+    const b = buildRequestBody({
+      model: 'm',
+      prompt: 'p',
+      imageUrls: ['a1', 'a2'],
+      sections: [{ label: 'VISIT B (later):', imageUrls: ['b1'] }],
+    });
+    const content = b.messages[0].content;
+    assert.deepEqual(
+      content.map((c) => (c.type === 'text' ? `text:${c.text}` : `img:${c.image_url.url}`)),
+      ['text:p', 'img:a1', 'img:a2', 'text:VISIT B (later):', 'img:b1']
+    );
+  });
+
+  it('classifies image files as single-frame visits', async () => {
+    const { classifySource } = await import('./analyze-response.mjs');
+    assert.equal(classifySource(false, '.jpg'), 'image');
+    assert.equal(classifySource(false, '.PNG'), 'image');
+    assert.equal(classifySource(true, '.jpg'), 'frames-dir');
+    assert.equal(classifySource(false, '.mp4'), 'video');
+    assert.equal(classifySource(false, ''), 'video');
+  });
+
+describe('getVideoMeta', () => {
+  const FFPROBE_JSON = JSON.stringify({
+    streams: [{ width: 640, height: 360, avg_frame_rate: '30000/1001', codec_name: 'h264' }],
+    format: { duration: '9.880000' },
+  });
+  const stubOk = (cmd, fargs, cb) => cb(null, FFPROBE_JSON, '');
+
+  it('parses ffprobe JSON into metadata', async () => {
+    const { getVideoMeta } = await import('./analyze-response.mjs');
+    const m = await getVideoMeta('clip.mp4', stubOk);
+    assert.equal(m.duration, 9.88);
+    assert.equal(m.width, 640);
+    assert.equal(m.height, 360);
+    assert.ok(Math.abs(m.fps - 29.97) < 0.01);
+    assert.equal(m.codec, 'h264');
+  });
+
+  it('throws a readable error when ffprobe fails', async () => {
+    const { getVideoMeta } = await import('./analyze-response.mjs');
+    const stubFail = (cmd, fargs, cb) => cb(new Error('enoent'), '', 'ffprobe: not found');
+    await assert.rejects(getVideoMeta('clip.mp4', stubFail), /ffprobe failed: ffprobe: not found/);
+  });
+});
+
+  it('accepts a valid compare diff', () => {
+    const r = extractAnalysis({
+      choices: [
+        {
+          message: {
+            content: '{"same_location":true,"changed":["new growth"],"unchanged":["fence line"],"progress_delta":"advanced","new_issues":[],"suggested_state_update":"Row established.","confidence":"high","unknowns":[]}',
+          },
+          finish_reason: 'stop',
+        },
+      ],
+    });
+    assert.equal(r.ok, true);
+    assert.equal(r.analysis.progress_delta, 'advanced');
+  });
 });
 
 describe('key persistence', () => {
