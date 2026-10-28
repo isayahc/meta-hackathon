@@ -131,6 +131,7 @@ node task-optimize.mjs ./my-farm --offline   # print the prompt, no API call
 
 Text-only call (no images). Works goals-only before any spots exist.
 Tests: `node --test goals.test.mjs`.
+
 ## Live dashboard
 
 `serve-dashboard.mjs` is the run script for the Field Ops dashboard
@@ -144,15 +145,35 @@ every 5s; "Re-run optimizer" shells to `task-optimize.mjs`
 
 ```bash
 node task-optimize.mjs ./my-farm --out ./my-farm/plan.json   # optional, seeds the actions panel
-node serve-dashboard.mjs ./my-farm --port 8123
+node eco.mjs 38.5,-98.0 --out ./my-farm/eco.json   # optional, powers the eco strip
+node serve-dashboard.mjs ./my-farm --port 8123 [--eco 38.5,-98.0]
 # open http://localhost:8123 in a browser
 ```
 
-With the ecology branch (#15): `node eco.mjs 38.5,-98.0 --out
-./my-farm/eco.json` powers the eco strip, and `--eco 38.5,-98.0` passes
-through to optimizer refreshes. Without it, those panels simply stay
-empty. Tests: `node --test dashboard.test.mjs` (HTTP tests skip where
-listen() is blocked and run on host).
+Without `plan.json` / `eco.json`, those panels simply stay empty. Tests:
+`node --test dashboard.test.mjs` (HTTP tests skip where listen() is
+blocked and run on host).
+
+## Ecology fusion
+
+`eco.mjs` pulls open weather + soil data for a site and turns it into
+optimizer input — no API keys needed. Open-Meteo gives current conditions
+plus a 3-day field-work outlook (rain, heat, frost, wind); SoilGrids v2
+gives topsoil texture, organic matter, and pH. Signals become hard
+constraints (rain ≥60% blocks spraying/tillage, wind ≥40 km/h blocks
+spraying, frost/heat reschedule transplant); soil texture/pH add their own
+(work-dry-only clay, short-cycle sandy irrigation, pH lockout checks):
+
+```bash
+node eco.mjs 38.5,-98.0 --out samples/eco-kansas.json
+node task-optimize.mjs ./my-farm --eco 38.5,-98.0 --out plan.json
+node task-optimize.mjs ./my-farm --eco-file samples/eco-kansas.json --offline
+```
+
+`--eco-file` replays a saved capture (same shape as `eco.mjs --out`) for
+offline runs and tests. Samples: `samples/eco-kansas.json` (documented
+shapes, fictional readings — recapture live with the first command).
+Tests: `node --test eco.test.mjs`.
 
 ## Sample
 
