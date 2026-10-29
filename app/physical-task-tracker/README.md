@@ -15,17 +15,21 @@ npm install   # typescript only; zero runtime dependencies
 npm run build # strict tsc + copy dashboard/samples into dist/
 ```
 
-Fastest start — dashboard up in two commands, no API key, no network:
+Fastest start — one command, no API key, no network:
+
+```bash
+npm start
+```
+
+That builds (if needed), starts the server on `./my-farm`, and loads
+http://localhost:8123 in your browser. (First time only: `npm install`.)
+Add your first goal right in the app under Plan, or ahead of time with:
 
 ```bash
 node dist/task-optimize.js ./my-farm --goal "Transplant bed 3 by Friday" --weight 5 --offline
-node dist/serve-dashboard.js ./my-farm --port 8123 --open
 ```
 
-The first command creates `./my-farm/goals.json`; the second serves the
-dashboard and loads http://localhost:8123 in your browser (spots/actions/eco
-panels fill in as you add data below). Stop the server with Ctrl+C.
-`npm test` rebuilds and runs the suite from `dist/`.
+Stop the server with Ctrl+C. `npm test` rebuilds and runs the suite.
 
 ## Run the full loop
 
