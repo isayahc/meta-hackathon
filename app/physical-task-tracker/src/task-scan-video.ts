@@ -201,9 +201,11 @@ const recorded = resolveRecordedAt(
   typeof st.mtimeMs === 'number' ? st.mtimeMs : null
 );
 console.error(
-  recorded.at
-    ? `Recorded ${recorded.at} (from ${recorded.source}; advisory only).`
-    : 'Recording date unknown.'
+  recorded.at && recorded.source === 'container'
+    ? `Recorded ${recorded.at} (from video metadata).`
+    : recorded.at
+      ? `Estimated ${recorded.at} (file date only; treat as an estimate).`
+      : 'Recording date unknown.'
 );
 
 function pickEven(files: string[], n: number): string[] {
@@ -303,6 +305,7 @@ if (SRT_MODE) {
     ...(result.analysis as Record<string, unknown>),
     recorded_at: recorded.at,
     recorded_source: recorded.source,
+    recorded_estimate: recorded.source === 'mtime',
   };
   console.log(JSON.stringify(out, null, 2));
   console.error(`(via frames: ${framePaths.map((p) => basename(p)).join(', ')})`);

@@ -184,6 +184,22 @@ test('scan-video: missing video and bad mime are 400, never shelled', async (t: 
   assert.ok(passThrough.status !== null && [400, 500, 502].includes(passThrough.status));
 });
 
+test('events: empty list carries the spot update, add persists, bad date is 400', async (t: TestContext) => {
+  const root = await scratch(t);
+  const empty = await call(root, 'GET', '/api/events');
+  assert.equal(empty.status, 200);
+  assert.ok(Array.isArray(empty.json.events));
+  assert.ok(empty.json.events.some((e: any) => e.kind === 'spot' && e.date === '2026-10-28'));
+  const created = await call(root, 'POST', '/api/events', { title: 'Spray test', date: '2026-10-26' });
+  assert.equal(created.status, 200);
+  assert.equal(created.json.event.kind, 'note');
+  const again = await call(root, 'GET', '/api/events');
+  assert.ok(again.json.events.some((e: any) => e.title === 'Spray test' && e.date === '2026-10-26'));
+  const bad = await call(root, 'POST', '/api/events', { title: 'Spray test', date: 'tomorrow' });
+  assert.equal(bad.status, 400);
+  assert.match(bad.json.error, /YYYY-MM-DD/);
+});
+
 test('unknown routes 404; non-JSON bodies 400', async (t: TestContext) => {
   const root = await scratch(t);
   assert.equal((await call(root, 'GET', '/api/nope')).status, 404);

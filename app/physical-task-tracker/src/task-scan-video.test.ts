@@ -48,7 +48,8 @@ test('video scan prints pure JSON to stdout, notes to stderr', async (t: TestCon
   assert.deepEqual(parsed.suggested_next_steps, ANALYSIS.suggested_next_steps);
   // Frames dir has no container tag: date falls back to file mtime.
   assert.equal(parsed.recorded_source, 'mtime');
+  assert.equal(parsed.recorded_estimate, true);
   assert.ok(parsed.recorded_at && !Number.isNaN(Date.parse(String(parsed.recorded_at))));
   assert.match(stderr, /\(via frames:/);
-  assert.match(stderr, /Recorded .* \(from mtime; advisory only\)\./);
+  assert.match(stderr, /Estimated .* \(file date only; treat as an estimate\)\./);
 });

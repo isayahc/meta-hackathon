@@ -11,6 +11,7 @@ import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listGoals, setGoalStatus, addGoal } from './lib/goals.js';
+import { listStoredEvents, addEvent, dayOf, isDay, type CalendarEvent } from './lib/events.js';
 import { loadEnvSync } from './lib/env.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -226,10 +227,53 @@ export function createServer(root: string, { eco = null }: { eco?: string | null
           const n = Math.min(12, Math.max(1, Number(frames) || 4));
           const src = await materializeVideo({ videoUrl, videoData }, workdir);
           const analysis = await runScript('task-scan-video.js', [src, '--frames', String(n)]);
+          try {
+            const a = (analysis ?? {}) as { observed_task?: unknown; stage?: unknown; recorded_at?: unknown };
+            if (typeof a.observed_task === 'string' && a.observed_task.trim()) {
+              await addEvent(root, {
+                title: a.observed_task.trim().slice(0, 120),
+                date: dayOf(a.recorded_at) ?? new Date().toISOString().slice(0, 10),
+                kind: 'scan',
+                detail: typeof a.stage === 'string' ? a.stage.slice(0, 120) : null,
+              });
+            }
+          } catch { /* calendar never breaks a scan */ }
           json(200, { ok: true, analysis });
         } finally {
           await rm(workdir, { recursive: true, force: true });
         }
+        return;
+      }
+      if (req.method === 'GET' && url.pathname === '/api/events') {
+        const stored = await listStoredEvents(root);
+        const goals = await listGoals(root);
+        const spots = await loadSpots(root);
+        const derived: CalendarEvent[] = [];
+        for (const g of goals) {
+          if (g.status !== 'done' && g.deadline && isDay(g.deadline)) {
+            derived.push({
+              id: `goal-${g.id}`, title: g.text, date: g.deadline, time: null,
+              kind: 'goal', detail: `due (weight ${g.weight}/5)`, created_at: g.created ?? '',
+            });
+          }
+        }
+        for (const s of spots) {
+          const day = dayOf(s.updated_at);
+          if (day) {
+            derived.push({
+              id: `spot-${s.id}`, title: `${s.name} updated`, date: day, time: null,
+              kind: 'spot', detail: s.summary?.slice(0, 120) ?? null, created_at: s.updated_at ?? '',
+            });
+          }
+        }
+        const events = [...stored, ...derived].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+        json(200, { events });
+        return;
+      }
+      if (req.method === 'POST' && url.pathname === '/api/events') {
+        const { title, date, time = null } = await readBody(req);
+        const event = await addEvent(root, { title, date, time, kind: 'note' });
+        json(200, { ok: true, event });
         return;
       }
       if (req.method === 'POST' && url.pathname === '/api/compares') {
@@ -263,7 +307,7 @@ export function createServer(root: string, { eco = null }: { eco?: string | null
       json(404, { ok: false, error: 'not found' });
     } catch (err) {
       const msg = (err as Error).message;
-      const code = /No goal|Bad status|Bad spot|Provide \{|not JSON|over \d+|Bad --eco|Bad location|No spots|Nothing to optimize|Set META_API_KEY|Empty key|required/i.test(msg)
+      const code = /No goal|Event title|Bad event|Bad status|Bad spot|Provide \{|not JSON|over \d+|Bad --eco|Bad location|No spots|Nothing to optimize|Set META_API_KEY|Empty key|required/i.test(msg)
         ? 400
         : /task-\w+\.m?js:|timed out/i.test(msg)
           ? 502
