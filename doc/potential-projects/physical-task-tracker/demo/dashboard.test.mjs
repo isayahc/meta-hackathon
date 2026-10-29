@@ -7,7 +7,7 @@ import { mkdtemp, mkdir, rm, writeFile, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createServer, loadSpots, buildFeed } from './serve-dashboard.mjs';
-import { addGoal, listGoals } from './goals.mjs';
+import { addGoal, listGoals } from './lib/goals.mjs';
 
 async function scratch(t) {
   const root = await mkdtemp(join(tmpdir(), 'dash-test-'));

@@ -9,7 +9,7 @@ import {
   readState,
   listSessions,
   appendSession,
-} from './spot-state.mjs';
+} from './lib/spot-state.mjs';
 
 async function freshRoot(t) {
   const dir = await mkdtemp(join(tmpdir(), 'spot-test-'));

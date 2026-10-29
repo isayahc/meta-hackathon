@@ -21,7 +21,7 @@ import {
   getVideoMeta,
   loadSavedKey,
   saveKey,
-} from './analyze-response.mjs';
+} from './lib/analyze-response.mjs';
 
 // Inspect a clip without spending an API call:
 //   node task-scan-video.mjs --meta <video-file>

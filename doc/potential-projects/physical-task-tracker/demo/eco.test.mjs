@@ -12,8 +12,8 @@ import {
   HEAT_C,
   FROST_C,
   WIND_KMH,
-} from './eco.mjs';
-import { buildOptimizerPrompt } from './analyze-response.mjs';
+} from './lib/eco.mjs';
+import { buildOptimizerPrompt } from './lib/analyze-response.mjs';
 
 async function kansas(t = null) {
   const raw = await readFile(new URL('./samples/eco-kansas.json', import.meta.url), 'utf8');

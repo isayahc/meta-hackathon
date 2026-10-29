@@ -59,6 +59,10 @@ once and it's remembered in `%APPDATA%\meta-hackathon\demo-key.json`
 (placeholders only). Run `node --test <name>.test.mjs` per script, or pass
 all test files in one `node --test` for the suite.
 
+Layout: `lib/` holds the shared modules (request/prompt builders,
+goals model, ecology, spot state); `task-*.mjs` are thin CLI wrappers;
+`serve-dashboard.mjs` + `dashboard/` is the web app (mobile-friendly).
+
 ## Run
 
 ```bash

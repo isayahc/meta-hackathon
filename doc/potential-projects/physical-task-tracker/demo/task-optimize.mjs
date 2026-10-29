@@ -16,9 +16,9 @@ import {
   extractAnalysis,
   DEFAULT_MAX_TOKENS,
   resolveApiKey,
-} from './analyze-response.mjs';
-import { addGoal, listGoals, setGoalStatus } from './goals.mjs';
-import { fetchEco, normalizeSoil, ecoConstraints, summarizeEco } from './eco.mjs';
+} from './lib/analyze-response.mjs';
+import { addGoal, listGoals, setGoalStatus } from './lib/goals.mjs';
+import { fetchEco, normalizeSoil, ecoConstraints, summarizeEco } from './lib/eco.mjs';
 
 const API_BASE = process.env.META_API_BASE ?? 'https://api.meta.ai/v1';
 const MODEL = process.env.MUSE_MODEL ?? 'muse-spark-1.1';

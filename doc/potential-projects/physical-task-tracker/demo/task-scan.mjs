@@ -33,7 +33,7 @@ import {
   configPath,
   loadSavedKey,
   saveKey,
-} from './analyze-response.mjs';
+} from './lib/analyze-response.mjs';
 
 const API_BASE = process.env.META_API_BASE ?? 'https://api.meta.ai/v1';
 const MODEL = process.env.MUSE_MODEL ?? 'muse-spark-1.1';

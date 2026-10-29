@@ -12,7 +12,7 @@ import {
   normalizeSegments,
   loadSavedKey,
   saveKey,
-} from './analyze-response.mjs';
+} from './lib/analyze-response.mjs';
 
 // Captured live failure: auth OK, but the model burned 798/800 tokens on
 // reasoning and returned finish_reason='length' with null content.
@@ -147,7 +147,7 @@ describe('buildRequestBody', () => {
   });
 
   it('classifies image files as single-frame visits', async () => {
-    const { classifySource } = await import('./analyze-response.mjs');
+    const { classifySource } = await import('./lib/analyze-response.mjs');
     assert.equal(classifySource(false, '.jpg'), 'image');
     assert.equal(classifySource(false, '.PNG'), 'image');
     assert.equal(classifySource(true, '.jpg'), 'frames-dir');
@@ -163,7 +163,7 @@ describe('getVideoMeta', () => {
   const stubOk = (cmd, fargs, cb) => cb(null, FFPROBE_JSON, '');
 
   it('parses ffprobe JSON into metadata', async () => {
-    const { getVideoMeta } = await import('./analyze-response.mjs');
+    const { getVideoMeta } = await import('./lib/analyze-response.mjs');
     const m = await getVideoMeta('clip.mp4', stubOk);
     assert.equal(m.duration, 9.88);
     assert.equal(m.width, 640);
@@ -173,7 +173,7 @@ describe('getVideoMeta', () => {
   });
 
   it('throws a readable error when ffprobe fails', async () => {
-    const { getVideoMeta } = await import('./analyze-response.mjs');
+    const { getVideoMeta } = await import('./lib/analyze-response.mjs');
     const stubFail = (cmd, fargs, cb) => cb(new Error('enoent'), '', 'ffprobe: not found');
     await assert.rejects(getVideoMeta('clip.mp4', stubFail), /ffprobe failed: ffprobe: not found/);
   });
@@ -228,7 +228,7 @@ describe('key persistence', () => {
       else process.env.APPDATA = savedAppData;
     });
     await saveKey('placeholder');
-    const { configPath } = await import('./analyze-response.mjs');
+    const { configPath } = await import('./lib/analyze-response.mjs');
     await writeFile(configPath(), 'not-json{{{');
     assert.equal(await loadSavedKey(), null);
   });

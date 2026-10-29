@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildBriefingPrompt } from './analyze-response.mjs';
+import { buildBriefingPrompt } from './lib/analyze-response.mjs';
 
 const SPOTS = [
   {
