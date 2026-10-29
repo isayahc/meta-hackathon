@@ -1,8 +1,8 @@
 // serve-dashboard.mjs — run script for the Field Ops dashboard.
 // Serves dashboard/index.html plus a small JSON API over a project dir:
 // spots + sessions, goals.json, cached plan.json, cached eco.json.
-//   node serve-dashboard.mjs <projectDir> [--port 8123] [--eco <lat,lon>]
-// Then open http://localhost:8123 in a browser.
+//   node serve-dashboard.mjs <projectDir> [--port 8123] [--eco <lat,lon>] [--open]
+// Then open http://localhost:8123 in a browser (--open loads it for you).
 //
 // Pages poll /api/overview every 5s. "Re-run optimizer" shells out to
 // task-optimize.mjs (needs the Meta key; failures surface in the UI).
@@ -125,6 +125,29 @@ export function createServer(root, { eco = null } = {}) {
   return server;
 }
 
+export async function waitForOk(url, tries = 50, delayMs = 100) {
+  for (let i = 0; i < tries; i++) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) return true;
+    } catch { /* not up yet */ }
+    await new Promise((r) => setTimeout(r, delayMs));
+  }
+  return false;
+}
+
+export function openUrl(url) {
+  const parts =
+    process.platform === 'win32'
+      ? ['cmd', '/c', 'start', '""', url]
+      : process.platform === 'darwin'
+        ? ['open', url]
+        : ['xdg-open', url];
+  return new Promise((resolve) => {
+    execFile(parts[0], parts.slice(1), { stdio: 'ignore' }, (err) => resolve(!err));
+  });
+}
+
 if (import.meta.url === `file:///${process.argv[1].replace(/\\/g, '/')}`) {
   const args = process.argv.slice(2);
   const root = args.find((a) => !a.startsWith('--')) ?? null;
@@ -133,14 +156,27 @@ if (import.meta.url === `file:///${process.argv[1].replace(/\\/g, '/')}`) {
     return i >= 0 && args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : def;
   };
   if (!root) {
-    console.error('Usage: node serve-dashboard.mjs <projectDir> [--port 8123] [--eco <lat,lon>]');
+    console.error(
+      'Usage: node serve-dashboard.mjs <projectDir> [--port 8123] [--eco <lat,lon>] [--open]'
+    );
     process.exit(2);
   }
   const port = Number(flagValue('--port', '8123'));
   const eco = flagValue('--eco', null);
+  const open = args.includes('--open');
   const server = createServer(root, { eco });
-  server.listen(port, '127.0.0.1', () => {
-    console.log(`Field Ops dashboard: http://localhost:${port}  (project: ${root})`);
-    console.log('Open that URL in a browser. Ctrl+C to stop.');
+  const url = `http://localhost:${port}`;
+  server.listen(port, '127.0.0.1', async () => {
+    console.log(`Field Ops dashboard: ${url}  (project: ${root})`);
+    if (open) {
+      if (await waitForOk(`${url}/api/overview`)) {
+        if (await openUrl(url)) console.log('Opened in your browser.');
+        else console.log(`Could not open a browser automatically — open ${url} yourself.`);
+      } else {
+        console.log(`Server is up but unreachable at ${url} — open it yourself.`);
+      }
+    } else {
+      console.log('Open that URL in a browser (or re-run with --open). Ctrl+C to stop.');
+    }
   });
 }

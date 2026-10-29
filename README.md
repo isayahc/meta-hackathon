@@ -11,11 +11,11 @@ dependencies. The working build is the farm-operations task tracker:
 ```bash
 cd C:\Users\isaya\meta-hackathon\doc\potential-projects\physical-task-tracker\demo
 node task-optimize.mjs ./my-farm --goal "Transplant bed 3 by Friday" --weight 5 --offline
-node serve-dashboard.mjs ./my-farm --port 8123
-# open http://localhost:8123 in a browser
+node serve-dashboard.mjs ./my-farm --port 8123 --open
 ```
 
-Two commands, no API key, no network — dashboard up with a starter goal.
+Two commands, no API key, no network — `--open` loads
+http://localhost:8123 in your browser with a starter goal.
 Full loop (scan → compare → briefing → optimizer → ecology → dashboard)
 with per-step commands: [demo README](doc/potential-projects/physical-task-tracker/demo/README.md).
 
