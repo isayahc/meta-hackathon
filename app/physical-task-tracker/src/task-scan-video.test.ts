@@ -81,3 +81,26 @@ test('video file slices one gif per frame interval, stdout stays JSON', { skip: 
   assert.match(stderr, /Sliced 2 gifs/);
   assert.equal((JSON.parse(stdout) as Record<string, unknown>).observed_task, ANALYSIS.observed_task);
 });
+
+const FAIL_STUB = `globalThis.fetch = async () => { throw new TypeError('fetch failed'); };`;
+
+test('unreachable API exits 1 with one clean stderr line, empty stdout', async (t: TestContext) => {
+  const dir = await mkdtemp(join(tmpdir(), 'scan-video-offline-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await writeFile(join(dir, 'frame-a.jpg'), Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
+  const stub = join(dir, 'stub-fetch.mjs');
+  await writeFile(stub, FAIL_STUB);
+  const err = await execFileAsync(
+    process.execPath,
+    ['--import', pathToFileURL(stub).href, SCRIPT, dir, '--frames', '1'],
+    { cwd: dir, env: { ...process.env, META_API_KEY: 'test-key-for-offline' } }
+  ).then(
+    () => null,
+    (e) => e as { code: unknown; stdout: string; stderr: string }
+  );
+  assert.ok(err, 'expected the CLI to exit non-zero');
+  assert.equal(err.code, 1);
+  assert.equal(err.stdout, '');
+  assert.match(err.stderr, /API unreachable: fetch failed/);
+  assert.doesNotMatch(err.stderr, /at node:|undici|AggregateError/);
+});
