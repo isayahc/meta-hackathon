@@ -1,8 +1,10 @@
-// Dashboard tests: pure loader tests always run; HTTP tests run when the
-// sandbox allows listen() and skip otherwise (EACCES). No network, no API
-// key (refresh is not exercised — it shells to the live API).
+// Dashboard + app server tests. Drive the real request handler with mock
+// req/res objects — no listen(), so they run in the sandbox and on host.
+// Exec-backed jobs (scans/compares/briefing/refresh) are covered on their
+// validation paths; live model runs need a key and stay manual.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
 import { mkdtemp, mkdir, rm, writeFile, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -29,26 +31,33 @@ async function scratch(t) {
   return root;
 }
 
-async function tryListen(t, root) {
-  const server = createServer(root);
-  try {
-    await new Promise((resolve, reject) => {
-      server.on('error', reject);
-      server.listen(0, '127.0.0.1', resolve);
-    });
-  } catch (err) {
-    if (err?.code === 'EACCES') {
-      t.skip('sandbox blocks listen(); run on host for HTTP coverage');
-      return null;
-    }
-    throw err;
-  }
-  t.after(() => server.close());
-  const port = server.address().port;
-  return async (path, opts) => {
-    const r = await fetch(`http://127.0.0.1:${port}${path}`, opts);
-    return { status: r.status, body: await r.text() };
+function mockReq(method, url, body = null) {
+  const req = new EventEmitter();
+  req.method = method;
+  req.url = url;
+  req[Symbol.asyncIterator] = async function* () {
+    if (body !== null) yield Buffer.from(typeof body === 'string' ? body : JSON.stringify(body));
   };
+  return req;
+}
+
+function mockRes() {
+  return {
+    status: null, body: '',
+    writeHead(s) { this.status = s; },
+    end(b) { this.body += b ?? ''; },
+  };
+}
+
+async function call(root, method, url, body = null, opts = {}) {
+  const server = createServer(root, opts);
+  const res = mockRes();
+  await server.listeners('request')[0](mockReq(method, url, body), res);
+  let parsed = null;
+  try {
+    parsed = JSON.parse(res.body);
+  } catch { /* HTML page */ }
+  return { status: res.status, body: res.body, json: parsed };
 }
 
 test('loadSpots reads spot meta + state + sessions', async (t) => {
@@ -87,12 +96,13 @@ test('dashboard page contains the app shell', async () => {
   assert.match(html, /Field Ops/);
   assert.match(html, /\/api\/overview/);
   assert.match(html, /prefers-reduced-motion/);
+  assert.match(html, /id="scanform"/);
+  assert.match(html, /id="compareform"/);
+  assert.match(html, /id="goalform"/);
 });
 
 test('serves the dashboard page', async (t) => {
-  const get = await tryListen(t, await scratch(t));
-  if (!get) return;
-  const r = await get('/');
+  const r = await call(await scratch(t), 'GET', '/');
   assert.equal(r.status, 200);
   assert.match(r.body, /Field Ops/);
 });
@@ -101,41 +111,59 @@ test('overview exposes spots, goals, plan, eco, feed', async (t) => {
   const root = await scratch(t);
   await writeFile(join(root, 'plan.json'), JSON.stringify({ plan: { ranked_actions: [] } }));
   await writeFile(join(root, 'eco.json'), JSON.stringify({ summary: 'Site (38.5, -98). Now: test.' }));
-  const get = await tryListen(t, root);
-  if (!get) return;
-  const r = await get('/api/overview');
+  const r = await call(root, 'GET', '/api/overview');
   assert.equal(r.status, 200);
-  const ov = JSON.parse(r.body);
-  assert.equal(ov.spots.length, 1);
-  assert.equal(ov.goals.length, 1);
-  assert.ok(ov.plan);
-  assert.match(ov.eco, /38\.5/);
-  assert.ok(ov.feed.length >= 2);
+  assert.equal(r.json.spots.length, 1);
+  assert.equal(r.json.goals.length, 1);
+  assert.ok(r.json.plan);
+  assert.match(r.json.eco, /38\.5/);
+  assert.ok(r.json.feed.length >= 2);
 });
 
-test('goal done button writes back to goals.json', async (t) => {
+test('goals: create, done-writeback, bad id and status are 400', async (t) => {
   const root = await scratch(t);
-  const get = await tryListen(t, root);
-  if (!get) return;
-  const before = JSON.parse((await get('/api/overview')).body);
-  const r = await get(`/api/goals/${before.goals[0].id}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status: 'done' }),
-  });
-  assert.equal(r.status, 200);
-  assert.equal(JSON.parse(r.body).goal.status, 'done');
-  assert.equal((await listGoals(root))[0].status, 'done');
+  const created = await call(root, 'POST', '/api/goals', { text: 'Water bed 3', weight: 2 });
+  assert.equal(created.status, 200);
+  assert.match(created.json.goal.id, /^water-bed-3-/);
+  assert.equal((await listGoals(root)).length, 2);
+  const empty = await call(root, 'POST', '/api/goals', { text: '  ' });
+  assert.equal(empty.status, 400);
+  const done = await call(root, 'POST', `/api/goals/${created.json.goal.id}`, { status: 'done' });
+  assert.equal(done.status, 200);
+  assert.equal(done.json.goal.status, 'done');
+  const bad = await call(root, 'POST', '/api/goals/nope-1', { status: 'done' });
+  assert.equal(bad.status, 400);
 });
 
-test('bad goal id is a 400, unknown routes 404', async (t) => {
-  const get = await tryListen(t, await scratch(t));
-  if (!get) return;
-  const bad = await get('/api/goals/nope-1', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status: 'done' }),
-  });
-  assert.equal(bad.status, 400);
-  assert.equal((await get('/api/nope')).status, 404);
+test('compares: bad spot id and missing images are 400, never shelled', async (t) => {
+  const root = await scratch(t);
+  const pic = { imageUrl: 'https://example.com/a.jpg' };
+  const badSpot = await call(root, 'POST', '/api/compares', { spot: '../evil', before: pic, after: pic });
+  assert.equal(badSpot.status, 400);
+  assert.match(badSpot.json.error, /Bad spot/);
+  const noImages = await call(root, 'POST', '/api/compares', { spot: 'bed-3', before: {}, after: pic });
+  assert.equal(noImages.status, 400);
+  assert.match(noImages.json.error, /data URL/);
+  const noScanImage = await call(root, 'POST', '/api/scans', {});
+  assert.equal(noScanImage.status, 400);
+});
+
+test('unknown routes 404; non-JSON bodies 400', async (t) => {
+  const root = await scratch(t);
+  assert.equal((await call(root, 'GET', '/api/nope')).status, 404);
+  const server = createServer(root);
+  const res = mockRes();
+  const req = mockReq('POST', '/api/goals', '{not json');
+  await server.listeners('request')[0](req, res);
+  assert.equal(res.status, 400);
+});
+
+test('overview degrades on an empty project dir', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'dash-empty-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const ov = (await call(root, 'GET', '/api/overview')).json;
+  assert.deepEqual(ov.spots, []);
+  assert.deepEqual(ov.goals, []);
+  assert.equal(ov.plan, null);
+  assert.equal(ov.eco, null);
 });
