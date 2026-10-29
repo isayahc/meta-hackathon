@@ -1,16 +1,20 @@
 // Field Ops app server: serves dashboard/index.html plus a JSON API that
 // runs the sibling CLIs as jobs (scan, compare, briefing, optimizer) and
-// manages goals.json. Keyless model jobs fail fast with the reason.
+// manages goals. Project state lives in <projectDir>/fieldops.db.
+// Keyless model jobs fail fast with the reason.
 //   node dist/serve-dashboard.js <projectDir> [--port 8123] [--eco <lat,lon>] [--open]
-// Node 18+, no runtime dependencies.
+// Node 18+, no runtime dependencies beyond built-in node:sqlite.
 
 import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { execFile } from 'node:child_process';
-import { readdir, readFile, writeFile, rm, mkdtemp } from 'node:fs/promises';
+import { readFile, writeFile, readdir, rm, mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listGoals, setGoalStatus, addGoal } from './lib/goals.js';
+import { listStoredEvents, addEvent, dayOf, isDay, type CalendarEvent } from './lib/events.js';
+import { listSpotBriefs, recentSessions } from './lib/spot-state.js';
+import { getDoc } from './lib/db.js';
 import { loadEnvSync } from './lib/env.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -81,7 +85,8 @@ const VIDEO_MIMES = ['video/mp4', 'video/webm', 'video/quicktime'] as const;
 
 export async function materializeVideo(
   input: { videoUrl?: unknown; videoData?: unknown },
-  dir: string
+  dir: string,
+  base = 'clip'
 ): Promise<string> {
   if (typeof input?.videoUrl === 'string' && input.videoUrl) return input.videoUrl;
   const m = /^data:(video\/(mp4|webm|quicktime));base64,([A-Za-z0-9+/=]+)$/.exec(
@@ -91,7 +96,8 @@ export async function materializeVideo(
     throw new Error('Provide {videoUrl} or {videoData} as an mp4/webm/mov data URL.');
   }
   const ext = m[2] === 'quicktime' ? 'mov' : (m[2] as string);
-  const path = join(dir, `clip.${ext}`);
+  const safe = base.replace(/[^A-Za-z0-9_-]/g, '') || 'clip';
+  const path = join(dir, `${safe}.${ext}`);
   await writeFile(path, Buffer.from(m[3] as string, 'base64'));
   return path;
 }
@@ -101,14 +107,6 @@ export function cleanSpotId(id: unknown): string {
     throw new Error(`Bad spot id "${String(id)}": letters, numbers, - and _ only.`);
   }
   return id;
-}
-
-async function readJson(path: string, fallback: any): Promise<any> {
-  try {
-    return JSON.parse(await readFile(path, 'utf8'));
-  } catch {
-    return fallback;
-  }
 }
 
 export interface OverviewSpot {
@@ -123,31 +121,17 @@ export interface OverviewSpot {
 }
 
 export async function loadSpots(root: string): Promise<OverviewSpot[]> {
-  let ids: string[] = [];
-  try {
-    ids = (await readdir(join(root, 'spots'))).sort();
-  } catch {
-    return [];
-  }
   const spots: OverviewSpot[] = [];
-  for (const id of ids) {
-    const dir = join(root, 'spots', id);
-    const meta = ((await readJson(join(dir, 'spot.json'), {})) ?? {}) as { name?: string };
-    const state = await readJson(join(dir, 'state.json'), null);
-    if (!state) continue;
-    let sessions: string[] = [];
-    try {
-      sessions = (await readdir(join(dir, 'sessions'))).sort().reverse();
-    } catch { /* no sessions yet */ }
+  for (const b of await listSpotBriefs(root)) {
     spots.push({
-      id,
-      name: meta.name ?? id,
-      stage: state.stage ?? null,
-      summary: state.summary ?? null,
-      open_issues: state.open_issues ?? [],
-      session_count: state.session_ids?.length ?? sessions.length,
-      recent_sessions: sessions.slice(0, 5),
-      updated_at: state.updated_at ?? null,
+      id: b.id,
+      name: b.name ?? b.id,
+      stage: b.stage ?? null,
+      summary: b.summary ?? null,
+      open_issues: b.open_issues ?? [],
+      session_count: b.session_count ?? 0,
+      recent_sessions: await recentSessions(root, b.id),
+      updated_at: b.updated_at ?? null,
     });
   }
   return spots;
@@ -172,7 +156,10 @@ export function buildFeed(spots: OverviewSpot[]): FeedEvent[] {
   return events.sort((a, b) => (b.sort > a.sort ? 1 : -1)).slice(0, 15);
 }
 
-export function createServer(root: string, { eco = null }: { eco?: string | null } = {}) {
+export function createServer(rootArg: string, { eco = null }: { eco?: string | null } = {}) {
+  // Absolute from the start: CLI children run from dist/, so stored paths
+  // (media clips, the db) must resolve identically in every process.
+  const root = resolve(rootArg);
   const server = createHttpServer(async (req: IncomingMessage, res: ServerResponse) => {
     const url = new URL(req.url ?? '/', 'http://localhost');
     const json = (code: number, obj: unknown) => {
@@ -189,8 +176,8 @@ export function createServer(root: string, { eco = null }: { eco?: string | null
       if (req.method === 'GET' && url.pathname === '/api/overview') {
         const spots = await loadSpots(root);
         const goals = await listGoals(root);
-        const plan = await readJson(join(root, 'plan.json'), null);
-        const ecoDoc = await readJson(join(root, 'eco.json'), null);
+        const plan = await getDoc(root, 'plan');
+        const ecoDoc = (await getDoc(root, 'eco')) as { summary?: string } | null;
         json(200, { spots, goals, plan, eco: ecoDoc?.summary ?? null, feed: buildFeed(spots) });
         return;
       }
@@ -220,16 +207,102 @@ export function createServer(root: string, { eco = null }: { eco?: string | null
         return;
       }
       if (req.method === 'POST' && url.pathname === '/api/scan-video') {
-        const workdir = await mkdtemp(join(tmpdir(), 'fieldops-video-'));
-        try {
-          const { videoUrl, videoData, frames = 4 } = await readBody(req, 200 * 1024 * 1024);
-          const n = Math.min(12, Math.max(1, Number(frames) || 4));
-          const src = await materializeVideo({ videoUrl, videoData }, workdir);
-          const analysis = await runScript('task-scan-video.js', [src, '--frames', String(n)]);
-          json(200, { ok: true, analysis });
-        } finally {
-          await rm(workdir, { recursive: true, force: true });
+        // Uploads persist under <project>/media so calendar entries can play
+        // the referenced clip later. URL inputs reference nothing local.
+        const { videoUrl, videoData, frames = 4 } = await readBody(req, 200 * 1024 * 1024);
+        const n = Math.min(12, Math.max(1, Number(frames) || 4));
+        let src: string;
+        let media: string | null = null;
+        let gifPrefix: string | null = null;
+        let mediaDir = '';
+        if (typeof videoUrl === 'string' && videoUrl) {
+          src = videoUrl;
+        } else {
+          mediaDir = join(root, 'media');
+          await mkdir(mediaDir, { recursive: true });
+          const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+          gifPrefix = `clip-${stamp}`;
+          src = await materializeVideo({ videoUrl, videoData }, mediaDir, gifPrefix);
+          media = src.split(/[\\/]/).pop() ?? null;
         }
+        const scanArgs = [src, '--frames', String(n)];
+        if (gifPrefix) scanArgs.push('--gifs', mediaDir, '--gif-prefix', gifPrefix);
+        const analysis = await runScript('task-scan-video.js', scanArgs);
+        try {
+          const a = (analysis ?? {}) as { observed_task?: unknown; stage?: unknown; recorded_at?: unknown; gifs?: unknown };
+          if (gifPrefix) {
+            try {
+              a.gifs = (await readdir(mediaDir))
+                .filter((f) => f.startsWith(`${gifPrefix}-`) && f.endsWith('.gif'))
+                .sort();
+            } catch { a.gifs = []; }
+          }
+          if (typeof a.observed_task === 'string' && a.observed_task.trim()) {
+            await addEvent(root, {
+              title: a.observed_task.trim().slice(0, 120),
+              date: dayOf(a.recorded_at) ?? new Date().toISOString().slice(0, 10),
+              kind: 'scan',
+              detail: typeof a.stage === 'string' ? a.stage.slice(0, 120) : null,
+              payload: analysis,
+              media,
+            });
+          }
+        } catch (e) { console.error(`calendar record failed: ${(e as Error).message}`); }
+        json(200, { ok: true, analysis });
+        return;
+      }
+      if (req.method === 'GET' && url.pathname.startsWith('/media/')) {
+        const name = decodeURIComponent(url.pathname.slice('/media/'.length));
+        if (!name || name.includes('/') || name.includes('\\') || !/\.(mp4|webm|mov|gif)$/i.test(name)) {
+          json(404, { ok: false, error: 'not found' });
+          return;
+        }
+        try {
+          const data = await readFile(join(root, 'media', name));
+          const type = /\.webm$/i.test(name)
+            ? 'video/webm'
+            : /\.mov$/i.test(name)
+              ? 'video/quicktime'
+              : /\.gif$/i.test(name)
+                ? 'image/gif'
+                : 'video/mp4';
+          res.writeHead(200, { 'Content-Type': type });
+          res.end(data);
+        } catch {
+          json(404, { ok: false, error: 'not found' });
+        }
+        return;
+      }
+      if (req.method === 'GET' && url.pathname === '/api/events') {
+        const stored = await listStoredEvents(root);
+        const goals = await listGoals(root);
+        const spots = await loadSpots(root);
+        const derived: CalendarEvent[] = [];
+        for (const g of goals) {
+          if (g.status !== 'done' && g.deadline && isDay(g.deadline)) {
+            derived.push({
+              id: `goal-${g.id}`, title: g.text, date: g.deadline, time: null,
+              kind: 'goal', detail: `due (weight ${g.weight}/5)`, payload: null, media: null, created_at: g.created ?? '',
+            });
+          }
+        }
+        for (const s of spots) {
+          const day = dayOf(s.updated_at);
+          if (day) {
+            derived.push({
+              id: `spot-${s.id}`, title: `${s.name} updated`, date: day, time: null,
+              kind: 'spot', detail: s.summary?.slice(0, 120) ?? null, payload: null, media: null, created_at: s.updated_at ?? '',
+            });
+          }
+        }
+        const events = [...stored, ...derived].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+        json(200, { events });
+        return;
+      }
+      if (req.method === 'POST' && url.pathname === '/api/events') {
+        const { title, date, time = null } = await readBody(req);
+        const event = await addEvent(root, { title, date, time, kind: 'note' });
+        json(200, { ok: true, event });
         return;
       }
       if (req.method === 'POST' && url.pathname === '/api/compares') {
@@ -239,7 +312,7 @@ export function createServer(root: string, { eco = null }: { eco?: string | null
           const id = cleanSpotId(spot);
           const a = await materializeImage(before, workdir, 'before');
           const b = await materializeImage(after, workdir, 'after');
-          const args = [a, b, '--spot', join(root, 'spots', id)];
+          const args = [a, b, '--spot', id, '--root', root];
           if (goal) args.push('--goal', goal);
           const analysis = await runScript('task-compare.js', args);
           json(200, { ok: true, spot: id, analysis });
@@ -254,7 +327,7 @@ export function createServer(root: string, { eco = null }: { eco?: string | null
         return;
       }
       if (req.method === 'POST' && url.pathname === '/api/refresh') {
-        const jobArgs = [root, '--out', join(root, 'plan.json')];
+        const jobArgs = [root];
         if (eco) jobArgs.push('--eco', eco);
         await runScript('task-optimize.js', jobArgs);
         json(200, { ok: true });
@@ -263,7 +336,7 @@ export function createServer(root: string, { eco = null }: { eco?: string | null
       json(404, { ok: false, error: 'not found' });
     } catch (err) {
       const msg = (err as Error).message;
-      const code = /No goal|Bad status|Bad spot|Provide \{|not JSON|over \d+|Bad --eco|Bad location|No spots|Nothing to optimize|Set META_API_KEY|Empty key|required/i.test(msg)
+      const code = /No goal|Event title|Bad event|Bad status|Bad spot|Provide \{|not JSON|over \d+|Bad --eco|Bad location|No spots|Nothing to optimize|Set META_API_KEY|Empty key|required/i.test(msg)
         ? 400
         : /task-\w+\.m?js:|timed out/i.test(msg)
           ? 502
@@ -307,13 +380,16 @@ if (invokedAsMain) {
   // .env (cwd, then app root) fills gaps; children inherit it. Real env wins.
   loadEnvSync();
   const args = process.argv.slice(2);
-  const root = args.find((a) => !a.startsWith('--')) ?? null;
-  if (!root) {
+  const rootArg = args.find((a) => !a.startsWith('--')) ?? null;
+  if (!rootArg) {
     console.error(
       'Usage: node dist/serve-dashboard.js <projectDir> [--port 8123] [--eco <lat,lon>] [--open]'
     );
     process.exit(2);
   }
+  // Absolute: CLI children run from dist/, so every stored path must
+  // resolve identically no matter the child's working directory.
+  const root = resolve(rootArg);
   const port = Number(flagValue(args, '--port', '8123'));
   const eco = flagValue(args, '--eco', null);
   const open = args.includes('--open');

@@ -168,8 +168,13 @@ console.log(JSON.stringify(result.analysis, null, 2));
 const spotFlag = flagValue(args, '--spot', null);
 if (spotFlag) {
   const { appendSession } = await import('./lib/spot-state.js');
-  const id = basename(spotFlag);
-  const root = dirname(dirname(spotFlag));
+  const rootFlag = flagValue(args, '--root', null);
+  const id = rootFlag ? spotFlag : basename(spotFlag);
+  if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,60}$/.test(id)) {
+    console.error(`Bad spot id "${id}": letters, numbers, - and _ only.`);
+    process.exit(1);
+  }
+  const root = rootFlag ?? dirname(dirname(spotFlag));
   const { sessionId } = await appendSession(root, id, result.analysis as VisitAnalysis);
   console.error(`Saved session ${sessionId} to ${spotFlag}.`);
 }

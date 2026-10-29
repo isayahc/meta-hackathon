@@ -1,13 +1,10 @@
-// Spot state: folders + JSON giving each tracked spot a memory.
-// Layout under a project root:
-//   spots/<spot-id>/spot.json                  { id, name, created }
-//   spots/<spot-id>/sessions/<timestamp>/analysis.json
-//   spots/<spot-id>/state.json                 { stage, summary, open_issues,
-//                                                session_ids, updated_at }
-// No dependencies. Node 18+.
-
-import { mkdir, writeFile, readFile, readdir } from 'node:fs/promises';
-import { join } from 'node:path';
+// Spot state: each tracked spot keeps a standing memory in fieldops.db.
+//   spots      one row per spot: name, stage, summary, open_issues,
+//              session_ids, updated_at
+//   sessions   one row per visit: spot_id, analysis JSON
+// No dependencies beyond node:sqlite (via lib/db).
+import { withDb } from './db.js';
+import type { SpotBrief } from './analyze-response.js';
 
 export interface SpotMeta {
   id: string;
@@ -32,72 +29,162 @@ export interface VisitAnalysis {
   [key: string]: unknown;
 }
 
-export function spotDir(root: string, id: string): string {
-  return join(root, 'spots', id);
+interface SpotRow {
+  id: string;
+  name: string;
+  stage: string;
+  summary: string;
+  open_issues: string;
+  session_ids: string;
+  updated_at: string;
+  created: string;
+}
+
+function parseList(raw: string): string[] {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((s): s is string => typeof s === 'string') : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function initSpot(
   root: string,
   id: string,
   name: string | null = null
-): Promise<{ dir: string; meta: SpotMeta; state: SpotState }> {
-  const dir = spotDir(root, id);
-  await mkdir(join(dir, 'sessions'), { recursive: true });
-  const meta: SpotMeta = {
-    id,
-    name: name ?? id,
-    created: new Date().toISOString(),
-  };
-  await writeFile(join(dir, 'spot.json'), JSON.stringify(meta, null, 2));
-  const state: SpotState = {
-    stage: 'unobserved',
-    summary: '',
-    open_issues: [],
-    session_ids: [],
-    updated_at: meta.created,
-  };
-  await writeFile(join(dir, 'state.json'), JSON.stringify(state, null, 2));
-  return { dir, meta, state };
+): Promise<{ meta: SpotMeta; state: SpotState }> {
+  return withDb(root, (db) => {
+    const now = new Date().toISOString();
+    db.prepare(
+      'INSERT INTO spots(id, name, stage, summary, open_issues, session_ids, updated_at, created) VALUES(?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING'
+    ).run(id, name ?? id, 'unobserved', '', '[]', '[]', now, now);
+    const row = db.prepare('SELECT id, name, stage, summary, open_issues, session_ids, updated_at, created FROM spots WHERE id = ?').get(id) as unknown as SpotRow;
+    return {
+      meta: { id: row.id, name: row.name, created: row.created },
+      state: {
+        stage: row.stage,
+        summary: row.summary,
+        open_issues: parseList(row.open_issues),
+        session_ids: parseList(row.session_ids),
+        updated_at: row.updated_at,
+      },
+    };
+  });
 }
 
 export async function readState(root: string, id: string): Promise<SpotState> {
-  const raw = await readFile(join(spotDir(root, id), 'state.json'), 'utf8');
-  return JSON.parse(raw) as SpotState;
+  return withDb(root, (db) => {
+    const row = db.prepare('SELECT stage, summary, open_issues, session_ids, updated_at FROM spots WHERE id = ?').get(id) as
+      | Omit<SpotRow, 'id' | 'name' | 'created'>
+      | undefined;
+    if (!row) throw new Error(`No spot "${id}".`);
+    return {
+      stage: row.stage,
+      summary: row.summary,
+      open_issues: parseList(row.open_issues),
+      session_ids: parseList(row.session_ids),
+      updated_at: row.updated_at,
+    };
+  });
 }
 
 export async function listSessions(root: string, id: string): Promise<string[]> {
-  const dir = join(spotDir(root, id), 'sessions');
-  return (await readdir(dir)).sort();
+  return withDb(root, (db) =>
+    (
+      db.prepare('SELECT sid FROM sessions WHERE spot_id = ? ORDER BY created, sid').all(id) as unknown as Array<{ sid: string }>
+    ).map((r) => r.sid)
+  );
 }
 
-// Append a model analysis as a new session and fold it into state.json.
+export async function readSession(root: string, id: string, sessionId: string): Promise<VisitAnalysis> {
+  return withDb(root, (db) => {
+    const row = db.prepare('SELECT analysis FROM sessions WHERE sid = ? AND spot_id = ?').get(sessionId, id) as unknown as
+      | { analysis: string }
+      | undefined;
+    if (!row) throw new Error(`No session "${sessionId}" for spot "${id}".`);
+    return JSON.parse(row.analysis) as VisitAnalysis;
+  });
+}
+
+// Append a model analysis as a new session and fold it into spot state.
 export async function appendSession(
   root: string,
   id: string,
   analysis: VisitAnalysis,
   sessionId: string | null = null
 ): Promise<{ sessionId: string; state: SpotState }> {
-  const dir = spotDir(root, id);
-  const sid = sessionId ?? new Date().toISOString().replace(/[:.]/g, '-');
-  const sessionDir = join(dir, 'sessions', sid);
-  await mkdir(sessionDir, { recursive: true });
-  await writeFile(join(sessionDir, 'analysis.json'), JSON.stringify(analysis, null, 2));
-  let state: SpotState;
-  try {
-    state = await readState(root, id);
-  } catch {
-    await initSpot(root, id);
-    state = await readState(root, id);
-  }
-  const next: SpotState = {
-    stage: (analysis.stage ?? analysis.progress_delta ?? state.stage) as string,
-    summary: (analysis.suggested_state_update ?? state.summary) as string,
-    open_issues: Array.isArray(analysis.new_issues)
-      ? (analysis.new_issues as string[])
-      : state.open_issues,
-    session_ids: [...new Set([...(state.session_ids ?? []), sid])],
-    updated_at: new Date().toISOString(),
-  };
-  await writeFile(join(dir, 'state.json'), JSON.stringify(next, null, 2));
-  return { sessionId: sid, state: next };
+  return withDb(root, (db) => {
+    const sid = sessionId ?? new Date().toISOString().replace(/[:.]/g, '-');
+    let row = db.prepare('SELECT stage, summary, open_issues, session_ids, updated_at FROM spots WHERE id = ?').get(id) as
+      | Omit<SpotRow, 'id' | 'name' | 'created'>
+      | undefined;
+    if (!row) {
+      const now = new Date().toISOString();
+      db.prepare(
+        'INSERT INTO spots(id, name, stage, summary, open_issues, session_ids, updated_at, created) VALUES(?, ?, ?, ?, ?, ?, ?, ?)'
+      ).run(id, id, 'unobserved', '', '[]', '[]', now, now);
+      row = { stage: 'unobserved', summary: '', open_issues: '[]', session_ids: '[]', updated_at: now };
+    }
+    const state: SpotState = {
+      stage: row.stage,
+      summary: row.summary,
+      open_issues: parseList(row.open_issues),
+      session_ids: parseList(row.session_ids),
+      updated_at: row.updated_at,
+    };
+    db.prepare('INSERT OR IGNORE INTO sessions(sid, spot_id, analysis, created) VALUES(?, ?, ?, ?)').run(
+      sid,
+      id,
+      JSON.stringify(analysis),
+      new Date().toISOString()
+    );
+    const next: SpotState = {
+      stage: (analysis.stage ?? analysis.progress_delta ?? state.stage) as string,
+      summary: (analysis.suggested_state_update ?? state.summary) as string,
+      open_issues: Array.isArray(analysis.new_issues)
+        ? (analysis.new_issues as string[])
+        : state.open_issues,
+      session_ids: [...new Set([...(state.session_ids ?? []), sid])],
+      updated_at: new Date().toISOString(),
+    };
+    db.prepare('UPDATE spots SET stage = ?, summary = ?, open_issues = ?, session_ids = ?, updated_at = ? WHERE id = ?').run(
+      next.stage,
+      next.summary,
+      JSON.stringify(next.open_issues),
+      JSON.stringify(next.session_ids),
+      next.updated_at,
+      id
+    );
+    return { sessionId: sid, state: next };
+  });
+}
+
+// Every spot with standing state, for briefings, the optimizer, and the
+// dashboard overview. Replaces the three copies of spots-dir walking.
+export async function listSpotBriefs(root: string): Promise<SpotBrief[]> {
+  return withDb(root, (db) => {
+    const rows = db.prepare('SELECT id, name, stage, summary, open_issues, session_ids, updated_at FROM spots ORDER BY id').all() as Array<
+      Omit<SpotRow, 'created'>
+    >;
+    const counts = new Map<string, number>();
+    for (const r of db.prepare('SELECT spot_id, COUNT(*) AS n FROM sessions GROUP BY spot_id').all() as Array<{ spot_id: string; n: number }>) {
+      counts.set(r.spot_id, r.n);
+    }
+    return rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      stage: r.stage,
+      summary: r.summary,
+      open_issues: parseList(r.open_issues),
+      session_count: counts.get(r.id) ?? parseList(r.session_ids).length,
+      updated_at: r.updated_at,
+    }));
+  });
+}
+
+// Recent session ids per spot, newest first — for the overview feed.
+export async function recentSessions(root: string, id: string, limit = 5): Promise<string[]> {
+  const all = await listSessions(root, id);
+  return all.slice(-limit).reverse();
 }

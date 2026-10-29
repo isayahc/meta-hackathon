@@ -79,6 +79,37 @@
   }
   form.run input[type="file"] { font: inherit; font-size: 13px; }
   .hint { font-weight: 400; color: var(--muted); font-size: 12px; }
+  .calbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .seg button { font: inherit; font-size: 13px; padding: 6px 12px; border: 0; background: #fff; color: var(--muted); cursor: pointer; }
+  .seg button.sel { background: var(--soil); color: #fff; }
+  .calnav { display: flex; gap: 6px; align-items: center; }
+  .calnav button { font: inherit; font-size: 13px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 4px; background: #fff; cursor: pointer; }
+  #caltitle { font-weight: 650; }
+  .calgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .calgrid.head { font-size: 11px; color: var(--muted); text-transform: uppercase; margin-bottom: 2px; }
+  .cell { min-height: 64px; border: 1px solid var(--line); border-radius: 4px; padding: 2px 4px; font-size: 12px; background: #fff; overflow: hidden; }
+  .cell.clickable { cursor: pointer; }
+  .cell.dim { opacity: 0.45; }
+  .cell .d { font-weight: 650; }
+  .cell.today { outline: 2px solid var(--green); outline-offset: -2px; }
+  .ev { margin-top: 2px; padding: 0 4px; border-radius: 3px; background: #e4e1d3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ev.scan { background: #cfe3d0; }
+  .ev.goal { background: #f3d9a7; }
+  .ev.clickable { cursor: pointer; outline: 1px solid var(--soil); outline-offset: -1px; }
+  #caldetail video { width: 100%; max-height: 340px; border-radius: 4px; background: #000; margin-top: 8px; }
+  ol.actions img { width: 100%; max-width: 420px; border-radius: 4px; margin-top: 4px; }
+  .car { margin-top: 4px; }
+  .carview { overflow: hidden; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+  .cartrack { display: flex; transition: transform 0.2s ease; }
+  .carslide { min-width: 100%; box-sizing: border-box; padding: 6px 8px; }
+  .carslide img { width: 100%; max-width: 420px; border-radius: 4px; display: block; }
+  .carslide p { margin: 6px 0 2px; font-size: 14px; }
+  .carnav { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 6px; }
+  .carnav button { font: inherit; font-size: 15px; padding: 2px 12px; border: 1px solid var(--line); border-radius: 4px; background: #fff; cursor: pointer; }
+  .ev .t { font-weight: 650; }
+  .daylist { display: grid; gap: 6px; }
+  .daylist .ev { white-space: normal; padding: 6px 8px; font-size: 13px; }
   #status { font-size: 13px; color: var(--muted); padding: 0 16px 8px; min-height: 1.4em; display: block; }
   #status.err { color: var(--red); }
   pre.result {
@@ -126,6 +157,7 @@
     <button role="tab" data-view="run" aria-selected="false">Run</button>
     <button role="tab" data-view="plan" aria-selected="false">Plan</button>
     <button role="tab" data-view="activity" aria-selected="false">Activity</button>
+    <button role="tab" data-view="cal" aria-selected="false">Calendar</button>
   </nav>
 </header>
 <span id="status" role="status"></span>
@@ -208,6 +240,33 @@
       <h2>Next actions</h2>
       <div style="margin-bottom:8px"><button class="btn" id="refresh" type="button">Re-run optimizer</button></div>
       <div id="actions"><p>No plan yet — run the optimizer.</p></div>
+    </section>
+  </div>
+  <div class="view" id="view-cal">
+    <section aria-label="Calendar">
+      <h2>Calendar</h2>
+      <div class="calbar">
+        <div class="seg" aria-label="Range">
+          <button type="button" data-cal="day">Day</button><button type="button" data-cal="week" class="sel">Week</button><button type="button" data-cal="month">Month</button>
+        </div>
+        <div class="calnav">
+          <button type="button" id="calprev" aria-label="Previous">‹</button><button type="button" id="caltoday">Today</button><button type="button" id="calnext" aria-label="Next">›</button>
+          <span id="caltitle"></span>
+        </div>
+      </div>
+      <div id="cal"><p class="hint">Loading…</p></div>
+    </section>
+    <section aria-label="Entry detail" id="caldetailwrap" hidden>
+      <h2>Entry</h2>
+      <div id="caldetail"></div>
+    </section>
+    <section aria-label="Add event">
+      <h2>Add event</h2>
+      <form class="addrow" id="eventform">
+        <input type="text" name="title" required placeholder="Event title…" aria-label="Event title">
+        <input type="date" name="date" required aria-label="Event date">
+        <button class="btn" type="submit">Add</button>
+      </form>
     </section>
   </div>
   <div class="view" id="view-activity">
@@ -407,8 +466,44 @@ function linearizeSequence(a) {
   return [];
 }
 
+let carouselN = 0;
+
+function seqCarousel(seq, gifs) {
+  const id = `car${++carouselN}`;
+  const slides = seq.map((s, i) => {
+    const g = Array.isArray(gifs) ? gifs[i] : null;
+    const img = typeof g === 'string' && g
+      ? `<img loading="lazy" src="/media/${encodeURIComponent(g)}" alt="clip slice">`
+      : '';
+    return `<div class="carslide">${img}<p>${esc(s)}</p></div>`;
+  }).join('');
+  return `<div class="car" id="${id}" data-i="0" data-n="${seq.length}">` +
+    `<div class="carview"><div class="cartrack">${slides}</div></div>` +
+    (seq.length > 1
+      ? `<div class="carnav"><button type="button" data-car="${id}" data-dir="-1" aria-label="Previous step">‹</button>` +
+        `<span id="${id}-n">1 / ${seq.length}</span>` +
+        `<button type="button" data-car="${id}" data-dir="1" aria-label="Next step">›</button></div>`
+      : '') +
+    '</div>';
+}
+
+document.addEventListener('click', (e) => {
+  const btn = e.target && e.target.closest ? e.target.closest('[data-car]') : null;
+  if (!btn) return;
+  const box = document.getElementById(btn.dataset.car);
+  if (!box) return;
+  const n = Number(box.dataset.n) || 1;
+  const i = (((Number(box.dataset.i) || 0) + Number(btn.dataset.dir)) % n + n) % n;
+  box.dataset.i = String(i);
+  const track = box.querySelector('.cartrack');
+  if (track) track.style.transform = `translateX(${-i * 100}%)`;
+  const counter = document.getElementById(`${btn.dataset.car}-n`);
+  if (counter) counter.textContent = `${i + 1} / ${n}`;
+});
+
 function renderTaskList(el, tasksEl, a) {
   const seq = linearizeSequence(a);
+  const seqGifs = Array.isArray(a.gifs) ? a.gifs : [];
   const steps = Array.isArray(a.suggested_next_steps) ? a.suggested_next_steps : [];
   const unknowns = Array.isArray(a.unknowns) && a.unknowns.length
     ? `<details class="deferred"><summary>unknowns (${a.unknowns.length})</summary><ul>` +
@@ -417,7 +512,10 @@ function renderTaskList(el, tasksEl, a) {
   el.innerHTML =
     `<h3 style="margin:.4em 0">${esc(a.observed_task ?? 'Task analysis')} ` +
     (a.stage ? `<span class="chip">${esc(a.stage)}</span>` : '') + '</h3>' +
-    (seq.length ? `<div style="margin-top:8px;font-weight:650">Sequence</div><ol class="actions">` + seq.map((s) => `<li>${esc(s)}</li>`).join('') + '</ol>' : '');
+    (a.recorded_at ? (a.recorded_estimate
+      ? `<p class="hint">estimated: ${esc(a.recorded_at)} (file date only — treat as an estimate)</p>`
+      : `<p class="hint">recorded: ${esc(a.recorded_at)}</p>`) : '') +
+    (seq.length ? `<div style="margin-top:8px;font-weight:650">Sequence</div>` + seqCarousel(seq, seqGifs) : '');
   tasksEl.innerHTML =
     (steps.length
       ? '<ul class="tasks">' + steps.map((s) => `<li><label><input type="checkbox"> ${esc(s)}</label></li>`).join('') + '</ul>'
@@ -440,6 +538,150 @@ $('videoform').addEventListener('submit', (e) => {
     renderTaskList($('videoresult'), $('videotasks'), analysis);
     return analysis;
   }, 'video analyzed — task list below');
+});
+
+let calMode = 'week';
+let calCursor = new Date();
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+function isoDay(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function parseDay(s) {
+  const [y, m, d] = String(s).split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function evChip(e, clickable = false) {
+  // Every video entry opens its detail panel; entries recorded before
+  // payloads existed simply show less inside it.
+  const click = clickable && e.kind === 'scan';
+  return `<div class="ev ${esc(e.kind)}${click ? ' clickable' : ''}" title="${esc(e.detail ?? e.kind)}"` +
+    (click ? ` data-eid="${esc(e.id)}"` : '') + '>' +
+    (e.time ? `<span class="t">${esc(e.time)}</span> ` : '') + `${esc(e.title)}</div>`;
+}
+
+function renderCalDetail(box, e) {
+  let a = null;
+  try {
+    a = typeof e.payload === 'string' ? JSON.parse(e.payload) : e.payload;
+  } catch { a = null; }
+  if (!a || typeof a !== 'object') a = null;
+  const seq = a ? linearizeSequence(a) : [];
+  const seqGifs = a && Array.isArray(a.gifs) ? a.gifs : [];
+  const steps = a && Array.isArray(a.suggested_next_steps) ? a.suggested_next_steps : [];
+  box.innerHTML =
+    `<h3 style="margin:.4em 0">${esc(e.title)}</h3>` +
+    `<p class="hint">${esc(e.date)}${e.detail ? ` — ${esc(e.detail)}` : ''}</p>` +
+    (seq.length ? `<div style="margin-top:8px;font-weight:650">Sequence</div>` + seqCarousel(seq, seqGifs) : '') +
+    (steps.length ? '<ul class="tasks">' +
+      steps.map((s) => `<li><label><input type="checkbox"> ${esc(s)}</label></li>`).join('') + '</ul>' : '') +
+    (!seq.length && !steps.length && !e.media ? '<p class="hint">No stored analysis or clip on this entry — re-analyze the video to fill it in.</p>' : '') +
+    (e.media ? `<video controls preload="metadata" src="/media/${encodeURIComponent(e.media)}"></video>` : '');
+}
+
+function calCell(date, events, opts = {}) {
+  const key = isoDay(date);
+  const list = (events[key] ?? []).slice(0, 3);
+  const more = (events[key] ?? []).length - list.length;
+  const today = isoDay(new Date()) === key ? ' today' : '';
+  return `<div class="cell${opts.dim ? ' dim' : ''}${today}${opts.click ? ' clickable' : ''}"` +
+    (opts.click ? ` data-day="${key}"` : '') + `><div class="d">${date.getDate()}</div>` +
+    list.map((x) => evChip(x, true)).join('') + (more > 0 ? `<div class="ev">+${more} more</div>` : '') + '</div>';
+}
+
+function renderCal(box, events) {
+  const byDay = {};
+  for (const e of events ?? []) (byDay[e.date] = byDay[e.date] || []).push(e);
+  for (const k of Object.keys(byDay)) byDay[k].sort((a, b) => (String(a.time ?? '') < String(b.time ?? '') ? -1 : 1));
+  const cur = new Date(calCursor);
+  if (calMode === 'day') {
+    const key = isoDay(cur);
+    $('caltitle').textContent = cur.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+    const list = byDay[key] ?? [];
+    box.innerHTML = list.length
+      ? '<div class="daylist">' + list.map((x) => evChip(x, true)).join('') + '</div>'
+      : '<p class="hint">Nothing on this day.</p>';
+    return;
+  }
+  if (calMode === 'week') {
+    const start = new Date(cur);
+    start.setDate(start.getDate() - start.getDay());
+    const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(start); d.setDate(d.getDate() + i); return d; });
+    $('caltitle').textContent = `${days[0].toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} – ${days[6].toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+    box.innerHTML = '<div class="calgrid head">' + DAY_NAMES.map((n) => `<div>${n}</div>`).join('') + '</div>' +
+      '<div class="calgrid">' + days.map((d) => calCell(d, byDay)).join('') + '</div>';
+    return;
+  }
+  const first = new Date(cur.getFullYear(), cur.getMonth(), 1);
+  $('caltitle').textContent = `${MONTH_NAMES[cur.getMonth()]} ${cur.getFullYear()}`;
+  const cells = [];
+  for (let i = 0; i < first.getDay(); i++) cells.push('<div class="cell dim"></div>');
+  const dim = new Date(first);
+  while (dim.getMonth() === first.getMonth()) {
+    cells.push(calCell(new Date(dim), byDay, { click: true }));
+    dim.setDate(dim.getDate() + 1);
+  }
+  box.innerHTML = '<div class="calgrid head">' + DAY_NAMES.map((n) => `<div>${n}</div>`).join('') + '</div>' +
+    '<div class="calgrid">' + cells.join('') + '</div>';
+  box.querySelectorAll('[data-day]').forEach((c) =>
+    c.addEventListener('click', () => { calCursor = parseDay(c.dataset.day); calMode = 'day'; syncSeg(); loadCal(); }));
+}
+
+let lastCalEvents = [];
+
+function showCalEntry(id) {
+  const e = lastCalEvents.find((x) => x.id === id);
+  if (!e) return;
+  const wrap = $('caldetailwrap');
+  wrap.hidden = false;
+  renderCalDetail($('caldetail'), e);
+  wrap.scrollIntoView({ block: 'nearest' });
+}
+
+async function loadCal() {
+  const box = $('cal');
+  try {
+    const { events } = await api('/api/events');
+    lastCalEvents = events ?? [];
+    renderCal(box, lastCalEvents);
+    box.querySelectorAll('[data-eid]').forEach((c) =>
+      c.addEventListener('click', (ev) => { ev.stopPropagation(); showCalEntry(c.dataset.eid); }));
+  } catch (e) { box.innerHTML = `<p>calendar failed: ${esc(e.message)}</p>`; }
+}
+
+function syncSeg() {
+  document.querySelectorAll('[data-cal]').forEach((b) => b.classList.toggle('sel', b.dataset.cal === calMode));
+}
+
+function shiftCal(dir) {
+  const d = new Date(calCursor);
+  if (calMode === 'month') d.setMonth(d.getMonth() + dir);
+  else d.setDate(d.getDate() + dir * (calMode === 'week' ? 7 : 1));
+  calCursor = d;
+  loadCal();
+}
+
+document.querySelectorAll('[data-cal]').forEach((b) =>
+  b.addEventListener('click', () => { calMode = b.dataset.cal; syncSeg(); loadCal(); }));
+$('calprev').addEventListener('click', () => shiftCal(-1));
+$('calnext').addEventListener('click', () => shiftCal(1));
+$('caltoday').addEventListener('click', () => { calCursor = new Date(); loadCal(); });
+document.querySelector('nav.tabs button[data-view="cal"]').addEventListener('click', loadCal);
+
+$('eventform').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const f = e.target;
+  busy(f.querySelector('button'), async () => {
+    await api('/api/events', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: f.title.value.trim(), date: f.date.value }),
+    });
+    f.reset();
+    loadCal();
+  }, 'event added');
 });
 
 $('compareform').addEventListener('submit', (e) => {

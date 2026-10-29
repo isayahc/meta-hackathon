@@ -184,7 +184,7 @@ const isMain = import.meta.url === `file:///${process.argv[1]?.replace(/\\/g, '/
 if (isMain) {
   const [ll, outFlag, outPath] = process.argv.slice(2);
   if (!ll?.includes(',')) {
-    console.error('Usage: node dist/lib/eco.js <lat,lon> [--out samples/eco-x.json]');
+    console.error('Usage: node dist/lib/eco.js <lat,lon> [--out samples/eco-x.json] [--root <projectDir>]');
     process.exit(2);
   }
   try {
@@ -197,6 +197,14 @@ if (isMain) {
       await mkdir(dirname(outPath), { recursive: true });
       await writeFile(outPath, text + '\n');
       console.error(`wrote ${outPath} (${eco.constraints.length} constraints)`);
+    }
+    const rootFlag = process.argv.includes('--root')
+      ? (process.argv[process.argv.indexOf('--root') + 1] ?? null)
+      : null;
+    if (rootFlag && !rootFlag.startsWith('--')) {
+      const { setDoc } = await import('./db.js');
+      setDoc(rootFlag, 'eco', { summary: eco.summary, location: eco.location, fetched_at: eco.fetched_at });
+      console.error(`stored eco doc in ${rootFlag}`);
     }
     console.log(text);
   } catch (err) {

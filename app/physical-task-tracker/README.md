@@ -41,15 +41,15 @@ see below); steps 4 and 6 need none.
 node dist/task-scan.js https://upload.wikimedia.org/wikipedia/commons/0/0a/Harvesting_carrots.jpg
 
 # 2. Compare two visits into a tracked spot (saves state + session)
-node dist/task-compare.js <visit-a> <visit-b> --spot ./my-farm/spots/north-fence
+node dist/task-compare.js <visit-a> <visit-b> --spot north-fence --root ./my-farm
 
 # 3. Brief + set goals + optimize into a plan
 node dist/task-briefing.js ./my-farm --out briefing.json
-node dist/task-optimize.js ./my-farm --goal "Transplant bed 3 by Friday" --weight 5 --out ./my-farm/plan.json
+node dist/task-optimize.js ./my-farm --goal "Transplant bed 3 by Friday" --weight 5
 
 # 4. (Optional, no key) Fuse weather + soil into the plan
-node dist/lib/eco.js 38.5,-98.0 --out ./my-farm/eco.json
-node dist/task-optimize.js ./my-farm --eco 38.5,-98.0 --out ./my-farm/plan.json
+node dist/lib/eco.js 38.5,-98.0 --root ./my-farm
+node dist/task-optimize.js ./my-farm --eco 38.5,-98.0
 
 # 5. (Optional) Segment a field feature with SAM 3.1
 node dist/sam-segment.js <image> "<noun>" --out segment.svg
@@ -155,16 +155,30 @@ node dist/task-compare.js <visit-a> <visit-b> [--frames 3] [--goal "established 
 With `--goal`, every change is mapped to goal movement and risks. This is the
 tracking inflection point: single-visit analysis becomes longitudinal state.
 
-## Spots + state files
+## Storage (SQLite)
 
-A spot is a fixed viewpoint with a memory: `spots/<id>/spot.json`,
-`sessions/<timestamp>/analysis.json`, and a rolling `state.json` (stage,
-summary, open issues). `src/lib/spot-state.ts` implements init/read/append;
-`src/task-compare.ts --spot <project>/spots/<id>` saves each run as a session
-and folds it into state (auto-creating the spot on first use):
+Project state lives in `<project>/fieldops.db` (built-in `node:sqlite`, no
+new dependencies): `goals`, `spots` + `sessions`, `events`, and `docs`
+(latest plan, latest eco fusion). First open migrates any legacy JSON files
+(`goals.json`, `spots/`, `events.json`, `plan.json`, `eco.json`) once and
+leaves them in place, unread afterwards. Only the API key stays out of the
+db (`%APPDATA%\meta-hackathon\demo-key.json`, never committed).
+Uploaded clips persist under `<project>/media/` (served back at
+`/media/<file>`) so calendar entries keep their referenced video. Each
+scan also slices one small GIF per observed step (`--gifs`), shown under
+each sequence item as a cheap stand-in for the full clip.
+
+## Spots + state
+
+A spot is a fixed viewpoint with a memory: one `spots` row (stage,
+summary, open issues) plus a `sessions` row per visit holding its analysis.
+`src/lib/spot-state.ts` implements init/read/append over those tables.
+`src/task-compare.ts --spot <id> --root <project>` saves each run as a
+session and folds it into state (auto-creating the spot on first use;
+a bare `--spot <project>/spots/<id>` path still works):
 
 ```bash
-node dist/task-compare.js visit-a visit-b --spot ./my-farm/spots/north-fence
+node dist/task-compare.js visit-a visit-b --spot north-fence --root ./my-farm
 ```
 
 Tests: `node --test dist/spot-state.test.js`.
@@ -177,18 +191,18 @@ overall standing, per-spot status, blockers, next actions, and goal status:
 node dist/task-briefing.js ./my-farm [--goal "clean September harvest"] [--out briefing.json]
 ```
 
-Text-only call (no images). Reads `spots/<id>/{spot.json,state.json}` as
+Text-only call (no images). Reads spot state from the db as
 produced by the spots layer. Tests: `node --test dist/briefing.test.js`.
 ## Goals + optimizer
 
-Goals are first-class objects in `<project>/goals.json` — `{ id, text,
+Goals are first-class rows in the `goals` table — `{ id, text,
 deadline, weight 1-5, status }`, status moving `open -> at-risk -> done`.
 `src/task-optimize.ts` ranks next actions from open goals, every spot's state,
 and hard constraints (never violated; conflicting work is deferred with a
 reason). Optimizer v1 is structured Muse reasoning, not a solver matrix:
 
 ```bash
-node dist/task-optimize.js ./my-farm --goal "Transplant bed 3 by Friday" --deadline 2026-10-31 --weight 5 --constraint "No watering after 10am heat" --out plan.json
+node dist/task-optimize.js ./my-farm --goal "Transplant bed 3 by Friday" --deadline 2026-10-31 --weight 5 --constraint "No watering after 10am heat"
 node dist/task-optimize.js ./my-farm --set-status transplant-bed-3-by-friday-1=done
 node dist/task-optimize.js ./my-farm --offline   # print the prompt, no API call
 ```
@@ -210,12 +224,12 @@ data URLs, are materialized to temp files, and cleaned up. Polls
 is text-first (no photo slider yet):
 
 ```bash
-node dist/task-optimize.js ./my-farm --out ./my-farm/plan.json   # optional, seeds the actions panel
-node dist/lib/eco.js 38.5,-98.0 --out ./my-farm/eco.json   # optional, powers the eco strip
+node dist/task-optimize.js ./my-farm --out plan.json   # optional file export; the db holds the live plan
+node dist/lib/eco.js 38.5,-98.0 --root ./my-farm   # optional, powers the eco strip
 node dist/serve-dashboard.js ./my-farm --port 8123 [--eco 38.5,-98.0] --open
 ```
 
-Without `plan.json` / `eco.json`, those panels simply stay empty. Tests:
+Without a stored plan / eco doc, those panels simply stay empty. Tests:
 `node --test dist/dashboard.test.js` (HTTP tests skip where listen() is
 blocked and run on host).
 
@@ -231,7 +245,7 @@ spraying, frost/heat reschedule transplant); soil texture/pH add their own
 
 ```bash
 node dist/lib/eco.js 38.5,-98.0 --out src/samples/eco-kansas.json
-node dist/task-optimize.js ./my-farm --eco 38.5,-98.0 --out plan.json
+node dist/task-optimize.js ./my-farm --eco 38.5,-98.0
 node dist/task-optimize.js ./my-farm --eco-file src/samples/eco-kansas.json --offline
 ```
 
