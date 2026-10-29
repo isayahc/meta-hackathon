@@ -15,7 +15,7 @@ import { execFile } from 'node:child_process';
 import { readdir, readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { listGoals, setGoalStatus } from './goals.mjs';
+import { listGoals, setGoalStatus } from './lib/goals.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 

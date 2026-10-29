@@ -19,7 +19,7 @@ import {
 import {
   resolveApiKey,
   buildOverlaySvg,
-} from './analyze-response.mjs';
+} from './lib/analyze-response.mjs';
 
 const API_BASE = process.env.META_API_BASE ?? 'https://api.meta.ai/v1';
 const MODEL = process.env.MUSE_MODEL ?? 'sam-3.1';

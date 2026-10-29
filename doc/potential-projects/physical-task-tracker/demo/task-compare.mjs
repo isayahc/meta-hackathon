@@ -17,7 +17,7 @@ import {
   DEFAULT_MAX_TOKENS,
   classifySource,
   resolveApiKey,
-} from './analyze-response.mjs';
+} from './lib/analyze-response.mjs';
 
 const execFileAsync = promisify(execFile);
 
@@ -167,7 +167,7 @@ console.log(JSON.stringify(result.analysis, null, 2));
 
 const spotFlag = flagValue('--spot', null);
 if (spotFlag) {
-  const { appendSession } = await import('./spot-state.mjs');
+  const { appendSession } = await import('./lib/spot-state.mjs');
   const id = basename(spotFlag);
   const root = dirname(dirname(spotFlag));
   const { sessionId } = await appendSession(root, id, result.analysis);

@@ -4,8 +4,8 @@ import assert from 'node:assert/strict';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { addGoal, listGoals, setGoalStatus } from './goals.mjs';
-import { buildOptimizerPrompt } from './analyze-response.mjs';
+import { addGoal, listGoals, setGoalStatus } from './lib/goals.mjs';
+import { buildOptimizerPrompt } from './lib/analyze-response.mjs';
 
 async function freshRoot(t) {
   const dir = await mkdtemp(join(tmpdir(), 'goals-test-'));
