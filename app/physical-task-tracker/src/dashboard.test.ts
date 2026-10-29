@@ -226,6 +226,29 @@ test('media: serves stored clips, blocks traversal and odd extensions', async (t
   assert.equal((await call(root, 'GET', '/media/x.txt')).status, 404);
 });
 
+test('event detail backfills actions from payload; toggles persist', async (t: TestContext) => {
+  const root = await scratch(t);
+  const { addEvent } = await import('./lib/events.js');
+  const event = await addEvent(root, {
+    title: 'Clip', date: '2026-10-29', kind: 'scan',
+    payload: { suggested_next_steps: ['Wipe it', 'Tighten nozzle'] },
+  });
+  const id = event.id;
+  // Actions backfill lazily from the payload on first detail read.
+  const detail = await call(root, 'GET', `/api/events/${id}`);
+  assert.equal(detail.status, 200);
+  assert.equal(detail.json.actions.length, 2);
+  assert.equal(detail.json.actions[0].status, 'open');
+  const toggle = await call(root, 'POST', `/api/actions/${id}-a0`, { status: 'done' });
+  assert.equal(toggle.status, 200);
+  assert.equal(toggle.json.action.status, 'done');
+  const again = await call(root, 'GET', `/api/events/${id}`);
+  assert.equal(again.json.actions[0].status, 'done');
+  assert.equal((await call(root, 'GET', '/api/events/nope')).status, 404);
+  assert.equal((await call(root, 'POST', '/api/actions/nope-a0', { status: 'done' })).status, 400);
+  assert.equal((await call(root, 'POST', `/api/actions/${id}-a0`, { status: 'finished' })).status, 400);
+});
+
 test('unknown routes 404; non-JSON bodies 400', async (t: TestContext) => {
   const root = await scratch(t);
   assert.equal((await call(root, 'GET', '/api/nope')).status, 404);

@@ -63,6 +63,11 @@ export async function listStoredEvents(root: string): Promise<CalendarEvent[]> {
   );
 }
 
+export async function getStoredEvent(root: string, id: string): Promise<CalendarEvent | null> {
+  const all = await listStoredEvents(root);
+  return all.find((e) => e.id === id) ?? null;
+}
+
 export function isDay(value: unknown): value is string {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value));
 }

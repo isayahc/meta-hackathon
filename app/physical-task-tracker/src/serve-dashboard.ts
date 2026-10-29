@@ -12,7 +12,8 @@ import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listGoals, setGoalStatus, addGoal } from './lib/goals.js';
-import { listStoredEvents, addEvent, dayOf, isDay, type CalendarEvent } from './lib/events.js';
+import { listStoredEvents, getStoredEvent, addEvent, dayOf, isDay, type CalendarEvent } from './lib/events.js';
+import { listActions, syncActions, setActionStatus } from './lib/actions.js';
 import { listSpotBriefs, recentSessions } from './lib/spot-state.js';
 import { getDoc } from './lib/db.js';
 import { loadEnvSync } from './lib/env.js';
@@ -228,6 +229,7 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
         const scanArgs = [src, '--frames', String(n)];
         if (gifPrefix) scanArgs.push('--gifs', mediaDir, '--gif-prefix', gifPrefix);
         const analysis = await runScript('task-scan-video.js', scanArgs);
+        let eventId: string | null = null;
         try {
           const a = (analysis ?? {}) as { observed_task?: unknown; stage?: unknown; recorded_at?: unknown; gifs?: unknown };
           if (gifPrefix) {
@@ -237,8 +239,9 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
                 .sort();
             } catch { a.gifs = []; }
           }
+          let savedEvent: { id: string } | null = null;
           if (typeof a.observed_task === 'string' && a.observed_task.trim()) {
-            await addEvent(root, {
+            savedEvent = await addEvent(root, {
               title: a.observed_task.trim().slice(0, 120),
               date: dayOf(a.recorded_at) ?? new Date().toISOString().slice(0, 10),
               kind: 'scan',
@@ -246,6 +249,13 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
               payload: analysis,
               media,
             });
+          }
+          if (savedEvent) {
+            eventId = savedEvent.id;
+            (a as { event?: unknown }).event = eventId;
+            const rawSteps = ((analysis ?? {}) as { suggested_next_steps?: unknown }).suggested_next_steps;
+            const steps = Array.isArray(rawSteps) ? rawSteps.filter((s): s is string => typeof s === 'string') : [];
+            await syncActions(root, eventId, steps);
           }
         } catch (e) { console.error(`calendar record failed: ${(e as Error).message}`); }
         json(200, { ok: true, analysis });
@@ -305,6 +315,36 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
         json(200, { ok: true, event });
         return;
       }
+      const eventMatch = req.method === 'GET' && /^\/api\/events\/([^/]+)$/.exec(url.pathname);
+      if (eventMatch) {
+        const event = await getStoredEvent(root, decodeURIComponent(eventMatch[1] as string));
+        if (!event) {
+          json(404, { ok: false, error: 'not found' });
+          return;
+        }
+        let actions = await listActions(root, event.id);
+        if (!actions.length && event.payload) {
+          try {
+            const steps = (JSON.parse(event.payload) as { suggested_next_steps?: unknown }).suggested_next_steps;
+            if (Array.isArray(steps)) {
+              actions = await syncActions(
+                root,
+                event.id,
+                steps.filter((s): s is string => typeof s === 'string')
+              );
+            }
+          } catch { /* leave empty */ }
+        }
+        json(200, { event, actions });
+        return;
+      }
+      const actionMatch = req.method === 'POST' && /^\/api\/actions\/([^/]+)$/.exec(url.pathname);
+      if (actionMatch) {
+        const { status } = await readBody(req);
+        const action = await setActionStatus(root, decodeURIComponent(actionMatch[1] as string), status);
+        json(200, { ok: true, action });
+        return;
+      }
       if (req.method === 'POST' && url.pathname === '/api/compares') {
         const workdir = await mkdtemp(join(tmpdir(), 'fieldops-compare-'));
         try {
@@ -336,7 +376,7 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
       json(404, { ok: false, error: 'not found' });
     } catch (err) {
       const msg = (err as Error).message;
-      const code = /No goal|Event title|Bad event|Bad status|Bad spot|Provide \{|not JSON|over \d+|Bad --eco|Bad location|No spots|Nothing to optimize|Set META_API_KEY|Empty key|required/i.test(msg)
+      const code = /No goal|No action|Event title|Bad event|Bad status|Bad spot|Provide \{|not JSON|over \d+|Bad --eco|Bad location|No spots|Nothing to optimize|Set META_API_KEY|Empty key|required/i.test(msg)
         ? 400
         : /task-\w+\.m?js:|timed out/i.test(msg)
           ? 502
