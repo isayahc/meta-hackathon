@@ -18,6 +18,10 @@ import {
   classifySource,
   resolveApiKey,
 } from './lib/analyze-response.js';
+import { loadEnvSync } from './lib/env.js';
+
+// .env (cwd, then app root) fills gaps; real environment always wins.
+loadEnvSync();
 import type { VisitAnalysis } from './lib/spot-state.js';
 import { flagValue } from './lib/args.js';
 

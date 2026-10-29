@@ -20,6 +20,10 @@ import {
   resolveApiKey,
   buildOverlaySvg,
 } from './lib/analyze-response.js';
+import { loadEnvSync } from './lib/env.js';
+
+// .env (cwd, then app root) fills gaps; real environment always wins.
+loadEnvSync();
 
 const API_BASE = process.env.META_API_BASE ?? 'https://api.meta.ai/v1';
 const MODEL = process.env.MUSE_MODEL ?? 'sam-3.1';

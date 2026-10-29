@@ -157,6 +157,10 @@
       </form>
       <div id="videoresult"></div>
     </section>
+    <section aria-label="Task checklist">
+      <h2>Task checklist (from the clip above)</h2>
+      <div id="videotasks"><p class="hint">Analyze a video first — its next steps land here as checkboxes.</p></div>
+    </section>
     <section aria-label="Scan a visit">
       <h2>Scan a visit (photo → task analysis)</h2>
       <form class="run" id="scanform">
@@ -396,7 +400,15 @@ $('scanform').addEventListener('submit', (e) => {
   }, 'scan complete');
 });
 
-function renderTaskList(el, a) {
+function linearizeSequence(a) {
+  const frames = Array.isArray(a.per_frame) ? a.per_frame.map((s) => String(s ?? '').trim()).filter(Boolean) : [];
+  if (frames.length) return frames;
+  if (String(a.progression ?? '').trim()) return [String(a.progression).trim()];
+  return [];
+}
+
+function renderTaskList(el, tasksEl, a) {
+  const seq = linearizeSequence(a);
   const steps = Array.isArray(a.suggested_next_steps) ? a.suggested_next_steps : [];
   const unknowns = Array.isArray(a.unknowns) && a.unknowns.length
     ? `<details class="deferred"><summary>unknowns (${a.unknowns.length})</summary><ul>` +
@@ -405,10 +417,12 @@ function renderTaskList(el, a) {
   el.innerHTML =
     `<h3 style="margin:.4em 0">${esc(a.observed_task ?? 'Task analysis')} ` +
     (a.stage ? `<span class="chip">${esc(a.stage)}</span>` : '') + '</h3>' +
-    (a.progression ? `<p>${esc(a.progression)}</p>` : '') +
+    (seq.length ? `<div style="margin-top:8px;font-weight:650">Sequence</div><ol class="actions">` + seq.map((s) => `<li>${esc(s)}</li>`).join('') + '</ol>' : '');
+  tasksEl.innerHTML =
     (steps.length
       ? '<ul class="tasks">' + steps.map((s) => `<li><label><input type="checkbox"> ${esc(s)}</label></li>`).join('') + '</ul>'
-      : '<p>No next steps suggested.</p>') +
+      : '<p>No next steps suggested.</p>');
+  el.innerHTML +=
     (a.confidence ? `<p class="hint">confidence: ${esc(a.confidence)}</p>` : '') +
     unknowns;
 }
@@ -423,7 +437,7 @@ $('videoform').addEventListener('submit', (e) => {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ videoData, frames: Number(f.frames.value) || 4 }),
     });
-    renderTaskList($('videoresult'), analysis);
+    renderTaskList($('videoresult'), $('videotasks'), analysis);
     return analysis;
   }, 'video analyzed — task list below');
 });

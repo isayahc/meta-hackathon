@@ -16,6 +16,10 @@ import {
   resolveApiKey,
   type SpotBrief,
 } from './lib/analyze-response.js';
+import { loadEnvSync } from './lib/env.js';
+
+// .env (cwd, then app root) fills gaps; real environment always wins.
+loadEnvSync();
 import { flagValue } from './lib/args.js';
 
 const API_BASE = process.env.META_API_BASE ?? 'https://api.meta.ai/v1';

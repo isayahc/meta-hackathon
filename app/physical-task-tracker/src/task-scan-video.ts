@@ -22,6 +22,10 @@ import {
   loadSavedKey,
   saveKey,
 } from './lib/analyze-response.js';
+import { loadEnvSync } from './lib/env.js';
+
+// .env (cwd, then app root) fills gaps; real environment always wins.
+loadEnvSync();
 
 // Inspect a clip without spending an API call:
 //   node task-scan-video.mjs --meta <video-file>
@@ -282,5 +286,5 @@ if (SRT_MODE) {
   console.log(srt);
 } else {
   console.log(JSON.stringify(result.analysis, null, 2));
-  console.log(`\n(via frames: ${framePaths.map((p) => basename(p)).join(', ')})`);
+  console.error(`(via frames: ${framePaths.map((p) => basename(p)).join(', ')})`);
 }
