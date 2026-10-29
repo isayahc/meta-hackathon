@@ -6,7 +6,8 @@
   "description": "Field Ops — phone-first farm-operations task tracker (TypeScript).",
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/copy-assets.mjs",
-    "start": "npm run build && node dist/serve-dashboard.js ./my-farm --port 8123 --open",
+    "prestart": "npm run build",
+    "start": "node dist/serve-dashboard.js ./my-farm --port 8123 --open",
     "test": "npm run build && node --test dist/*.test.js dist/lib/*.test.js"
   },
   "devDependencies": {

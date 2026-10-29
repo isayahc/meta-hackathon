@@ -10,16 +10,14 @@ tracker (TypeScript, zero runtime dependencies):
 
 ```bash
 cd C:\Users\isaya\meta-hackathon\app\physical-task-tracker
-npm install   # typescript only
-npm run build # strict tsc into dist/
-node dist/task-optimize.js ./my-farm --goal "Transplant bed 3 by Friday" --weight 5 --offline
-node dist/serve-dashboard.js ./my-farm --port 8123 --open
+npm install # once; typescript only
+npm start   # builds, serves ./my-farm, opens the app in your browser
 ```
 
-No API key, no network for the above — `--open` loads
-http://localhost:8123 in your browser with a starter goal.
-Full loop (scan → compare → briefing → optimizer → ecology → dashboard)
-with per-step commands: [app README](app/physical-task-tracker/README.md).
+No API key, no network for the above — the app loads at
+http://localhost:8123. Full loop (scan → compare → briefing → optimizer →
+ecology → dashboard) with per-step commands:
+[app README](app/physical-task-tracker/README.md).
 
 ## Meta Global AI Developer Hackathon — Scope
 
