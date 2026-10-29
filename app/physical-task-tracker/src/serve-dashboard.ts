@@ -6,6 +6,8 @@
 // Node 18+, no runtime dependencies beyond built-in node:sqlite.
 
 import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { lookup } from 'node:dns/promises';
+import { isIP } from 'node:net';
 import { execFile } from 'node:child_process';
 import { readFile, writeFile, readdir, rm, mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -71,7 +73,9 @@ export interface ImageInput {
 // {imageUrl} passes through; {imageData} must be a png/jpeg/webp data URL
 // and is written to dir. Returns a path or URL the CLIs accept.
 export async function materializeImage(img: ImageInput, dir: string, base: string): Promise<string> {
-  if (typeof img?.imageUrl === 'string' && img.imageUrl) return img.imageUrl;
+  if (typeof img?.imageUrl === 'string' && img.imageUrl) {
+    return fetchRemote(img.imageUrl, dir, base, { kinds: ['image'], maxBytes: MAX_UPLOAD_BYTES });
+  }
   const m = /^data:(image\/(png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/.exec(
     typeof img?.imageData === 'string' ? img.imageData : ''
   );
@@ -89,7 +93,9 @@ export async function materializeVideo(
   dir: string,
   base = 'clip'
 ): Promise<string> {
-  if (typeof input?.videoUrl === 'string' && input.videoUrl) return input.videoUrl;
+  if (typeof input?.videoUrl === 'string' && input.videoUrl) {
+    return fetchRemote(input.videoUrl, dir, base, { kinds: ['video'], maxBytes: 200 * 1024 * 1024 });
+  }
   const m = /^data:(video\/(mp4|webm|quicktime));base64,([A-Za-z0-9+/=]+)$/.exec(
     typeof input?.videoData === 'string' ? input.videoData : ''
   );
@@ -101,6 +107,115 @@ export async function materializeVideo(
   const path = join(dir, `${safe}.${ext}`);
   await writeFile(path, Buffer.from(m[3] as string, 'base64'));
   return path;
+}
+
+function isBlockedIp(ip: string): boolean {
+  if (isIP(ip) === 4) {
+    const [a, b] = ip.split('.').map(Number);
+    return (
+      a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) ||
+      (a === 172 && (b as number) >= 16 && (b as number) <= 31) || (a === 192 && b === 168)
+    );
+  }
+  if (isIP(ip) === 6) {
+    const low = ip.toLowerCase();
+    return low === '::1' || low === '::' || low.startsWith('fe80:') || low.startsWith('fc') || low.startsWith('fd');
+  }
+  return true;
+}
+
+async function assertPublicHost(hostname: string): Promise<void> {
+  let addrs: Array<{ address: string }>;
+  try {
+    addrs = await lookup(hostname, { all: true });
+  } catch {
+    throw new Error(`Could not resolve host "${hostname}".`);
+  }
+  if (!addrs.length || addrs.some((a) => isBlockedIp(a.address))) {
+    throw new Error(`Refusing non-public host "${hostname}".`);
+  }
+}
+
+function extFromContentType(ct: string): string {
+  const map: Record<string, string> = {
+    'image/png': 'png',
+    'image/jpeg': 'jpg',
+    'image/webp': 'webp',
+    'video/mp4': 'mp4',
+    'video/webm': 'webm',
+    'video/quicktime': 'mov',
+  };
+  const ext = map[ct];
+  if (!ext) throw new Error(`Refusing content-type "${ct || 'unknown'}".`);
+  return ext;
+}
+
+// Bounded, SSRF-safe remote fetch for URL inputs: http(s) only, no creds,
+// no private/link-local/loopback targets (re-checked per redirect hop),
+// max 3 redirects, per-hop 60s timeout, strict size caps, allowlisted
+// content types. Returns the saved local path — CLIs never see raw URLs.
+export async function fetchRemote(
+  urlStr: string,
+  dir: string,
+  base: string,
+  opts: { kinds: Array<'image' | 'video'>; maxBytes: number }
+): Promise<string> {
+  let current = urlStr;
+  for (let hop = 0; hop <= 3; hop++) {
+    let u: URL;
+    try {
+      u = new URL(current);
+    } catch {
+      throw new Error(`Bad URL "${String(urlStr).slice(0, 120)}".`);
+    }
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') {
+      throw new Error('Only http(s) URLs are fetched.');
+    }
+    if (u.username || u.password) throw new Error('URLs with credentials are refused.');
+    await assertPublicHost(u.hostname);
+    let res: Response;
+    try {
+      res = await fetch(current, { redirect: 'manual', signal: AbortSignal.timeout(60000) });
+    } catch (e) {
+      throw new Error(`Fetch failed: ${(e as Error).message.slice(0, 200)}`);
+    }
+    const location = res.headers.get('location');
+    if (res.status >= 300 && res.status < 400 && location) {
+      try {
+        await res.body?.cancel();
+      } catch { /* best effort */ }
+      current = new URL(location, current).toString();
+      continue;
+    }
+    if (!res.ok) throw new Error(`Fetch failed: HTTP ${res.status}.`);
+    const ct = (res.headers.get('content-type') ?? '').split(';')[0]?.trim().toLowerCase() ?? '';
+    if (!opts.kinds.some((k) => ct.startsWith(`${k}/`))) {
+      throw new Error(`Refusing content-type "${ct || 'unknown'}".`);
+    }
+    const declared = Number(res.headers.get('content-length'));
+    if (Number.isFinite(declared) && declared > opts.maxBytes) {
+      throw new Error(`Remote file over ${opts.maxBytes} bytes.`);
+    }
+    const reader = res.body?.getReader();
+    if (!reader) throw new Error('Empty response body.');
+    const chunks: Buffer[] = [];
+    let size = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > opts.maxBytes) {
+        await reader.cancel().catch(() => {});
+        throw new Error(`Remote file over ${opts.maxBytes} bytes.`);
+      }
+      chunks.push(Buffer.from(value));
+    }
+    const safe = base.replace(/[^A-Za-z0-9_-]/g, '') || 'remote';
+    const path = join(dir, `${safe}.${extFromContentType(ct)}`);
+    await writeFile(path, Buffer.concat(chunks));
+    return path;
+  }
+  throw new Error('Too many redirects.');
 }
 
 export function cleanSpotId(id: unknown): string {
@@ -217,7 +332,11 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
         let gifPrefix: string | null = null;
         let mediaDir = '';
         if (typeof videoUrl === 'string' && videoUrl) {
-          src = videoUrl;
+          mediaDir = join(root, 'media');
+          await mkdir(mediaDir, { recursive: true });
+          gifPrefix = `clip-${new Date().toISOString().replace(/[:.]/g, '-')}`;
+          src = await materializeVideo({ videoUrl }, mediaDir, gifPrefix);
+          media = src.split(/[\\/]/).pop() ?? null;
         } else {
           mediaDir = join(root, 'media');
           await mkdir(mediaDir, { recursive: true });
@@ -376,7 +495,7 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
       json(404, { ok: false, error: 'not found' });
     } catch (err) {
       const msg = (err as Error).message;
-      const code = /No goal|No action|Event title|Bad event|Bad status|Bad spot|Provide \{|not JSON|over \d+|Bad --eco|Bad location|No spots|Nothing to optimize|Set META_API_KEY|Empty key|required/i.test(msg)
+      const code = /No goal|No action|Event title|Bad event|Bad status|Bad URL|Only http|credentials|non-public|Refusing|Too many redirects|Could not resolve|Bad spot|Provide \{|not JSON|over \d+|Bad --eco|Bad location|No spots|Nothing to optimize|Set META_API_KEY|Empty key|required/i.test(msg)
         ? 400
         : /task-\w+\.m?js:|timed out/i.test(msg)
           ? 502

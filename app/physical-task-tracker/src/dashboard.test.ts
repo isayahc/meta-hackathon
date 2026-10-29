@@ -8,7 +8,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { mkdtemp, mkdir, readdir, rm, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createServer, loadSpots, buildFeed, waitForOk } from './serve-dashboard.js';
+import { createServer, loadSpots, buildFeed, waitForOk, fetchRemote } from './serve-dashboard.js';
 import { addGoal, listGoals } from './lib/goals.js';
 import { initSpot, appendSession } from './lib/spot-state.js';
 import { setDoc } from './lib/db.js';
@@ -247,6 +247,21 @@ test('event detail backfills actions from payload; toggles persist', async (t: T
   assert.equal((await call(root, 'GET', '/api/events/nope')).status, 404);
   assert.equal((await call(root, 'POST', '/api/actions/nope-a0', { status: 'done' })).status, 400);
   assert.equal((await call(root, 'POST', `/api/actions/${id}-a0`, { status: 'finished' })).status, 400);
+});
+
+test('fetchRemote refuses dangerous URLs without fetching', async (t: TestContext) => {
+  const dir = await mkdtemp(join(tmpdir(), 'fetch-guard-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const img = { kinds: ['image'] as Array<'image' | 'video'>, maxBytes: 1024 };
+  const vid = { kinds: ['video'] as Array<'image' | 'video'>, maxBytes: 1024 };
+  await assert.rejects(fetchRemote('not a url', dir, 'x', img), /Bad URL/);
+  await assert.rejects(fetchRemote('file:///etc/passwd', dir, 'x', img), /Only http/);
+  await assert.rejects(fetchRemote('ftp://example.com/x.jpg', dir, 'x', img), /Only http/);
+  await assert.rejects(fetchRemote('https://user:pass@example.com/x.jpg', dir, 'x', img), /credentials/);
+  await assert.rejects(fetchRemote('http://127.0.0.1/x.mp4', dir, 'x', vid), /non-public/);
+  await assert.rejects(fetchRemote('http://localhost/x.mp4', dir, 'x', vid), /non-public/);
+  await assert.rejects(fetchRemote('http://169.254.169.254/latest', dir, 'x', vid), /non-public/);
+  await assert.rejects(fetchRemote('http://[::1]/x.mp4', dir, 'x', vid), /non-public/);
 });
 
 test('unknown routes 404; non-JSON bodies 400', async (t: TestContext) => {
