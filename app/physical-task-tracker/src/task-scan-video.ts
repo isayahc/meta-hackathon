@@ -22,6 +22,10 @@ import {
   loadSavedKey,
   saveKey,
 } from './lib/analyze-response.js';
+import { loadEnvSync } from './lib/env.js';
+
+// .env (cwd, then app root) fills gaps; real environment always wins.
+loadEnvSync();
 
 // Inspect a clip without spending an API call:
 //   node task-scan-video.mjs --meta <video-file>

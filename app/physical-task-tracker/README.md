@@ -54,7 +54,7 @@ node dist/sam-segment.js <image> "<noun>" --out segment.svg
 node dist/serve-dashboard.js ./my-farm --port 8123 --open
 ```
 
-Key handling: `META_API_KEY` env → saved key, then hidden prompt. Say yes
+Key handling: `.env` (cwd, then app root) → `META_API_KEY` env → saved key, then hidden prompt. Say yes
 once and it's remembered in `%APPDATA%\meta-hackathon\demo-key.json`
 (outside the repo, never committed). `example.env` lists every variable
 (placeholders only). `npm test` rebuilds and runs the suite from `dist/`.

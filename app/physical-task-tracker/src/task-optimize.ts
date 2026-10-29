@@ -19,7 +19,11 @@ import {
 } from './lib/analyze-response.js';
 import { addGoal, listGoals, setGoalStatus } from './lib/goals.js';
 import { fetchEco, normalizeSoil, ecoConstraints, summarizeEco, type WeatherDoc } from './lib/eco.js';
+import { loadEnvSync } from './lib/env.js';
 import { type SpotBrief } from './lib/analyze-response.js';
+
+// .env (cwd, then app root) fills gaps; real environment always wins.
+loadEnvSync();
 import { flagValue, flagAll } from './lib/args.js';
 
 const API_BASE = process.env.META_API_BASE ?? 'https://api.meta.ai/v1';

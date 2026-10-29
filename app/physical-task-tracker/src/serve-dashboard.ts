@@ -11,6 +11,7 @@ import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listGoals, setGoalStatus, addGoal } from './lib/goals.js';
+import { loadEnvSync } from './lib/env.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -303,6 +304,8 @@ function flagValue(args: string[], name: string, def: string | null): string | n
 
 const invokedAsMain = import.meta.url === `file:///${process.argv[1]?.replace(/\\/g, '/')}`;
 if (invokedAsMain) {
+  // .env (cwd, then app root) fills gaps; children inherit it. Real env wins.
+  loadEnvSync();
   const args = process.argv.slice(2);
   const root = args.find((a) => !a.startsWith('--')) ?? null;
   if (!root) {
