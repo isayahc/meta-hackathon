@@ -232,7 +232,7 @@ export function createServer(root: string, { eco = null }: { eco?: string | null
               media,
             });
           }
-        } catch { /* calendar never breaks a scan */ }
+        } catch (e) { console.error(`calendar record failed: ${(e as Error).message}`); }
         json(200, { ok: true, analysis });
         return;
       }
