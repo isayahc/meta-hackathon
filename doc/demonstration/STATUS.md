@@ -23,7 +23,7 @@ PhenoCam compare, clip metadata.
 ## Run it (in order)
 
 ```bash
-cd doc/potential-projects/physical-task-tracker/demo
+cd app/physical-task-tracker
 node task-scan.mjs <photo-url>                          # single-visit analysis (Meta key)
 node task-compare.mjs <visit-a> <visit-b> --spot ./my-farm/spots/north-fence
 node task-briefing.mjs ./my-farm --out briefing.json

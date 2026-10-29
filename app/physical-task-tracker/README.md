@@ -1,8 +1,8 @@
-# Demo: task-scan
+# Field Ops — physical task tracker
 
-Sends a farm-work photo to a Muse model and gets back structured task state:
-what work is happening, what stage it's at, visible progress cues, safety
-flags, and suggested next steps as JSON.
+Phone-first farm-operations app: photograph work, diff visits into tracked
+spots, briefings, goals + optimizer, weather/soil fusion, all in one
+tabbed browser UI backed by small Node scripts (zero dependencies).
 
 ## Start here
 
@@ -10,7 +10,7 @@ Prerequisites: Node 18+ (`node --version`). No `npm install` — zero
 dependencies. Every command runs from this directory:
 
 ```bash
-cd C:\Users\isaya\meta-hackathon\doc\potential-projects\physical-task-tracker\demo
+cd C:\Users\isaya\meta-hackathon\app\physical-task-tracker
 ```
 
 Fastest start — dashboard up in two commands, no API key, no network:
