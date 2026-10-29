@@ -1,7 +1,7 @@
 // Demo: optimizer over goals + spot state.
 // Ranks next actions from the project's goals table, every tracked spot's
 // standing state, and hard constraints (--constraint, repeatable).
-// Text-only call (no images). Node 18+.
+// Text-only call (no images). Node 22+.
 //   node task-optimize.mjs <project-root> [--goal "text" --deadline DATE --weight 1-5]
 //       [--set-status <id>=<open|at-risk|done>] [--constraint "..."]
 //       [--eco <lat,lon> | --eco-file samples/eco-x.json] [--offline] [--out plan.json]

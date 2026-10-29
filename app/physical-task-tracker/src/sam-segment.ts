@@ -1,6 +1,6 @@
 // Demo: segment objects in an image with SAM 3.1 and save an SVG overlay.
 // Zero app dependencies besides @meta-sam/parser (see package.json).
-// Node 18+.
+// Node 22+.
 //   node sam-segment.mjs <image-url-or-path> "<noun phrase>" [--out overlay.svg]
 //
 // Concept prompts are short noun phrases ("center pivot irrigation field"),

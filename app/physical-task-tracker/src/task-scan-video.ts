@@ -1,7 +1,7 @@
 // Demo: test video understanding over farm work.
 // Sends N frames (a video file via ffmpeg, or a directory of frame images)
 // to a Muse model and asks what changed between them - task progression.
-// Zero dependencies besides ffmpeg (only needed for video files). Node 18+.
+// Zero dependencies besides ffmpeg (only needed for video files). Node 22+.
 //   node task-scan-video.mjs <video-file | frames-dir> [--frames N]
 //
 // Same env as task-scan.mjs (key prompt with outside-the-repo persistence).

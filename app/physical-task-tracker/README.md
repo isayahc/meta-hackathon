@@ -2,16 +2,17 @@
 
 Phone-first farm-operations app: photograph work, diff visits into tracked
 spots, briefings, goals + optimizer, weather/soil fusion, all in one
-tabbed browser UI backed by small Node scripts (zero dependencies).
+tabbed browser UI backed by small Node scripts (one runtime dependency:
+the SAM parser).
 
 ## Start here
 
 TypeScript sources live in `src/` and compile to `dist/` (gitignored).
-Prerequisites: Node 18+. One-time setup:
+Prerequisites: Node 22+. One-time setup:
 
 ```bash
 cd C:\Users\isaya\meta-hackathon\app\physical-task-tracker
-npm install   # typescript only; zero runtime dependencies
+npm install   # typescript + the SAM parser
 npm run build # strict tsc + copy dashboard/samples into dist/
 ```
 

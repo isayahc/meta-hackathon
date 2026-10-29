@@ -1,7 +1,7 @@
 // Demo: compare two visits to the same spot and report what changed.
 // The tracking inflection point: single-visit analysis becomes a diff.
 // Each visit is a video file (needs ffmpeg) or a directory of frame images.
-// Zero app dependencies. Node 18+.
+// Zero app dependencies. Node 22+.
 //   node task-compare.mjs <visit-a> <visit-b> [--frames N] [--goal "..."]
 //
 // Same env and key handling as task-scan.mjs.
