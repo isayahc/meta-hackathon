@@ -106,8 +106,11 @@ node dist/task-scan-video.js <phone-video.mp4 | frames-dir> [--frames 6]
 Video files need `ffmpeg` (`ffprobe` for duration); a directory of frame
 images skips that. Same key handling and env vars as above.
 
-`--meta <video-file>` prints duration, dimensions, fps, and codec without
-spending an API call — useful for sizing `--frames` before a run.
+`--meta <video-file>` prints duration, dimensions, fps, codec, and the
+recording date (`recorded_at`, from the container's `creation_time` tag)
+without spending an API call — useful for sizing `--frames` before a run.
+Every scan also reports its recording date (file date as fallback) and feeds
+it to the model so analysis is temporally grounded.
 
 ## Action SRT
 

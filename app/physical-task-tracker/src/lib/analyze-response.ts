@@ -3,9 +3,14 @@
 // performs no network or filesystem side effects - safe for tests.
 
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import type { Goal } from './goals.js';
+
+function defaultMtime(p: string): Date {
+  return statSync(p).mtime;
+}
 
 export const DEFAULT_MAX_TOKENS = 4096;
 
@@ -116,6 +121,9 @@ export interface VideoMeta {
   height: number;
   fps: number;
   codec: string | null;
+  // ISO recording time from the container's creation_time tag, or null when
+  // the container carries none (callers fall back to file mtime).
+  recorded_at: string | null;
 }
 
 type ExecFn = (
@@ -135,7 +143,7 @@ export async function getVideoMeta(path: string, execFileImpl: ExecFn | null = n
       [
         '-v', 'error',
         '-select_streams', 'v:0',
-        '-show_entries', 'stream=width,height,avg_frame_rate,codec_name:format=duration',
+        '-show_entries', 'stream=width,height,avg_frame_rate,codec_name:format=duration:format_tags=creation_time',
         '-of', 'json',
         path,
       ],
@@ -145,17 +153,35 @@ export async function getVideoMeta(path: string, execFileImpl: ExecFn | null = n
   });
   const info = JSON.parse(out) as {
     streams?: Array<{ width?: number; height?: number; avg_frame_rate?: string; codec_name?: string }>;
-    format?: { duration?: string };
+    format?: { duration?: string; tags?: { creation_time?: string } };
   };
   const stream = info.streams?.[0] ?? {};
   const [num, den] = String(stream.avg_frame_rate ?? '0/1').split('/').map(Number);
+  const tag = info.format?.tags?.creation_time;
+  let recorded_at: string | null = null;
+  if (tag) {
+    const t = new Date(tag).getTime();
+    if (Number.isFinite(t)) recorded_at = new Date(t).toISOString();
+  }
   return {
     duration: Number(info.format?.duration ?? NaN),
     width: Number(stream.width ?? NaN),
     height: Number(stream.height ?? NaN),
     fps: den ? (num as number) / (den as number) : NaN,
     codec: stream.codec_name ?? null,
+    recorded_at,
   };
+}
+
+// Recording date for a video: container creation_time first, file mtime as
+// fallback. Never null — mtime always exists for a file that stats.
+export function resolveRecordedAt(
+  meta: Pick<VideoMeta, 'recorded_at'>,
+  path: string,
+  statMtime: (p: string) => Date = defaultMtime
+): { recorded_at: string; source: 'container' | 'mtime' } {
+  if (meta.recorded_at) return { recorded_at: meta.recorded_at, source: 'container' };
+  return { recorded_at: statMtime(path).toISOString(), source: 'mtime' };
 }
 
 export interface SpotBrief {
