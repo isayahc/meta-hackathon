@@ -163,6 +163,8 @@ new dependencies): `goals`, `spots` + `sessions`, `events`, and `docs`
 (`goals.json`, `spots/`, `events.json`, `plan.json`, `eco.json`) once and
 leaves them in place, unread afterwards. Only the API key stays out of the
 db (`%APPDATA%\meta-hackathon\demo-key.json`, never committed).
+Uploaded clips persist under `<project>/media/` (served back at
+`/media/<file>`) so calendar entries keep their referenced video.
 
 ## Spots + state
 

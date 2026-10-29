@@ -5,7 +5,7 @@
 import { test, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { mkdtemp, rm, readFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createServer, loadSpots, buildFeed, waitForOk } from './serve-dashboard.js';
@@ -199,6 +199,16 @@ test('events: list carries the spot update, add persists, bad date is 400', asyn
   const bad = await call(root, 'POST', '/api/events', { title: 'Spray test', date: 'tomorrow' });
   assert.equal(bad.status, 400);
   assert.match(bad.json.error, /YYYY-MM-DD/);
+});
+
+test('media: serves stored clips, blocks traversal and odd extensions', async (t: TestContext) => {
+  const root = await scratch(t);
+  await mkdir(join(root, 'media'), { recursive: true });
+  await writeFile(join(root, 'media', 'clip-x.mp4'), Buffer.from([0, 1, 2, 3]));
+  assert.equal((await call(root, 'GET', '/media/clip-x.mp4')).status, 200);
+  assert.equal((await call(root, 'GET', '/media/..%2F..%2Fsecret')).status, 404);
+  assert.equal((await call(root, 'GET', '/media/nope.mp4')).status, 404);
+  assert.equal((await call(root, 'GET', '/media/x.txt')).status, 404);
 });
 
 test('unknown routes 404; non-JSON bodies 400', async (t: TestContext) => {

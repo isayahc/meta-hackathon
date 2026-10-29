@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS sessions(
 );
 CREATE TABLE IF NOT EXISTS events(
   id TEXT PRIMARY KEY, title TEXT NOT NULL, date TEXT NOT NULL,
-  time TEXT, kind TEXT NOT NULL DEFAULT 'note', detail TEXT, created_at TEXT NOT NULL
+  time TEXT, kind TEXT NOT NULL DEFAULT 'note', detail TEXT, created_at TEXT NOT NULL,
+  payload TEXT, media TEXT
 );
 CREATE TABLE IF NOT EXISTS docs(
   key TEXT PRIMARY KEY, body TEXT NOT NULL, updated_at TEXT NOT NULL
@@ -160,6 +161,11 @@ export function openDb(root: string): DatabaseSync {
   const db = new DatabaseSync(dbPath(root));
   db.exec('PRAGMA journal_mode = WAL');
   db.exec(SCHEMA);
+  // Column upgrades for DBs created before the column existed.
+  for (const [table, column, decl] of [['events', 'payload', 'TEXT'], ['events', 'media', 'TEXT']] as const) {
+    const cols = (db.prepare(`PRAGMA table_info(${table})`).all() as unknown as Array<{ name: string }>).map((c) => c.name);
+    if (!cols.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+  }
   migrateLegacyJson(db, root);
   return db;
 }

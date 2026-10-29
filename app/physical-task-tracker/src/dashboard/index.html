@@ -96,6 +96,8 @@
   .ev { margin-top: 2px; padding: 0 4px; border-radius: 3px; background: #e4e1d3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ev.scan { background: #cfe3d0; }
   .ev.goal { background: #f3d9a7; }
+  .ev.clickable { cursor: pointer; outline: 1px solid var(--soil); outline-offset: -1px; }
+  #caldetail video { width: 100%; max-height: 340px; border-radius: 4px; background: #000; margin-top: 8px; }
   .ev .t { font-weight: 650; }
   .daylist { display: grid; gap: 6px; }
   .daylist .ev { white-space: normal; padding: 6px 8px; font-size: 13px; }
@@ -244,6 +246,10 @@
         </div>
       </div>
       <div id="cal"><p class="hint">Loading…</p></div>
+    </section>
+    <section aria-label="Entry detail" id="caldetailwrap" hidden>
+      <h2>Entry</h2>
+      <div id="caldetail"></div>
     </section>
     <section aria-label="Add event">
       <h2>Add event</h2>
@@ -503,9 +509,30 @@ function parseDay(s) {
   return new Date(y, m - 1, d);
 }
 
-function evChip(e) {
-  return `<div class="ev ${esc(e.kind)}" title="${esc(e.detail ?? e.kind)}">` +
+function evChip(e, clickable = false) {
+  const click = clickable && e.kind === 'scan' && !!(e.payload || e.media);
+  return `<div class="ev ${esc(e.kind)}${click ? ' clickable' : ''}" title="${esc(e.detail ?? e.kind)}"` +
+    (click ? ` data-eid="${esc(e.id)}"` : '') + '>' +
     (e.time ? `<span class="t">${esc(e.time)}</span> ` : '') + `${esc(e.title)}</div>`;
+}
+
+function renderCalDetail(box, e) {
+  let a = null;
+  try {
+    a = typeof e.payload === 'string' ? JSON.parse(e.payload) : e.payload;
+  } catch { a = null; }
+  if (!a || typeof a !== 'object') a = null;
+  const seq = a ? linearizeSequence(a) : [];
+  const steps = a && Array.isArray(a.suggested_next_steps) ? a.suggested_next_steps : [];
+  box.innerHTML =
+    `<h3 style="margin:.4em 0">${esc(e.title)}</h3>` +
+    `<p class="hint">${esc(e.date)}${e.detail ? ` — ${esc(e.detail)}` : ''}</p>` +
+    (seq.length ? `<div style="margin-top:8px;font-weight:650">Sequence</div><ol class="actions">` +
+      seq.map((s) => `<li>${esc(s)}</li>`).join('') + '</ol>' : '') +
+    (steps.length ? '<ul class="tasks">' +
+      steps.map((s) => `<li><label><input type="checkbox"> ${esc(s)}</label></li>`).join('') + '</ul>' : '') +
+    (!seq.length && !steps.length && !e.media ? '<p class="hint">No stored analysis for this entry.</p>' : '') +
+    (e.media ? `<video controls preload="metadata" src="/media/${encodeURIComponent(e.media)}"></video>` : '');
 }
 
 function calCell(date, events, opts = {}) {
@@ -515,7 +542,7 @@ function calCell(date, events, opts = {}) {
   const today = isoDay(new Date()) === key ? ' today' : '';
   return `<div class="cell${opts.dim ? ' dim' : ''}${today}${opts.click ? ' clickable' : ''}"` +
     (opts.click ? ` data-day="${key}"` : '') + `><div class="d">${date.getDate()}</div>` +
-    list.map(evChip).join('') + (more > 0 ? `<div class="ev">+${more} more</div>` : '') + '</div>';
+    list.map((x) => evChip(x, true)).join('') + (more > 0 ? `<div class="ev">+${more} more</div>` : '') + '</div>';
 }
 
 function renderCal(box, events) {
@@ -528,7 +555,7 @@ function renderCal(box, events) {
     $('caltitle').textContent = cur.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
     const list = byDay[key] ?? [];
     box.innerHTML = list.length
-      ? '<div class="daylist">' + list.map(evChip).join('') + '</div>'
+      ? '<div class="daylist">' + list.map((x) => evChip(x, true)).join('') + '</div>'
       : '<p class="hint">Nothing on this day.</p>';
     return;
   }
@@ -556,11 +583,25 @@ function renderCal(box, events) {
     c.addEventListener('click', () => { calCursor = parseDay(c.dataset.day); calMode = 'day'; syncSeg(); loadCal(); }));
 }
 
+let lastCalEvents = [];
+
+function showCalEntry(id) {
+  const e = lastCalEvents.find((x) => x.id === id);
+  if (!e) return;
+  const wrap = $('caldetailwrap');
+  wrap.hidden = false;
+  renderCalDetail($('caldetail'), e);
+  wrap.scrollIntoView({ block: 'nearest' });
+}
+
 async function loadCal() {
   const box = $('cal');
   try {
     const { events } = await api('/api/events');
-    renderCal(box, events ?? []);
+    lastCalEvents = events ?? [];
+    renderCal(box, lastCalEvents);
+    box.querySelectorAll('[data-eid]').forEach((c) =>
+      c.addEventListener('click', (ev) => { ev.stopPropagation(); showCalEntry(c.dataset.eid); }));
   } catch (e) { box.innerHTML = `<p>calendar failed: ${esc(e.message)}</p>`; }
 }
 

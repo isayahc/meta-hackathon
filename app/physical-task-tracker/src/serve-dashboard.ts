@@ -7,7 +7,7 @@
 
 import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { execFile } from 'node:child_process';
-import { readFile, writeFile, rm, mkdtemp } from 'node:fs/promises';
+import { readFile, writeFile, rm, mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -85,7 +85,8 @@ const VIDEO_MIMES = ['video/mp4', 'video/webm', 'video/quicktime'] as const;
 
 export async function materializeVideo(
   input: { videoUrl?: unknown; videoData?: unknown },
-  dir: string
+  dir: string,
+  base = 'clip'
 ): Promise<string> {
   if (typeof input?.videoUrl === 'string' && input.videoUrl) return input.videoUrl;
   const m = /^data:(video\/(mp4|webm|quicktime));base64,([A-Za-z0-9+/=]+)$/.exec(
@@ -95,7 +96,8 @@ export async function materializeVideo(
     throw new Error('Provide {videoUrl} or {videoData} as an mp4/webm/mov data URL.');
   }
   const ext = m[2] === 'quicktime' ? 'mov' : (m[2] as string);
-  const path = join(dir, `clip.${ext}`);
+  const safe = base.replace(/[^A-Za-z0-9_-]/g, '') || 'clip';
+  const path = join(dir, `${safe}.${ext}`);
   await writeFile(path, Buffer.from(m[3] as string, 'base64'));
   return path;
 }
@@ -202,26 +204,51 @@ export function createServer(root: string, { eco = null }: { eco?: string | null
         return;
       }
       if (req.method === 'POST' && url.pathname === '/api/scan-video') {
-        const workdir = await mkdtemp(join(tmpdir(), 'fieldops-video-'));
+        // Uploads persist under <project>/media so calendar entries can play
+        // the referenced clip later. URL inputs reference nothing local.
+        const { videoUrl, videoData, frames = 4 } = await readBody(req, 200 * 1024 * 1024);
+        const n = Math.min(12, Math.max(1, Number(frames) || 4));
+        let src: string;
+        let media: string | null = null;
+        if (typeof videoUrl === 'string' && videoUrl) {
+          src = videoUrl;
+        } else {
+          const mediaDir = join(root, 'media');
+          await mkdir(mediaDir, { recursive: true });
+          const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+          src = await materializeVideo({ videoUrl, videoData }, mediaDir, `clip-${stamp}`);
+          media = src.split(/[\\/]/).pop() ?? null;
+        }
+        const analysis = await runScript('task-scan-video.js', [src, '--frames', String(n)]);
         try {
-          const { videoUrl, videoData, frames = 4 } = await readBody(req, 200 * 1024 * 1024);
-          const n = Math.min(12, Math.max(1, Number(frames) || 4));
-          const src = await materializeVideo({ videoUrl, videoData }, workdir);
-          const analysis = await runScript('task-scan-video.js', [src, '--frames', String(n)]);
-          try {
-            const a = (analysis ?? {}) as { observed_task?: unknown; stage?: unknown; recorded_at?: unknown };
-            if (typeof a.observed_task === 'string' && a.observed_task.trim()) {
-              await addEvent(root, {
-                title: a.observed_task.trim().slice(0, 120),
-                date: dayOf(a.recorded_at) ?? new Date().toISOString().slice(0, 10),
-                kind: 'scan',
-                detail: typeof a.stage === 'string' ? a.stage.slice(0, 120) : null,
-              });
-            }
-          } catch { /* calendar never breaks a scan */ }
-          json(200, { ok: true, analysis });
-        } finally {
-          await rm(workdir, { recursive: true, force: true });
+          const a = (analysis ?? {}) as { observed_task?: unknown; stage?: unknown; recorded_at?: unknown };
+          if (typeof a.observed_task === 'string' && a.observed_task.trim()) {
+            await addEvent(root, {
+              title: a.observed_task.trim().slice(0, 120),
+              date: dayOf(a.recorded_at) ?? new Date().toISOString().slice(0, 10),
+              kind: 'scan',
+              detail: typeof a.stage === 'string' ? a.stage.slice(0, 120) : null,
+              payload: analysis,
+              media,
+            });
+          }
+        } catch { /* calendar never breaks a scan */ }
+        json(200, { ok: true, analysis });
+        return;
+      }
+      if (req.method === 'GET' && url.pathname.startsWith('/media/')) {
+        const name = decodeURIComponent(url.pathname.slice('/media/'.length));
+        if (!name || name.includes('/') || name.includes('\\') || !/\.(mp4|webm|mov)$/i.test(name)) {
+          json(404, { ok: false, error: 'not found' });
+          return;
+        }
+        try {
+          const data = await readFile(join(root, 'media', name));
+          const type = /\.webm$/i.test(name) ? 'video/webm' : /\.mov$/i.test(name) ? 'video/quicktime' : 'video/mp4';
+          res.writeHead(200, { 'Content-Type': type });
+          res.end(data);
+        } catch {
+          json(404, { ok: false, error: 'not found' });
         }
         return;
       }
@@ -234,7 +261,7 @@ export function createServer(root: string, { eco = null }: { eco?: string | null
           if (g.status !== 'done' && g.deadline && isDay(g.deadline)) {
             derived.push({
               id: `goal-${g.id}`, title: g.text, date: g.deadline, time: null,
-              kind: 'goal', detail: `due (weight ${g.weight}/5)`, created_at: g.created ?? '',
+              kind: 'goal', detail: `due (weight ${g.weight}/5)`, payload: null, media: null, created_at: g.created ?? '',
             });
           }
         }
@@ -243,7 +270,7 @@ export function createServer(root: string, { eco = null }: { eco?: string | null
           if (day) {
             derived.push({
               id: `spot-${s.id}`, title: `${s.name} updated`, date: day, time: null,
-              kind: 'spot', detail: s.summary?.slice(0, 120) ?? null, created_at: s.updated_at ?? '',
+              kind: 'spot', detail: s.summary?.slice(0, 120) ?? null, payload: null, media: null, created_at: s.updated_at ?? '',
             });
           }
         }

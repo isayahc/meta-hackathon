@@ -32,6 +32,20 @@ test('addEvent rejects bad title, date, and time', async (t: TestContext) => {
   assert.deepEqual(await listStoredEvents(root), []);
 });
 
+test('scan entries keep payload and media refs; paths are jailed', async (t: TestContext) => {
+  const root = await freshRoot(t);
+  const e = await addEvent(root, {
+    title: 'Clip', date: '2026-10-26', kind: 'scan', detail: 'reassembly',
+    payload: { observed_task: 'x' }, media: 'clip-a.mp4',
+  });
+  assert.equal(e.media, 'clip-a.mp4');
+  const [back] = await listStoredEvents(root);
+  assert.equal(back?.media, 'clip-a.mp4');
+  assert.equal(JSON.parse(String(back?.payload)).observed_task, 'x');
+  const evil = await addEvent(root, { title: 'Evil', date: '2026-10-26', media: '../x.mp4' });
+  assert.equal(evil.media, null);
+});
+
 test('day helpers accept strict shapes only', () => {
   assert.equal(isDay('2026-10-26'), true);
   assert.equal(isDay('2026-13-40'), false);
