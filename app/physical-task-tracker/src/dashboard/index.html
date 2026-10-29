@@ -84,6 +84,11 @@
     background: #fff; border: 1px solid var(--line); border-radius: 4px;
     padding: 10px; overflow: auto; max-height: 320px; font-size: 12px;
   }
+  ul.tasks { list-style: none; margin: 8px 0; padding: 0; }
+  ul.tasks li { padding: 8px 4px; border-top: 1px dotted var(--line); font-size: 14px; }
+  ul.tasks li:first-child { border-top: 0; }
+  ul.tasks input[type="checkbox"] { width: 18px; height: 18px; margin-right: 8px; vertical-align: -3px; }
+  ul.tasks label:has(input:checked) { color: var(--muted); text-decoration: line-through; }
   ul.goals { list-style: none; margin: 0 0 10px; padding: 0; }
   ul.goals li { padding: 6px 0; border-top: 1px dotted var(--line); display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
   ul.goals li:first-child { border-top: 0; }
@@ -134,6 +139,23 @@
     </div>
   </div>
   <div class="view" id="view-run">
+    <section aria-label="Analyze a video">
+      <h2>Analyze a video (clip → task list)</h2>
+      <form class="run" id="videoform">
+        <label>Video file (mp4/webm/mov)
+          <input type="file" name="file" accept="video/mp4,video/webm,video/quicktime">
+        </label>
+        <label>Frames
+          <select name="frames">
+            <option value="4" selected>4 frames</option>
+            <option value="6">6 frames</option>
+            <option value="8">8 frames</option>
+          </select>
+        </label>
+        <div><button class="btn" type="submit">Get task list</button></div>
+      </form>
+      <div id="videoresult"></div>
+    </section>
     <section aria-label="Scan a visit">
       <h2>Scan a visit (photo → task analysis)</h2>
       <form class="run" id="scanform">
@@ -371,6 +393,38 @@ $('scanform').addEventListener('submit', (e) => {
     showResult($('scanresult'), analysis);
     return analysis;
   }, 'scan complete');
+});
+
+function renderTaskList(el, a) {
+  const steps = Array.isArray(a.suggested_next_steps) ? a.suggested_next_steps : [];
+  const unknowns = Array.isArray(a.unknowns) && a.unknowns.length
+    ? `<details class="deferred"><summary>unknowns (${a.unknowns.length})</summary><ul>` +
+      a.unknowns.map((u) => `<li>${esc(u)}</li>`).join('') + '</ul></details>'
+    : '';
+  el.innerHTML =
+    `<h3 style="margin:.4em 0">${esc(a.observed_task ?? 'Task analysis')} ` +
+    (a.stage ? `<span class="chip">${esc(a.stage)}</span>` : '') + '</h3>' +
+    (a.progression ? `<p>${esc(a.progression)}</p>` : '') +
+    (steps.length
+      ? '<ul class="tasks">' + steps.map((s) => `<li><label><input type="checkbox"> ${esc(s)}</label></li>`).join('') + '</ul>'
+      : '<p>No next steps suggested.</p>') +
+    (a.confidence ? `<p class="hint">confidence: ${esc(a.confidence)}</p>` : '') +
+    unknowns;
+}
+
+$('videoform').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const f = e.target;
+  busy(f.querySelector('button'), async () => {
+    const videoData = await fileData(f.file);
+    if (!videoData) throw new Error('Pick a video file first.');
+    const { analysis } = await api('/api/scan-video', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ videoData, frames: Number(f.frames.value) || 4 }),
+    });
+    renderTaskList($('videoresult'), analysis);
+    return analysis;
+  }, 'video analyzed — task list below');
 });
 
 $('compareform').addEventListener('submit', (e) => {
