@@ -3,8 +3,9 @@
 Physical task tracker for farm operations (+ construction): phone video in,
 task list out — state tracking, two-visit diffs, spots with memory, resume
 briefings, goals + optimizer, ecology fusion, calendar, live dashboard.
-Work in flight on `app/video-upload` ([PR #30](https://github.com/isayahc/meta-hackathon/pull/30));
-`main` holds everything through merged #29.
+`main` holds everything through merged #30. Three doc commits
+(COMPETITORS.md, TASK_RESEARCH.md, this snapshot) are in flight on
+`app/video-upload`.
 
 ## Built since the last snapshot
 
@@ -35,7 +36,6 @@ Key: `.env` → `META_API_KEY` → saved key
 
 ## Still open
 
-- Merge PR #30.
 - Session-1 head-mounted planting footage (not shot) — see `DEMO_PLAN.md`.
 - Submission video + writeup, due Nov 4 9PM ET.
 - Live runs: real eco capture (replaces `samples/eco-kansas.json` fixture),
