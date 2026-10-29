@@ -21,6 +21,7 @@ import {
   getVideoMeta,
   loadSavedKey,
   saveKey,
+  resolveRecordedAt,
 } from './lib/analyze-response.js';
 import { loadEnvSync } from './lib/env.js';
 
@@ -133,6 +134,7 @@ if (!st) {
 
 let framePaths: string[] = [];
 let tmpDir: string | null = null;
+let containerTime: string | null = null;
 if (classifySource(st.isDirectory(), extname(input)) === 'image') {
   framePaths = [input];
 } else if (st.isDirectory()) {
@@ -175,6 +177,7 @@ if (classifySource(st.isDirectory(), extname(input)) === 'image') {
   ]).catch(() => ({ stdout: '' }));
   const duration = Number.parseFloat(durOut) || 0;
   videoDuration = duration > 0 ? duration : null;
+  containerTime = await getVideoMeta(input).then((m) => m.creationTime).catch(() => null);
   tmpDir = await mkdtemp(join(tmpdir(), 'task-scan-frames-'));
   for (let i = 0; i < FRAME_COUNT; i++) {
     const t = duration > 0 ? (duration * (i + 0.5)) / FRAME_COUNT : i * 2;
@@ -191,6 +194,17 @@ if (classifySource(st.isDirectory(), extname(input)) === 'image') {
   }
   console.error(`Extracted ${framePaths.length} frames.`);
 }
+
+// Container creation_time first, file mtime as fallback. Advisory only.
+const recorded = resolveRecordedAt(
+  containerTime,
+  typeof st.mtimeMs === 'number' ? st.mtimeMs : null
+);
+console.error(
+  recorded.at
+    ? `Recorded ${recorded.at} (from ${recorded.source}; advisory only).`
+    : 'Recording date unknown.'
+);
 
 function pickEven(files: string[], n: number): string[] {
   if (files.length <= n) return files;
@@ -285,6 +299,11 @@ if (SRT_MODE) {
   console.log(`Wrote ${srtPath} (${segments.length} cues)`);
   console.log(srt);
 } else {
-  console.log(JSON.stringify(result.analysis, null, 2));
+  const out = {
+    ...(result.analysis as Record<string, unknown>),
+    recorded_at: recorded.at,
+    recorded_source: recorded.source,
+  };
+  console.log(JSON.stringify(out, null, 2));
   console.error(`(via frames: ${framePaths.map((p) => basename(p)).join(', ')})`);
 }

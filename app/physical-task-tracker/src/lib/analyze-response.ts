@@ -116,6 +116,7 @@ export interface VideoMeta {
   height: number;
   fps: number;
   codec: string | null;
+  creationTime: string | null;
 }
 
 type ExecFn = (
@@ -135,7 +136,7 @@ export async function getVideoMeta(path: string, execFileImpl: ExecFn | null = n
       [
         '-v', 'error',
         '-select_streams', 'v:0',
-        '-show_entries', 'stream=width,height,avg_frame_rate,codec_name:format=duration',
+        '-show_entries', 'stream=width,height,avg_frame_rate,codec_name:format=duration:format_tags=creation_time',
         '-of', 'json',
         path,
       ],
@@ -145,7 +146,7 @@ export async function getVideoMeta(path: string, execFileImpl: ExecFn | null = n
   });
   const info = JSON.parse(out) as {
     streams?: Array<{ width?: number; height?: number; avg_frame_rate?: string; codec_name?: string }>;
-    format?: { duration?: string };
+    format?: { duration?: string; tags?: { creation_time?: string } };
   };
   const stream = info.streams?.[0] ?? {};
   const [num, den] = String(stream.avg_frame_rate ?? '0/1').split('/').map(Number);
@@ -155,7 +156,29 @@ export async function getVideoMeta(path: string, execFileImpl: ExecFn | null = n
     height: Number(stream.height ?? NaN),
     fps: den ? (num as number) / (den as number) : NaN,
     codec: stream.codec_name ?? null,
+    creationTime: info.format?.tags?.creation_time ?? null,
   };
+}
+
+// When a clip was recorded: container creation_time first (what the camera
+// wrote), file mtime as fallback, unknown when neither parses. Advisory
+// only — never assert a date the bytes don't support.
+export interface RecordedAt {
+  at: string | null;
+  source: 'container' | 'mtime' | 'unknown';
+}
+
+export function resolveRecordedAt(
+  container: string | null | undefined,
+  mtimeMs: number | null | undefined
+): RecordedAt {
+  if (typeof container === 'string' && !Number.isNaN(Date.parse(container))) {
+    return { at: new Date(container).toISOString(), source: 'container' };
+  }
+  if (typeof mtimeMs === 'number' && Number.isFinite(mtimeMs)) {
+    return { at: new Date(mtimeMs).toISOString(), source: 'mtime' };
+  }
+  return { at: null, source: 'unknown' };
 }
 
 export interface SpotBrief {

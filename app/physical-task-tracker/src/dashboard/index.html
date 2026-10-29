@@ -417,6 +417,7 @@ function renderTaskList(el, tasksEl, a) {
   el.innerHTML =
     `<h3 style="margin:.4em 0">${esc(a.observed_task ?? 'Task analysis')} ` +
     (a.stage ? `<span class="chip">${esc(a.stage)}</span>` : '') + '</h3>' +
+    (a.recorded_at ? `<p class="hint">recorded: ${esc(a.recorded_at)}${a.recorded_source && a.recorded_source !== 'unknown' ? ` (from ${esc(a.recorded_source)})` : ''} — advisory only</p>` : '') +
     (seq.length ? `<div style="margin-top:8px;font-weight:650">Sequence</div><ol class="actions">` + seq.map((s) => `<li>${esc(s)}</li>`).join('') + '</ol>' : '');
   tasksEl.innerHTML =
     (steps.length

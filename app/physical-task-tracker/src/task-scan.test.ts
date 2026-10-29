@@ -11,6 +11,7 @@ import {
   formatSrt,
   normalizeSegments,
   loadSavedKey,
+  resolveRecordedAt,
   saveKey,
 } from './lib/analyze-response.js';
 
@@ -188,6 +189,49 @@ describe('getVideoMeta', () => {
     const { getVideoMeta } = await import('./lib/analyze-response.js');
     const stubFail = (cmd: string, fargs: string[], cb: ProbeCb) => cb(new Error('enoent'), '', 'ffprobe: not found');
     await assert.rejects(getVideoMeta('clip.mp4', stubFail), /ffprobe failed: ffprobe: not found/);
+  });
+
+  it('reads creation_time from container tags when present', async () => {
+    const { getVideoMeta } = await import('./lib/analyze-response.js');
+    const withTag = JSON.stringify({
+      streams: [{ width: 640, height: 360, avg_frame_rate: '30/1', codec_name: 'h264' }],
+      format: { duration: '9.88', tags: { creation_time: '2026-10-20T14:00:00.000Z' } },
+    });
+    const stub = (cmd: string, fargs: string[], cb: ProbeCb) => cb(null, withTag, '');
+    const m = await getVideoMeta('clip.mp4', stub);
+    assert.equal(m.creationTime, '2026-10-20T14:00:00.000Z');
+  });
+
+  it('reports null creationTime when the container has no tag', async () => {
+    const { getVideoMeta } = await import('./lib/analyze-response.js');
+    const m = await getVideoMeta('clip.mp4', stubOk);
+    assert.equal(m.creationTime, null);
+  });
+});
+
+describe('resolveRecordedAt', () => {
+  it('prefers a valid container tag', () => {
+    assert.deepEqual(resolveRecordedAt('2026-10-20T14:00:00.000Z', 1700000000000), {
+      at: '2026-10-20T14:00:00.000Z',
+      source: 'container',
+    });
+  });
+
+  it('falls back to mtime when the tag is missing or garbage', () => {
+    const mtime = Date.UTC(2025, 4, 1, 12, 0, 0);
+    assert.deepEqual(resolveRecordedAt(null, mtime), {
+      at: new Date(mtime).toISOString(),
+      source: 'mtime',
+    });
+    assert.deepEqual(resolveRecordedAt('not a date', mtime), {
+      at: new Date(mtime).toISOString(),
+      source: 'mtime',
+    });
+  });
+
+  it('reports unknown when nothing parses', () => {
+    assert.deepEqual(resolveRecordedAt(null, null), { at: null, source: 'unknown' });
+    assert.deepEqual(resolveRecordedAt('garbage', NaN), { at: null, source: 'unknown' });
   });
 });
 

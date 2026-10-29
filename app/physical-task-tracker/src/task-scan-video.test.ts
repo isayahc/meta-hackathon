@@ -43,6 +43,12 @@ test('video scan prints pure JSON to stdout, notes to stderr', async (t: TestCon
     { cwd: dir, env: { ...process.env, META_API_KEY: 'test-key-for-stdout-contract' } }
   );
   // Must survive a strict JSON.parse, exactly like serve-dashboard does.
-  assert.deepEqual(JSON.parse(stdout), ANALYSIS);
+  const parsed = JSON.parse(stdout) as Record<string, unknown>;
+  assert.equal(parsed.observed_task, ANALYSIS.observed_task);
+  assert.deepEqual(parsed.suggested_next_steps, ANALYSIS.suggested_next_steps);
+  // Frames dir has no container tag: date falls back to file mtime.
+  assert.equal(parsed.recorded_source, 'mtime');
+  assert.ok(parsed.recorded_at && !Number.isNaN(Date.parse(String(parsed.recorded_at))));
   assert.match(stderr, /\(via frames:/);
+  assert.match(stderr, /Recorded .* \(from mtime; advisory only\)\./);
 });
