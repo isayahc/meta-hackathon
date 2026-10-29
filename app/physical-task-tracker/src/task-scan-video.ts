@@ -7,6 +7,7 @@
 // Same env as task-scan.mjs (key prompt with outside-the-repo persistence).
 
 import { readdir, readFile, writeFile, mkdtemp, rm } from 'node:fs/promises';
+import { statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, extname, basename } from 'node:path';
 import { execFile } from 'node:child_process';
@@ -19,6 +20,7 @@ import {
   normalizeSegments,
   classifySource,
   getVideoMeta,
+  resolveRecordedAt,
   loadSavedKey,
   saveKey,
 } from './lib/analyze-response.js';
@@ -209,15 +211,28 @@ if (tmpDir) await rm(tmpDir, { recursive: true, force: true });
 const durationHint = videoDuration
   ? `, which is ${videoDuration.toFixed(1)} seconds long`
   : '';
+// Recording date: container creation_time first, file mtime as fallback.
+// Frames dirs have no container, so they always use the directory mtime.
+let recordedLine = '';
+if (!st.isDirectory()) {
+  try {
+    const probe = await getVideoMeta(input).catch(() => null);
+    const stamp = probe
+      ? resolveRecordedAt(probe, input)
+      : { recorded_at: statSync(input).mtime.toISOString(), source: 'mtime' as const };
+    recordedLine = ` Recorded ${stamp.recorded_at.slice(0, 10)} (from ${stamp.source === 'container' ? 'video metadata' : 'file date'}).`;
+    console.error(`Recorded date: ${stamp.recorded_at} [${stamp.source}]`);
+  } catch { /* date is advisory; never block the scan */ }
+}
 const prompt = SRT_MODE
   ? `You are the vision layer of a farm-operations task tracker.
-These ${imageUrls.length} frames are in time order from the same video${durationHint}.
+These ${imageUrls.length} frames are in time order from the same video${durationHint}.${recordedLine}
 Divide the video into action segments. Report ONLY what you can observe.
 Reply with strict JSON, no markdown fences - a bare array:
 [{"start": 0.0, "end": 3.2, "label": "athlete runs up with javelin"}, ...]
 Rules: times in seconds${videoDuration ? ` from 0 to ${videoDuration.toFixed(1)}` : ''}; segments must not overlap; cover only parts where a distinct action happens; short labels.`
   : `You are the vision layer of a farm-operations task tracker.
-These ${imageUrls.length} frames are in time order from the same job.
+These ${imageUrls.length} frames are in time order from the same job.${recordedLine}
 Report ONLY what you can observe. Reply with strict JSON, no markdown fences:
 {
   "same_location": true,

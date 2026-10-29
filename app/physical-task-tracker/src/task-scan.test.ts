@@ -189,6 +189,36 @@ describe('getVideoMeta', () => {
     const stubFail = (cmd: string, fargs: string[], cb: ProbeCb) => cb(new Error('enoent'), '', 'ffprobe: not found');
     await assert.rejects(getVideoMeta('clip.mp4', stubFail), /ffprobe failed: ffprobe: not found/);
   });
+
+  it('reads recorded_at from the container creation_time tag', async () => {
+    const { getVideoMeta } = await import('./lib/analyze-response.js');
+    const tagged = JSON.stringify({
+      streams: [{ width: 640, height: 360, avg_frame_rate: '30/1', codec_name: 'h264' }],
+      format: { duration: '9.88', tags: { creation_time: '2024-05-01T12:00:00.000000Z' } },
+    });
+    const stub = (cmd: string, fargs: string[], cb: ProbeCb) => cb(null, tagged, '');
+    const m = await getVideoMeta('clip.mp4', stub);
+    assert.equal(m.recorded_at, '2024-05-01T12:00:00.000Z');
+  });
+
+  it('leaves recorded_at null when the container carries no tag', async () => {
+    const { getVideoMeta } = await import('./lib/analyze-response.js');
+    const m = await getVideoMeta('clip.mp4', stubOk);
+    assert.equal(m.recorded_at, null);
+  });
+
+  it('prefers container date, falls back to file mtime', async () => {
+    const { resolveRecordedAt } = await import('./lib/analyze-response.js');
+    assert.deepEqual(resolveRecordedAt({ recorded_at: '2024-05-01T12:00:00.000Z' }, 'x.mp4'), {
+      recorded_at: '2024-05-01T12:00:00.000Z',
+      source: 'container',
+    });
+    const fakeMtime = () => new Date('2023-01-02T03:04:05.000Z');
+    assert.deepEqual(resolveRecordedAt({ recorded_at: null }, 'x.mp4', fakeMtime), {
+      recorded_at: '2023-01-02T03:04:05.000Z',
+      source: 'mtime',
+    });
+  });
 });
 
   it('accepts a valid compare diff', () => {
