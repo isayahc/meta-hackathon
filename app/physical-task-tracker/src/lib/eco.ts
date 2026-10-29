@@ -6,7 +6,7 @@
 // Emits { location, fetched_at, weather, soil, constraints }: weather is a
 // 3-day field-work summary, soil is topsoil texture/organic-matter/pH, and
 // constraints are hard optimizer strings ("never spray before rain", ...).
-// Thresholds are exported for tests. Node 18+ (global fetch).
+// Thresholds are exported for tests. Node 22+ (global fetch).
 
 export const RAIN_PROB_PCT = 60; // precipitation_probability_max worth planning around
 export const HEAT_C = 35; // suspend midday transplant / irrigate early

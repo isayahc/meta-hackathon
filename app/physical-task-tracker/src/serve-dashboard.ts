@@ -3,7 +3,7 @@
 // manages goals. Project state lives in <projectDir>/fieldops.db.
 // Keyless model jobs fail fast with the reason.
 //   node dist/serve-dashboard.js <projectDir> [--port 8123] [--eco <lat,lon>] [--open]
-// Node 18+, no runtime dependencies beyond built-in node:sqlite.
+// Node 22+. One runtime dependency: @meta-sam/parser (SAM overlay CLI).
 
 import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { execFile } from 'node:child_process';

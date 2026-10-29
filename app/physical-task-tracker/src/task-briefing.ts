@@ -1,7 +1,7 @@
 // Demo: resume briefing over every tracked spot.
 // Reads spot state from the project's fieldops.db and briefs the operator:
 // where things stand, blockers, next actions, and goal status.
-// Text-only call (no images). Node 18+.
+// Text-only call (no images). Node 22+.
 //   node task-briefing.mjs <project-root> [--goal "..."] [--out briefing.json]
 //
 // Same env and key handling as task-scan.mjs.

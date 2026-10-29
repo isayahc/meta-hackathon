@@ -1,5 +1,5 @@
 // Demo: ask a Muse model to read farm-task state from a work photo.
-// Zero dependencies. Node 18+.
+// Zero dependencies. Node 22+.
 //   META_API_KEY=... node task-scan.mjs <image-path-or-url>
 //
 // Env:
