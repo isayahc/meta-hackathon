@@ -16,6 +16,7 @@ import {
   extractAnalysis,
   DEFAULT_MAX_TOKENS,
   resolveApiKey,
+  postApi,
 } from './lib/analyze-response.js';
 import { addGoal, listGoals, setGoalStatus } from './lib/goals.js';
 import { fetchEco, normalizeSoil, ecoConstraints, summarizeEco, type WeatherDoc } from './lib/eco.js';
@@ -128,14 +129,7 @@ const body = buildRequestBody({
   reasoningEffort: process.env.REASONING_EFFORT ?? null,
 });
 
-const res = await fetch(`${API_BASE}/chat/completions`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${KEY}`,
-  },
-  body: JSON.stringify(body),
-});
+const res = await postApi(`${API_BASE}/chat/completions`, KEY, body);
 
 if (!res.ok) {
   console.error(`API error ${res.status}: ${(await res.text()).slice(0, 500)}`);

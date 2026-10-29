@@ -127,6 +127,20 @@ type ExecFn = (
 
 // Probe a video file with ffprobe. execFile is injected so tests can stub
 // it; defaults to node:child_process.
+// POST JSON with Bearer auth. Network failures exit cleanly on stderr
+// (stdout stays pure JSON) instead of an undici stack dump.
+export async function postApi(url: string, key: string, body: unknown): Promise<Response> {
+  try {
+    return await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    console.error(`API unreachable: ${((e as Error)?.message ?? String(e)).slice(0, 200)}`);
+    process.exit(1);
+  }
+}
 export async function getVideoMeta(path: string, execFileImpl: ExecFn | null = null): Promise<VideoMeta> {
   const { execFile } = await import('node:child_process');
   const run: ExecFn = execFileImpl ?? (execFile as unknown as ExecFn);

@@ -19,6 +19,7 @@ import {
 import {
   resolveApiKey,
   buildOverlaySvg,
+  postApi,
 } from './lib/analyze-response.js';
 import { loadEnvSync } from './lib/env.js';
 
@@ -55,13 +56,7 @@ if (/^https?:\/\//i.test(input)) {
   imageHref = basename(input);
 }
 
-const res = await fetch(`${API_BASE}/responses`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${KEY}`,
-  },
-  body: JSON.stringify({
+const samBody = {
     model: MODEL,
     input: [
       {
@@ -72,8 +67,8 @@ const res = await fetch(`${API_BASE}/responses`, {
         ],
       },
     ],
-  }),
-});
+};
+const res = await postApi(`${API_BASE}/responses`, KEY, samBody);
 
 if (!res.ok) {
   console.error(`API error ${res.status}: ${(await res.text()).slice(0, 500)}`);
