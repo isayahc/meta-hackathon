@@ -737,9 +737,12 @@ $('compareform').addEventListener('submit', (e) => {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
     });
     showResult($('compareresult'), out.analysis);
+    if (out.analysis && out.analysis.same_location === false) {
+      $('compareresult').insertAdjacentHTML('afterbegin', '<p><span class="chip risk">quarantined</span> <span class="hint">model doubts this visit matches the spot — state left untouched, session kept.</span></p>');
+    }
     tick(false);
     return out;
-  }, 'compare saved to spot state');
+  }, 'compare complete — see result below');
 });
 
 $('goalform').addEventListener('submit', (e) => {

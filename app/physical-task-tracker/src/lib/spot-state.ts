@@ -26,6 +26,7 @@ export interface VisitAnalysis {
   progress_delta?: string;
   suggested_state_update?: string;
   new_issues?: string[];
+  same_location?: boolean;
   [key: string]: unknown;
 }
 
@@ -113,7 +114,7 @@ export async function appendSession(
   id: string,
   analysis: VisitAnalysis,
   sessionId: string | null = null
-): Promise<{ sessionId: string; state: SpotState }> {
+): Promise<{ sessionId: string; state: SpotState; quarantined: boolean }> {
   return withDb(root, (db) => {
     const sid = sessionId ?? new Date().toISOString().replace(/[:.]/g, '-');
     let row = db.prepare('SELECT stage, summary, open_issues, session_ids, updated_at FROM spots WHERE id = ?').get(id) as
@@ -139,15 +140,26 @@ export async function appendSession(
       JSON.stringify(analysis),
       new Date().toISOString()
     );
-    const next: SpotState = {
-      stage: (analysis.stage ?? analysis.progress_delta ?? state.stage) as string,
-      summary: (analysis.suggested_state_update ?? state.summary) as string,
-      open_issues: Array.isArray(analysis.new_issues)
-        ? (analysis.new_issues as string[])
-        : state.open_issues,
-      session_ids: [...new Set([...(state.session_ids ?? []), sid])],
-      updated_at: new Date().toISOString(),
-    };
+    // Verification gate (minimum viable): the session is always recorded
+    // for the audit trail, but standing state only folds trusted analyses.
+    // same_location === false means the model doubts the visit matches this
+    // spot — keep prior stage/summary/issues untouched (quarantined).
+    const trusted = analysis.same_location !== false;
+    const next: SpotState = trusted
+      ? {
+          stage: (analysis.stage ?? analysis.progress_delta ?? state.stage) as string,
+          summary: (analysis.suggested_state_update ?? state.summary) as string,
+          open_issues: Array.isArray(analysis.new_issues)
+            ? (analysis.new_issues as string[])
+            : state.open_issues,
+          session_ids: [...new Set([...(state.session_ids ?? []), sid])],
+          updated_at: new Date().toISOString(),
+        }
+      : {
+          ...state,
+          session_ids: [...new Set([...(state.session_ids ?? []), sid])],
+          updated_at: new Date().toISOString(),
+        };
     db.prepare('UPDATE spots SET stage = ?, summary = ?, open_issues = ?, session_ids = ?, updated_at = ? WHERE id = ?').run(
       next.stage,
       next.summary,
@@ -156,7 +168,7 @@ export async function appendSession(
       next.updated_at,
       id
     );
-    return { sessionId: sid, state: next };
+    return { sessionId: sid, state: next, quarantined: !trusted };
   });
 }
 
