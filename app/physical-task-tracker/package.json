@@ -1,0 +1,16 @@
+{
+  "name": "field-ops",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Field Ops — phone-first farm-operations task tracker (TypeScript).",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/copy-assets.mjs",
+    "start": "node dist/serve-dashboard.mjs",
+    "test": "npm run build && node --test dist/*.test.js dist/lib/*.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.2"
+  }
+}

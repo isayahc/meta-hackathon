@@ -1,4 +1,4 @@
-import { describe, it } from 'node:test';
+import { describe, it, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -12,7 +12,7 @@ import {
   normalizeSegments,
   loadSavedKey,
   saveKey,
-} from './lib/analyze-response.mjs';
+} from './lib/analyze-response.js';
 
 // Captured live failure: auth OK, but the model burned 798/800 tokens on
 // reasoning and returned finish_reason='length' with null content.
@@ -67,7 +67,8 @@ describe('extractAnalysis', () => {
       ],
     });
     assert.equal(r.ok, true);
-    assert.equal(r.analysis.observed_task, 'harvesting carrots');
+    if (!r.ok) throw new Error('expected ok result');
+    assert.equal((r.analysis as { observed_task: string }).observed_task, 'harvesting carrots');
   });
 
   it('rejects free text instead of JSON', () => {
@@ -111,9 +112,12 @@ describe('buildRequestBody', () => {
       prompt: 'p',
       imageUrls: ['f1', 'f2', 'f3'],
     });
-    const imgs = b.messages[0].content.filter((c) => c.type === 'image_url');
+    const msg = (b.messages as Array<{ content: Array<{ type: string; image_url?: { url: string } }> }>)[0] as {
+      content: Array<{ type: string; image_url?: { url: string } }>;
+    };
+    const imgs = msg.content.filter((c) => c.type === 'image_url');
     assert.deepEqual(
-      imgs.map((c) => c.image_url.url),
+      imgs.map((c) => c.image_url?.url),
       ['f1', 'f2', 'f3']
     );
   });
@@ -125,9 +129,12 @@ describe('buildRequestBody', () => {
       imageUrl: 'u0',
       imageUrls: ['f1', 'f2'],
     });
-    const imgs = b.messages[0].content.filter((c) => c.type === 'image_url');
+    const msg = (b.messages as Array<{ content: Array<{ type: string; image_url?: { url: string } }> }>)[0] as {
+      content: Array<{ type: string; image_url?: { url: string } }>;
+    };
+    const imgs = msg.content.filter((c) => c.type === 'image_url');
     assert.deepEqual(
-      imgs.map((c) => c.image_url.url),
+      imgs.map((c) => c.image_url?.url),
       ['u0', 'f1', 'f2']
     );
   });
@@ -139,15 +146,19 @@ describe('buildRequestBody', () => {
       imageUrls: ['a1', 'a2'],
       sections: [{ label: 'VISIT B (later):', imageUrls: ['b1'] }],
     });
-    const content = b.messages[0].content;
+    const content = (
+      b.messages as Array<{
+        content: Array<{ type: string; text?: string; image_url?: { url: string } }>;
+      }>
+    )[0]?.content ?? [];
     assert.deepEqual(
-      content.map((c) => (c.type === 'text' ? `text:${c.text}` : `img:${c.image_url.url}`)),
+      content.map((c) => (c.type === 'text' ? `text:${c.text}` : `img:${c.image_url?.url}`)),
       ['text:p', 'img:a1', 'img:a2', 'text:VISIT B (later):', 'img:b1']
     );
   });
 
   it('classifies image files as single-frame visits', async () => {
-    const { classifySource } = await import('./lib/analyze-response.mjs');
+    const { classifySource } = await import('./lib/analyze-response.js');
     assert.equal(classifySource(false, '.jpg'), 'image');
     assert.equal(classifySource(false, '.PNG'), 'image');
     assert.equal(classifySource(true, '.jpg'), 'frames-dir');
@@ -160,10 +171,11 @@ describe('getVideoMeta', () => {
     streams: [{ width: 640, height: 360, avg_frame_rate: '30000/1001', codec_name: 'h264' }],
     format: { duration: '9.880000' },
   });
-  const stubOk = (cmd, fargs, cb) => cb(null, FFPROBE_JSON, '');
+  type ProbeCb = (err: Error | null, stdout: string, stderr: string) => void;
+  const stubOk = (cmd: string, fargs: string[], cb: ProbeCb) => cb(null, FFPROBE_JSON, '');
 
   it('parses ffprobe JSON into metadata', async () => {
-    const { getVideoMeta } = await import('./lib/analyze-response.mjs');
+    const { getVideoMeta } = await import('./lib/analyze-response.js');
     const m = await getVideoMeta('clip.mp4', stubOk);
     assert.equal(m.duration, 9.88);
     assert.equal(m.width, 640);
@@ -173,8 +185,8 @@ describe('getVideoMeta', () => {
   });
 
   it('throws a readable error when ffprobe fails', async () => {
-    const { getVideoMeta } = await import('./lib/analyze-response.mjs');
-    const stubFail = (cmd, fargs, cb) => cb(new Error('enoent'), '', 'ffprobe: not found');
+    const { getVideoMeta } = await import('./lib/analyze-response.js');
+    const stubFail = (cmd: string, fargs: string[], cb: ProbeCb) => cb(new Error('enoent'), '', 'ffprobe: not found');
     await assert.rejects(getVideoMeta('clip.mp4', stubFail), /ffprobe failed: ffprobe: not found/);
   });
 });
@@ -191,16 +203,17 @@ describe('getVideoMeta', () => {
       ],
     });
     assert.equal(r.ok, true);
-    assert.equal(r.analysis.progress_delta, 'advanced');
+    if (!r.ok) throw new Error('expected ok result');
+    assert.equal((r.analysis as { progress_delta: string }).progress_delta, 'advanced');
   });
 });
 
 describe('key persistence', () => {
   // Redirect the config dir so tests never touch a real key file.
-  let dir;
-  let savedAppData;
+  let dir: string;
+  let savedAppData: string | undefined;
 
-  it('round-trips a saved key', async (t) => {
+  it('round-trips a saved key', async (t: TestContext) => {
     dir = await mkdtemp(join(tmpdir(), 'task-scan-test-'));
     t.after(async () => {
       await rm(dir, { recursive: true, force: true });
@@ -216,7 +229,7 @@ describe('key persistence', () => {
     assert.equal(await loadSavedKey(), 'test-key-123');
   });
 
-  it('returns null for corrupt key files', async (t) => {
+  it('returns null for corrupt key files', async (t: TestContext) => {
     dir = await mkdtemp(join(tmpdir(), 'task-scan-test-'));
     t.after(async () => {
       await rm(dir, { recursive: true, force: true });
@@ -228,7 +241,7 @@ describe('key persistence', () => {
       else process.env.APPDATA = savedAppData;
     });
     await saveKey('placeholder');
-    const { configPath } = await import('./lib/analyze-response.mjs');
+    const { configPath } = await import('./lib/analyze-response.js');
     await writeFile(configPath(), 'not-json{{{');
     assert.equal(await loadSavedKey(), null);
   });
@@ -272,7 +285,7 @@ describe('srt', () => {
 
   it('returns null when nothing usable remains', () => {
     assert.equal(normalizeSegments([], null), null);
-    assert.equal(normalizeSegments('nope', null), null);
+    assert.equal(normalizeSegments('nope' as any, null), null);
     assert.equal(normalizeSegments([{ start: 0, end: 0, label: 'x' }], null), null);
   });
 });

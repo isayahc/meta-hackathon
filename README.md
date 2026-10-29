@@ -5,16 +5,18 @@ are being evaluated under [doc/potential-projects](doc/potential-projects).
 
 ## Run the demo
 
-Prerequisites: Node 18+ (`node --version`). No `npm install` — zero
-dependencies. The working build is the farm-operations task tracker:
+Prerequisites: Node 18+. The working build is the farm-operations task
+tracker (TypeScript, zero runtime dependencies):
 
 ```bash
 cd C:\Users\isaya\meta-hackathon\app\physical-task-tracker
-node task-optimize.mjs ./my-farm --goal "Transplant bed 3 by Friday" --weight 5 --offline
-node serve-dashboard.mjs ./my-farm --port 8123 --open
+npm install   # typescript only
+npm run build # strict tsc into dist/
+node dist/task-optimize.js ./my-farm --goal "Transplant bed 3 by Friday" --weight 5 --offline
+node dist/serve-dashboard.js ./my-farm --port 8123 --open
 ```
 
-Two commands, no API key, no network — `--open` loads
+No API key, no network for the above — `--open` loads
 http://localhost:8123 in your browser with a starter goal.
 Full loop (scan → compare → briefing → optimizer → ecology → dashboard)
 with per-step commands: [app README](app/physical-task-tracker/README.md).

@@ -1,6 +1,6 @@
 // Ecology fusion tests. Offline: parse the Kansas fixture, pin rule
 // thresholds, and check prompt wiring. No network, no API key.
-import test from 'node:test';
+import { test, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import {
@@ -12,8 +12,8 @@ import {
   HEAT_C,
   FROST_C,
   WIND_KMH,
-} from './lib/eco.mjs';
-import { buildOptimizerPrompt } from './lib/analyze-response.mjs';
+} from './lib/eco.js';
+import { buildOptimizerPrompt } from './lib/analyze-response.js';
 
 async function kansas(t = null) {
   const raw = await readFile(new URL('./samples/eco-kansas.json', import.meta.url), 'utf8');
@@ -81,7 +81,7 @@ test('optimizer prompt carries the eco block and its constraints', async () => {
   const soil = normalizeSoil(soilDoc);
   const constraints = ecoConstraints(weather, soil);
   const p = buildOptimizerPrompt(
-    [{ id: 'h-1', text: 'Harvest bed 1', deadline: null, weight: 4, status: 'open' }],
+    [{ id: 'h-1', text: 'Harvest bed 1', deadline: null, weight: 4, status: 'open', created: '' }],
     [],
     constraints,
     summarizeEco(weather, soil, 38.5, -98.0)

@@ -1,36 +1,37 @@
-// Helpers for the task-scan demo: request building, response handling,
-// and API-key persistence. Importing this module performs no network or
-// filesystem side effects - safe to import from tests.
+// Helpers for the task tracker: request building, response handling,
+// API-key persistence, prompts, overlays, SRT. Importing this module
+// performs no network or filesystem side effects - safe for tests.
 
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import type { Goal } from './goals.js';
 
 export const DEFAULT_MAX_TOKENS = 4096;
 
 // Key lives OUTSIDE the repo so it can never be committed.
-export function configPath() {
+export function configPath(): string {
   const base = process.env.APPDATA ?? join(homedir(), '.config');
   return join(base, 'meta-hackathon', 'demo-key.json');
 }
 
-export async function loadSavedKey() {
+export async function loadSavedKey(): Promise<string | null> {
   try {
     const raw = await readFile(configPath(), 'utf8');
-    const key = JSON.parse(raw)?.key;
+    const key: unknown = (JSON.parse(raw) as { key?: unknown })?.key;
     return typeof key === 'string' && key.trim() ? key.trim() : null;
   } catch {
     return null;
   }
 }
 
-export async function saveKey(key) {
+export async function saveKey(key: string): Promise<void> {
   const path = configPath();
   await mkdir(join(path, '..'), { recursive: true });
   await writeFile(path, JSON.stringify({ key }), { mode: 0o600 });
 }
 
-function readHidden(query) {
+function readHidden(query: string): Promise<string> {
   return new Promise((resolve) => {
     const stdin = process.stdin;
     process.stdout.write(query);
@@ -38,7 +39,7 @@ function readHidden(query) {
     stdin.resume();
     stdin.setEncoding('utf8');
     let buf = '';
-    const onData = (ch) => {
+    const onData = (ch: string) => {
       if (ch === '\r' || ch === '\n' || ch === String.fromCharCode(4)) {
         stdin.setRawMode(false);
         stdin.pause();
@@ -58,13 +59,13 @@ function readHidden(query) {
   });
 }
 
-async function askYesNo(query) {
+async function askYesNo(query: string): Promise<boolean> {
   process.stdout.write(query);
   return new Promise((resolve) => {
     const stdin = process.stdin;
     stdin.resume();
     stdin.setEncoding('utf8');
-    const onData = (ch) => {
+    const onData = (ch: string) => {
       stdin.pause();
       stdin.removeListener('data', onData);
       resolve(/^\s*y(es)?\s*$/i.test(ch));
@@ -75,7 +76,7 @@ async function askYesNo(query) {
 
 // Resolution order: env, saved file (outside the repo), hidden prompt
 // with an offer to remember. Throws when non-interactive and keyless.
-export async function resolveApiKey() {
+export async function resolveApiKey(): Promise<string> {
   const env = process.env.META_API_KEY;
   if (env?.trim()) return env.trim();
   const saved = await loadSavedKey();
@@ -92,7 +93,7 @@ export async function resolveApiKey() {
   return key;
 }
 
-function escapeXml(s) {
+function escapeXml(s: string): string {
   return String(s)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -102,20 +103,33 @@ function escapeXml(s) {
 
 // Single image files are single-frame visits; directories are frame sets;
 // anything else goes down the ffmpeg video path.
-export function classifySource(isDirectory, ext) {
+export function classifySource(isDirectory: boolean, ext: string): string {
   if (!isDirectory && ['.jpg', '.jpeg', '.png', '.webp'].includes(String(ext).toLowerCase())) {
     return 'image';
   }
   return isDirectory ? 'frames-dir' : 'video';
 }
 
-// Probe a video file with ffprobe. Returns
-// { duration, width, height, fps, codec } or throws with the ffprobe stderr.
-// execFile is injected so tests can stub it; defaults to node:child_process.
-export async function getVideoMeta(path, execFileImpl = null) {
+export interface VideoMeta {
+  duration: number;
+  width: number;
+  height: number;
+  fps: number;
+  codec: string | null;
+}
+
+type ExecFn = (
+  cmd: string,
+  args: string[],
+  cb: (err: Error | null, stdout: string, stderr: string) => void
+) => unknown;
+
+// Probe a video file with ffprobe. execFile is injected so tests can stub
+// it; defaults to node:child_process.
+export async function getVideoMeta(path: string, execFileImpl: ExecFn | null = null): Promise<VideoMeta> {
   const { execFile } = await import('node:child_process');
-  const run = execFileImpl ?? execFile;
-  const out = await new Promise((resolve, reject) => {
+  const run: ExecFn = execFileImpl ?? (execFile as unknown as ExecFn);
+  const out = await new Promise<string>((resolve, reject) => {
     run(
       'ffprobe',
       [
@@ -129,21 +143,33 @@ export async function getVideoMeta(path, execFileImpl = null) {
         err ? reject(new Error(`ffprobe failed: ${String(stderr).trim().slice(0, 200)}`)) : resolve(stdout)
     );
   });
-  const info = JSON.parse(out);
+  const info = JSON.parse(out) as {
+    streams?: Array<{ width?: number; height?: number; avg_frame_rate?: string; codec_name?: string }>;
+    format?: { duration?: string };
+  };
   const stream = info.streams?.[0] ?? {};
   const [num, den] = String(stream.avg_frame_rate ?? '0/1').split('/').map(Number);
   return {
     duration: Number(info.format?.duration ?? NaN),
     width: Number(stream.width ?? NaN),
     height: Number(stream.height ?? NaN),
-    fps: den ? num / den : NaN,
+    fps: den ? (num as number) / (den as number) : NaN,
     codec: stream.codec_name ?? null,
   };
 }
 
-// Briefing prompt over spot states. spots: [{ id, name, stage, summary,
-// open_issues, session_count, updated_at }]. goals: [strings].
-export function buildBriefingPrompt(spots, goals = []) {
+export interface SpotBrief {
+  id: string;
+  name?: string;
+  stage?: string;
+  summary?: string;
+  open_issues?: string[];
+  session_count?: number;
+  updated_at?: string;
+}
+
+// Briefing prompt over spot states. goals: free-text operator goals.
+export function buildBriefingPrompt(spots: SpotBrief[], goals: string[] = []): string {
   const lines = spots.map((s) => {
     const issues =
       s.open_issues?.length
@@ -179,11 +205,15 @@ export function buildBriefingPrompt(spots, goals = []) {
 }
 
 // Optimizer prompt: rank what to do next from goals, spot states, and
-// constraints. goals: [{ id, text, deadline, weight 1-5, status }].
-// spots: same shape as buildBriefingPrompt. constraints: [strings] such as
-// weather windows, labor, daylight, equipment. ecoSummary: optional field-
-// conditions block (see eco.mjs summarizeEco), or null.
-export function buildOptimizerPrompt(goals, spots, constraints = [], ecoSummary = null) {
+// constraints. constraints: [strings] such as weather windows, labor,
+// daylight, equipment. ecoSummary: optional field-conditions block
+// (see eco summarizeEco), or null.
+export function buildOptimizerPrompt(
+  goals: Goal[],
+  spots: SpotBrief[],
+  constraints: string[] = [],
+  ecoSummary: string | null = null
+): string {
   const open = goals.filter((g) => g.status !== 'done');
   const goalLines = open.length
     ? open
@@ -229,9 +259,33 @@ export function buildOptimizerPrompt(goals, spots, constraints = [], ecoSummary 
   );
 }
 
+export interface MaskPath {
+  d: string;
+  left: number;
+  top: number;
+}
+
+export interface MaskBox {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
 // Overlay SVG: mask paths translated by their bounds, boxes as rects.
-// paths: [{d, left, top}], boxes: [{left, top, right, bottom}].
-export function buildOverlaySvg({ width, height, imageHref, boxes = [], paths = [] }) {
+export function buildOverlaySvg({
+  width,
+  height,
+  imageHref,
+  boxes = [],
+  paths = [],
+}: {
+  width: number;
+  height: number;
+  imageHref?: string;
+  boxes?: MaskBox[];
+  paths?: MaskPath[];
+}): string {
   const W = Math.max(1, Math.ceil(Number(width) || 0));
   const H = Math.max(1, Math.ceil(Number(height) || 0));
   const parts = [
@@ -255,19 +309,34 @@ export function buildOverlaySvg({ width, height, imageHref, boxes = [], paths = 
   return parts.join('\n') + '\n';
 }
 
+export interface PromptSection {
+  label: string;
+  imageUrls?: string[];
+}
+
+export interface RequestBodyOptions {
+  model: string;
+  prompt: string;
+  imageUrl?: string | null;
+  imageUrls?: string[];
+  // Labeled follow-up sections appended after the main images, e.g. a
+  // second visit to compare against the first.
+  sections?: PromptSection[];
+  maxTokens?: number;
+  reasoningEffort?: string | null;
+}
+
 export function buildRequestBody({
   model,
   prompt,
   imageUrl = null,
   imageUrls = [],
-  // Labeled follow-up sections: [{ label, imageUrls }] appended after the
-  // main images, e.g. a second visit to compare against the first.
   sections = [],
   maxTokens = DEFAULT_MAX_TOKENS,
   reasoningEffort = null,
-}) {
+}: RequestBodyOptions): Record<string, unknown> {
   const urls = imageUrl ? [imageUrl, ...imageUrls] : imageUrls;
-  const content = [
+  const content: Array<Record<string, unknown>> = [
     { type: 'text', text: prompt },
     ...urls.map((url) => ({ type: 'image_url', image_url: { url } })),
   ];
@@ -277,7 +346,7 @@ export function buildRequestBody({
       content.push({ type: 'image_url', image_url: { url } });
     }
   }
-  const body = {
+  const body: Record<string, unknown> = {
     model,
     // OpenAI-compatible token budget. If the provider instead expects
     // max_completion_tokens, adjust here.
@@ -286,21 +355,27 @@ export function buildRequestBody({
   };
   // Forwarded only when set: unknown params can get the request rejected,
   // so reasoning effort stays opt-in (e.g. REASONING_EFFORT=low).
-  if (reasoningEffort) body.reasoning_effort = reasoningEffort;
+  if (reasoningEffort) body['reasoning_effort'] = reasoningEffort;
   return body;
 }
 
-export function formatTimestamp(totalSeconds) {
+export function formatTimestamp(totalSeconds: number): string {
   const s = Math.max(0, Number(totalSeconds) || 0);
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const sec = Math.floor(s % 60);
   const ms = Math.round((s - Math.floor(s)) * 1000);
-  const pad = (n, w = 2) => String(n).padStart(w, '0');
+  const pad = (n: number, w = 2) => String(n).padStart(w, '0');
   return `${pad(h)}:${pad(m)}:${pad(sec)},${pad(ms, 3)}`;
 }
 
-export function formatSrt(segments) {
+export interface SrtSegment {
+  start: number;
+  end: number;
+  label: string;
+}
+
+export function formatSrt(segments: SrtSegment[]): string {
   return (
     segments
       .map(
@@ -311,9 +386,12 @@ export function formatSrt(segments) {
   );
 }
 
-export function normalizeSegments(segments, duration = null) {
+export function normalizeSegments(
+  segments: Array<{ start?: unknown; end?: unknown; label?: unknown }>,
+  duration: number | null = null
+): SrtSegment[] | null {
   if (!Array.isArray(segments)) return null;
-  const clean = [];
+  const clean: SrtSegment[] = [];
   for (const seg of segments) {
     const start = Number(seg?.start);
     const end = Number(seg?.end);
@@ -330,7 +408,22 @@ export function normalizeSegments(segments, duration = null) {
   return clean.length ? clean : null;
 }
 
-export function extractAnalysis(data) {
+interface ProviderChoice {
+  finish_reason?: string;
+  native_finish_reason?: string;
+  message?: { content?: unknown };
+}
+
+interface ProviderResponse {
+  choices?: ProviderChoice[];
+  usage?: unknown;
+}
+
+export type AnalysisResult =
+  | { ok: true; analysis: unknown; raw: string }
+  | { ok: false; code: string; error: string; usage?: unknown; raw?: string; detail?: unknown };
+
+export function extractAnalysis(data: ProviderResponse): AnalysisResult {
   const choice = data?.choices?.[0];
   if (!choice) {
     return {
@@ -340,8 +433,7 @@ export function extractAnalysis(data) {
       detail: data,
     };
   }
-  const finish =
-    choice.finish_reason ?? choice.native_finish_reason ?? 'unknown';
+  const finish = choice.finish_reason ?? choice.native_finish_reason ?? 'unknown';
   const content = choice.message?.content ?? null;
   const usage = data.usage ?? null;
 
@@ -371,8 +463,7 @@ export function extractAnalysis(data) {
     return {
       ok: false,
       code: 'not_json',
-      error:
-        'Model returned free text instead of the requested JSON task analysis.',
+      error: 'Model returned free text instead of the requested JSON task analysis.',
       raw: text,
       usage,
     };

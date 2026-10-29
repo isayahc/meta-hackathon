@@ -12,13 +12,13 @@
 
 import { readFile } from 'node:fs/promises';
 
-async function askYesNo(query) {
+async function askYesNo(query: string): Promise<boolean> {
   process.stdout.write(query);
   return new Promise((resolve) => {
     const stdin = process.stdin;
     stdin.resume();
     stdin.setEncoding('utf8');
-    const onData = (ch) => {
+    const onData = (ch: string) => {
       stdin.pause();
       stdin.removeListener('data', onData);
       resolve(/^\s*y(es)?\s*$/i.test(ch));
@@ -33,11 +33,11 @@ import {
   configPath,
   loadSavedKey,
   saveKey,
-} from './lib/analyze-response.mjs';
+} from './lib/analyze-response.js';
 
 const API_BASE = process.env.META_API_BASE ?? 'https://api.meta.ai/v1';
 const MODEL = process.env.MUSE_MODEL ?? 'muse-spark-1.1';
-function readHidden(query) {
+function readHidden(query: string): Promise<string> {
   return new Promise((resolve) => {
     const stdin = process.stdin;
     process.stdout.write(query);
@@ -45,7 +45,7 @@ function readHidden(query) {
     stdin.resume();
     stdin.setEncoding('utf8');
     let buf = '';
-    const onData = (ch) => {
+    const onData = (ch: string) => {
       if (ch === '\r' || ch === '\n' || ch === '\u0004') {
         stdin.setRawMode(false);
         stdin.pause();
@@ -65,7 +65,7 @@ function readHidden(query) {
   });
 }
 
-let KEY = process.env.META_API_KEY ?? (await loadSavedKey());
+let KEY: string | null = process.env.META_API_KEY ?? (await loadSavedKey());
 if (!KEY) {
   if (!process.stdin.isTTY) {
     console.error('Set META_API_KEY first (no terminal to prompt on).');
