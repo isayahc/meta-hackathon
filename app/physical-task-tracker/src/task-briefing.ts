@@ -1,13 +1,13 @@
 // Demo: resume briefing over every tracked spot.
-// Reads <project>/spots/<id>/{spot.json,state.json} and briefs the operator:
+// Reads spot state from the project's fieldops.db and briefs the operator:
 // where things stand, blockers, next actions, and goal status.
 // Text-only call (no images). Node 18+.
 //   node task-briefing.mjs <project-root> [--goal "..."] [--out briefing.json]
 //
 // Same env and key handling as task-scan.mjs.
 
-import { readdir, readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { writeFile } from 'node:fs/promises';
+import { listSpotBriefs } from './lib/spot-state.js';
 import {
   buildRequestBody,
   buildBriefingPrompt,
@@ -39,44 +39,9 @@ if (!root) {
 
 const KEY = await resolveApiKey();
 
-let spotIds;
-try {
-  spotIds = (await readdir(join(root, 'spots'))).sort();
-} catch {
-  console.error(`No spots found under ${join(root, 'spots')}.`);
-  process.exit(1);
-}
-if (!spotIds.length) {
-  console.error('No spots to brief on.');
-  process.exit(1);
-}
-
-const spots: SpotBrief[] = [];
-for (const id of spotIds) {
-  const dir = join(root, 'spots', id);
-  let meta: { id: string; name: unknown } = { id, name: id };
-  try {
-    meta = { id, name: id, ...(JSON.parse(await readFile(join(dir, 'spot.json'), 'utf8')) as Record<string, unknown>) };
-  } catch { /* uninitialized spot: name falls back to id */ }
-  let state: any = {};
-  try {
-    state = JSON.parse(await readFile(join(dir, 'state.json'), 'utf8'));
-  } catch {
-    console.error(`Skipping spot "${id}": no state.json (run a compare with --spot first).`);
-    continue;
-  }
-  spots.push({
-    id,
-    name: (meta.name ?? id) as string,
-    stage: state.stage,
-    summary: state.summary,
-    open_issues: state.open_issues,
-    session_count: state.session_ids?.length ?? 0,
-    updated_at: state.updated_at,
-  });
-}
+const spots: SpotBrief[] = await listSpotBriefs(root);
 if (!spots.length) {
-  console.error('No spots with state to brief on.');
+  console.error('No spots to brief on (run a compare with --spot first).');
   process.exit(1);
 }
 

@@ -5,11 +5,13 @@
 import { test, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { mkdtemp, mkdir, rm, writeFile, readFile } from 'node:fs/promises';
+import { mkdtemp, rm, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createServer, loadSpots, buildFeed, waitForOk } from './serve-dashboard.js';
 import { addGoal, listGoals } from './lib/goals.js';
+import { initSpot, appendSession } from './lib/spot-state.js';
+import { setDoc } from './lib/db.js';
 
 // Minimal HTTP shape: just what the handler touches.
 interface MockReq {
@@ -28,18 +30,16 @@ interface MockRes {
 async function scratch(t: TestContext) {
   const root = await mkdtemp(join(tmpdir(), 'dash-test-'));
   t.after(() => rm(root, { recursive: true, force: true }));
-  const spot = join(root, 'spots', 'north-fence');
-  await mkdir(join(spot, 'sessions', '2026-10-28T09-00-00'), { recursive: true });
-  await writeFile(join(spot, 'spot.json'), JSON.stringify({ name: 'North fence' }));
-  await writeFile(
-    join(spot, 'state.json'),
-    JSON.stringify({
+  await initSpot(root, 'north-fence', 'North fence');
+  await appendSession(
+    root,
+    'north-fence',
+    {
       stage: 'fruiting',
-      summary: 'Ripe tomatoes, aphids on row 2.',
-      open_issues: ['Aphids on row 2'],
-      session_ids: ['2026-10-28T09-00-00'],
-      updated_at: '2026-10-28T09:00:00Z',
-    })
+      suggested_state_update: 'Ripe tomatoes, aphids on row 2.',
+      new_issues: ['Aphids on row 2'],
+    },
+    '2026-10-28T09-00-00'
   );
   await addGoal(root, { text: 'Harvest bed 1', weight: 4 });
   return root;
@@ -87,10 +87,10 @@ test('loadSpots reads spot meta + state + sessions', async (t: TestContext) => {
   assert.deepEqual(spots[0].recent_sessions, ['2026-10-28T09-00-00']);
 });
 
-test('loadSpots skips spots without state; empty project gives []', async (t: TestContext) => {
+test('loadSpots lists initialized spots even without sessions', async (t: TestContext) => {
   const root = await scratch(t);
-  await mkdir(join(root, 'spots', 'empty-spot'), { recursive: true });
-  assert.equal((await loadSpots(root)).length, 1);
+  await initSpot(root, 'empty-spot', 'Empty spot');
+  assert.equal((await loadSpots(root)).length, 2);
   const bare = await mkdtemp(join(tmpdir(), 'dash-empty-'));
   t.after(() => rm(bare, { recursive: true, force: true }));
   assert.deepEqual(await loadSpots(bare), []);
@@ -127,8 +127,8 @@ test('serves the dashboard page', async (t: TestContext) => {
 
 test('overview exposes spots, goals, plan, eco, feed', async (t: TestContext) => {
   const root = await scratch(t);
-  await writeFile(join(root, 'plan.json'), JSON.stringify({ plan: { ranked_actions: [] } }));
-  await writeFile(join(root, 'eco.json'), JSON.stringify({ summary: 'Site (38.5, -98). Now: test.' }));
+  setDoc(root, 'plan', { plan: { ranked_actions: [] } });
+  setDoc(root, 'eco', { summary: 'Site (38.5, -98). Now: test.' });
   const r = await call(root, 'GET', '/api/overview');
   assert.equal(r.status, 200);
   assert.equal(r.json.spots.length, 1);
@@ -149,7 +149,7 @@ test('goals: create, done-writeback, bad id and status are 400', async (t: TestC
   const done = await call(root, 'POST', `/api/goals/${created.json.goal.id}`, { status: 'done' });
   assert.equal(done.status, 200);
   assert.equal(done.json.goal.status, 'done');
-  const bad = await call(root, 'POST', '/api/goals/nope-1', { status: 'done' });
+  const bad = await call(root, 'POST', `/api/goals/nope-1`, { status: 'done' });
   assert.equal(bad.status, 400);
 });
 
@@ -184,12 +184,13 @@ test('scan-video: missing video and bad mime are 400, never shelled', async (t: 
   assert.ok(passThrough.status !== null && [400, 500, 502].includes(passThrough.status));
 });
 
-test('events: empty list carries the spot update, add persists, bad date is 400', async (t: TestContext) => {
+test('events: list carries the spot update, add persists, bad date is 400', async (t: TestContext) => {
   const root = await scratch(t);
+  const today = new Date().toISOString().slice(0, 10);
   const empty = await call(root, 'GET', '/api/events');
   assert.equal(empty.status, 200);
   assert.ok(Array.isArray(empty.json.events));
-  assert.ok(empty.json.events.some((e: any) => e.kind === 'spot' && e.date === '2026-10-28'));
+  assert.ok(empty.json.events.some((e: any) => e.kind === 'spot' && e.date === today));
   const created = await call(root, 'POST', '/api/events', { title: 'Spray test', date: '2026-10-26' });
   assert.equal(created.status, 200);
   assert.equal(created.json.event.kind, 'note');

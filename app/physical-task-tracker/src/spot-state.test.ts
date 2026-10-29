@@ -1,14 +1,15 @@
 import { describe, it, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, readFile } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  spotDir,
   initSpot,
   readState,
   listSessions,
+  readSession,
   appendSession,
+  listSpotBriefs,
 } from './lib/spot-state.js';
 
 async function freshRoot(t: TestContext) {
@@ -29,9 +30,9 @@ const DIFF = {
 describe('spot-state', () => {
   it('inits a spot with unobserved state', async (t: TestContext) => {
     const root = await freshRoot(t);
-    const { dir, meta, state } = await initSpot(root, 'north-fence', 'North fence');
-    assert.equal(dir, spotDir(root, 'north-fence'));
+    const { meta, state } = await initSpot(root, 'north-fence', 'North fence');
     assert.equal(meta.id, 'north-fence');
+    assert.equal(meta.name, 'North fence');
     assert.equal(state.stage, 'unobserved');
     assert.deepEqual(state.session_ids, []);
     assert.deepEqual(await listSessions(root, 'north-fence'), []);
@@ -46,9 +47,7 @@ describe('spot-state', () => {
     assert.equal(state.summary, 'Row half-crated, crew moving east.');
     assert.deepEqual(state.open_issues, ['soft ground near gate']);
     assert.deepEqual(state.session_ids, ['s1']);
-    const saved = JSON.parse(
-      await readFile(join(spotDir(root, 'bed-1'), 'sessions', 's1', 'analysis.json'), 'utf8')
-    );
+    const saved = await readSession(root, 'bed-1', 's1');
     assert.equal(saved.progress_delta, 'advanced');
     assert.deepEqual(await readState(root, 'bed-1'), state);
   });
@@ -68,5 +67,17 @@ describe('spot-state', () => {
     assert.equal(state.stage, 'done');
     assert.equal(state.summary, 'Row half-crated, crew moving east.');
     assert.deepEqual(state.session_ids, ['s1', 's2']);
+  });
+
+  it('lists briefs for briefings and the overview', async (t: TestContext) => {
+    const root = await freshRoot(t);
+    await initSpot(root, 'bed-1', 'Bed one');
+    await appendSession(root, 'bed-1', DIFF, 's1');
+    const briefs = await listSpotBriefs(root);
+    assert.equal(briefs.length, 1);
+    assert.equal(briefs[0]?.name, 'Bed one');
+    assert.equal(briefs[0]?.stage, 'mid-harvest');
+    assert.equal(briefs[0]?.session_count, 1);
+    assert.deepEqual(await listSpotBriefs(await freshRoot(t)), []);
   });
 });

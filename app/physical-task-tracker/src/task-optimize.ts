@@ -1,15 +1,15 @@
 // Demo: optimizer over goals + spot state.
-// Ranks next actions from <project>/goals.json, every tracked spot's
-// state.json, and hard constraints (--constraint, repeatable).
+// Ranks next actions from the project's goals table, every tracked spot's
+// standing state, and hard constraints (--constraint, repeatable).
 // Text-only call (no images). Node 18+.
 //   node task-optimize.mjs <project-root> [--goal "text" --deadline DATE --weight 1-5]
 //       [--set-status <id>=<open|at-risk|done>] [--constraint "..."]
 //       [--eco <lat,lon> | --eco-file samples/eco-x.json] [--offline] [--out plan.json]
 //
-// Same env and key handling as task-briefing.mjs.
+// The finished plan is stored in the project's fieldops.db (and exported
+// to --out when given). Same env and key handling as task-briefing.mjs.
 
-import { readdir, readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { readFile, writeFile } from 'node:fs/promises';
 import {
   buildRequestBody,
   buildOptimizerPrompt,
@@ -19,12 +19,14 @@ import {
 } from './lib/analyze-response.js';
 import { addGoal, listGoals, setGoalStatus } from './lib/goals.js';
 import { fetchEco, normalizeSoil, ecoConstraints, summarizeEco, type WeatherDoc } from './lib/eco.js';
-import { loadEnvSync } from './lib/env.js';
 import { type SpotBrief } from './lib/analyze-response.js';
+import { listSpotBriefs } from './lib/spot-state.js';
+import { setDoc } from './lib/db.js';
+import { loadEnvSync } from './lib/env.js';
+import { flagValue, flagAll } from './lib/args.js';
 
 // .env (cwd, then app root) fills gaps; real environment always wins.
 loadEnvSync();
-import { flagValue, flagAll } from './lib/args.js';
 
 const API_BASE = process.env.META_API_BASE ?? 'https://api.meta.ai/v1';
 const MODEL = process.env.MUSE_MODEL ?? 'muse-spark-1.1';
@@ -67,7 +69,7 @@ if (assign) {
 const constraints = flagAll(args, '--constraint');
 
 // Ecology fusion: live fetch (--eco lat,lon) or a saved capture
-// (--eco-file samples/eco-x.json, same shape as eco --out).
+// (--eco-file samples/eco-x.json). Either way the summary lands in the db.
 let ecoSummary: string | null = null;
 const ecoLoc = flagValue(args, '--eco', null);
 const ecoFile = flagValue(args, '--eco-file', null);
@@ -99,38 +101,11 @@ if (ecoLoc || ecoFile) {
   const ecoRules = ecoConstraints(weather, soil);
   constraints.push(...ecoRules);
   ecoSummary = summarizeEco(weather, soil, lat as number, lon as number);
+  setDoc(root, 'eco', { summary: ecoSummary, location: { lat, lon } });
   console.error(`eco: ${lat},${lon} -> ${ecoRules.length} weather/soil constraints`);
 }
 
-let spotIds: string[] = [];
-try {
-  spotIds = (await readdir(join(root, 'spots'))).sort();
-} catch { /* goals-only project: optimize from goals alone */ }
-
-const spots: SpotBrief[] = [];
-for (const id of spotIds) {
-  const dir = join(root, 'spots', id);
-  let meta: { id: string; name: unknown } = { id, name: id };
-  try {
-    meta = { id, name: id, ...(JSON.parse(await readFile(join(dir, 'spot.json'), 'utf8')) as Record<string, unknown>) };
-  } catch { /* uninitialized spot: name falls back to id */ }
-  let state: any = {};
-  try {
-    state = JSON.parse(await readFile(join(dir, 'state.json'), 'utf8'));
-  } catch {
-    console.error(`Skipping spot "${id}": no state.json (run a compare with --spot first).`);
-    continue;
-  }
-  spots.push({
-    id,
-    name: (meta.name ?? id) as string,
-    stage: state.stage,
-    summary: state.summary,
-    open_issues: state.open_issues,
-    session_count: state.session_ids?.length ?? 0,
-    updated_at: state.updated_at,
-  });
-}
+const spots: SpotBrief[] = await listSpotBriefs(root);
 
 const goals = await listGoals(root);
 if (!spots.length && !goals.length) {
@@ -175,6 +150,13 @@ if (!result.ok) {
   if (result.detail) console.error(`--- raw response ---\n${JSON.stringify(result.detail).slice(0, 1000)}`);
   process.exit(1);
 }
-const text = JSON.stringify({ goals_open: goals.filter((g) => g.status !== 'done').length, goals_total: goals.length, spots: spots.length, plan: result.analysis }, null, 2);
+const planObj = {
+  goals_open: goals.filter((g) => g.status !== 'done').length,
+  goals_total: goals.length,
+  spots: spots.length,
+  plan: result.analysis,
+};
+setDoc(root, 'plan', planObj);
+const text = JSON.stringify(planObj, null, 2);
 if (outPath) await writeFile(outPath, text + '\n');
 console.log(text);

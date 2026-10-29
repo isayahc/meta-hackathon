@@ -1,17 +1,20 @@
 // Field Ops app server: serves dashboard/index.html plus a JSON API that
 // runs the sibling CLIs as jobs (scan, compare, briefing, optimizer) and
-// manages goals.json. Keyless model jobs fail fast with the reason.
+// manages goals. Project state lives in <projectDir>/fieldops.db.
+// Keyless model jobs fail fast with the reason.
 //   node dist/serve-dashboard.js <projectDir> [--port 8123] [--eco <lat,lon>] [--open]
-// Node 18+, no runtime dependencies.
+// Node 18+, no runtime dependencies beyond built-in node:sqlite.
 
 import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { execFile } from 'node:child_process';
-import { readdir, readFile, writeFile, rm, mkdtemp } from 'node:fs/promises';
+import { readFile, writeFile, rm, mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listGoals, setGoalStatus, addGoal } from './lib/goals.js';
 import { listStoredEvents, addEvent, dayOf, isDay, type CalendarEvent } from './lib/events.js';
+import { listSpotBriefs, recentSessions } from './lib/spot-state.js';
+import { getDoc } from './lib/db.js';
 import { loadEnvSync } from './lib/env.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -104,14 +107,6 @@ export function cleanSpotId(id: unknown): string {
   return id;
 }
 
-async function readJson(path: string, fallback: any): Promise<any> {
-  try {
-    return JSON.parse(await readFile(path, 'utf8'));
-  } catch {
-    return fallback;
-  }
-}
-
 export interface OverviewSpot {
   id: string;
   name: string;
@@ -124,31 +119,17 @@ export interface OverviewSpot {
 }
 
 export async function loadSpots(root: string): Promise<OverviewSpot[]> {
-  let ids: string[] = [];
-  try {
-    ids = (await readdir(join(root, 'spots'))).sort();
-  } catch {
-    return [];
-  }
   const spots: OverviewSpot[] = [];
-  for (const id of ids) {
-    const dir = join(root, 'spots', id);
-    const meta = ((await readJson(join(dir, 'spot.json'), {})) ?? {}) as { name?: string };
-    const state = await readJson(join(dir, 'state.json'), null);
-    if (!state) continue;
-    let sessions: string[] = [];
-    try {
-      sessions = (await readdir(join(dir, 'sessions'))).sort().reverse();
-    } catch { /* no sessions yet */ }
+  for (const b of await listSpotBriefs(root)) {
     spots.push({
-      id,
-      name: meta.name ?? id,
-      stage: state.stage ?? null,
-      summary: state.summary ?? null,
-      open_issues: state.open_issues ?? [],
-      session_count: state.session_ids?.length ?? sessions.length,
-      recent_sessions: sessions.slice(0, 5),
-      updated_at: state.updated_at ?? null,
+      id: b.id,
+      name: b.name ?? b.id,
+      stage: b.stage ?? null,
+      summary: b.summary ?? null,
+      open_issues: b.open_issues ?? [],
+      session_count: b.session_count ?? 0,
+      recent_sessions: await recentSessions(root, b.id),
+      updated_at: b.updated_at ?? null,
     });
   }
   return spots;
@@ -190,8 +171,8 @@ export function createServer(root: string, { eco = null }: { eco?: string | null
       if (req.method === 'GET' && url.pathname === '/api/overview') {
         const spots = await loadSpots(root);
         const goals = await listGoals(root);
-        const plan = await readJson(join(root, 'plan.json'), null);
-        const ecoDoc = await readJson(join(root, 'eco.json'), null);
+        const plan = await getDoc(root, 'plan');
+        const ecoDoc = (await getDoc(root, 'eco')) as { summary?: string } | null;
         json(200, { spots, goals, plan, eco: ecoDoc?.summary ?? null, feed: buildFeed(spots) });
         return;
       }
@@ -283,7 +264,7 @@ export function createServer(root: string, { eco = null }: { eco?: string | null
           const id = cleanSpotId(spot);
           const a = await materializeImage(before, workdir, 'before');
           const b = await materializeImage(after, workdir, 'after');
-          const args = [a, b, '--spot', join(root, 'spots', id)];
+          const args = [a, b, '--spot', id, '--root', root];
           if (goal) args.push('--goal', goal);
           const analysis = await runScript('task-compare.js', args);
           json(200, { ok: true, spot: id, analysis });
@@ -298,7 +279,7 @@ export function createServer(root: string, { eco = null }: { eco?: string | null
         return;
       }
       if (req.method === 'POST' && url.pathname === '/api/refresh') {
-        const jobArgs = [root, '--out', join(root, 'plan.json')];
+        const jobArgs = [root];
         if (eco) jobArgs.push('--eco', eco);
         await runScript('task-optimize.js', jobArgs);
         json(200, { ok: true });

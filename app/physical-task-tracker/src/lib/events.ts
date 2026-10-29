@@ -1,10 +1,9 @@
 // Calendar events: operator-visible log of what happened and what's due.
-// Stored events live in <project>/events.json. Day/week/month views also
-// overlay goal deadlines and spot updates derived at read time.
-// No dependencies. Node 18+.
+// Stored events live in the project's fieldops.db. Day/week/month views
+// also overlay goal deadlines and spot updates derived at read time.
+// No dependencies beyond node:sqlite (via lib/db).
 
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { withDb } from './db.js';
 
 export type CalendarEventKind = 'scan' | 'spot' | 'goal' | 'note';
 
@@ -28,18 +27,30 @@ export interface NewCalendarEvent {
   detail?: string | null;
 }
 
-export function eventsPath(root: string): string {
-  return join(root, 'events.json');
+interface EventRow {
+  id: string;
+  title: string;
+  date: string;
+  time: string | null;
+  kind: CalendarEventKind;
+  detail: string | null;
+  created_at: string;
 }
 
 export async function listStoredEvents(root: string): Promise<CalendarEvent[]> {
-  try {
-    const raw = await readFile(eventsPath(root), 'utf8');
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as CalendarEvent[]) : [];
-  } catch {
-    return [];
-  }
+  return withDb(root, (db) =>
+    (db.prepare('SELECT id, title, date, time, kind, detail, created_at FROM events ORDER BY date, time').all() as unknown as EventRow[]).map(
+      (r): CalendarEvent => ({
+        id: r.id,
+        title: r.title,
+        date: r.date,
+        time: r.time,
+        kind: r.kind,
+        detail: r.detail,
+        created_at: r.created_at,
+      })
+    )
+  );
 }
 
 export function isDay(value: unknown): value is string {
@@ -79,18 +90,26 @@ export async function addEvent(
   if (time !== null && time !== undefined && !isTime(time)) {
     throw new Error(`Bad event time "${String(time)}": use HH:MM.`);
   }
-  const events = await listStoredEvents(root);
-  const event: CalendarEvent = {
-    id: slugify(title, events.length + 1),
-    title: title.trim(),
-    date,
-    time: time ?? null,
-    kind,
-    detail: detail?.trim() ? (detail as string).trim() : null,
-    created_at: new Date().toISOString(),
-  };
-  events.push(event);
-  await mkdir(root, { recursive: true });
-  await writeFile(eventsPath(root), JSON.stringify(events, null, 2));
-  return event;
+  return withDb(root, (db) => {
+    const n = (db.prepare('SELECT COUNT(*) AS n FROM events').get() as unknown as { n: number }).n;
+    const event: CalendarEvent = {
+      id: slugify(title, n + 1),
+      title: title.trim(),
+      date,
+      time: time ?? null,
+      kind,
+      detail: detail?.trim() ? (detail as string).trim() : null,
+      created_at: new Date().toISOString(),
+    };
+    db.prepare('INSERT INTO events(id, title, date, time, kind, detail, created_at) VALUES(?, ?, ?, ?, ?, ?, ?)').run(
+      event.id,
+      event.title,
+      event.date,
+      event.time,
+      event.kind,
+      event.detail,
+      event.created_at
+    );
+    return event;
+  });
 }
