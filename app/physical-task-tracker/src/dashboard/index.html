@@ -510,7 +510,9 @@ function parseDay(s) {
 }
 
 function evChip(e, clickable = false) {
-  const click = clickable && e.kind === 'scan' && !!(e.payload || e.media);
+  // Every video entry opens its detail panel; entries recorded before
+  // payloads existed simply show less inside it.
+  const click = clickable && e.kind === 'scan';
   return `<div class="ev ${esc(e.kind)}${click ? ' clickable' : ''}" title="${esc(e.detail ?? e.kind)}"` +
     (click ? ` data-eid="${esc(e.id)}"` : '') + '>' +
     (e.time ? `<span class="t">${esc(e.time)}</span> ` : '') + `${esc(e.title)}</div>`;
@@ -531,7 +533,7 @@ function renderCalDetail(box, e) {
       seq.map((s) => `<li>${esc(s)}</li>`).join('') + '</ol>' : '') +
     (steps.length ? '<ul class="tasks">' +
       steps.map((s) => `<li><label><input type="checkbox"> ${esc(s)}</label></li>`).join('') + '</ul>' : '') +
-    (!seq.length && !steps.length && !e.media ? '<p class="hint">No stored analysis for this entry.</p>' : '') +
+    (!seq.length && !steps.length && !e.media ? '<p class="hint">No stored analysis or clip on this entry — re-analyze the video to fill it in.</p>' : '') +
     (e.media ? `<video controls preload="metadata" src="/media/${encodeURIComponent(e.media)}"></video>` : '');
 }
 
