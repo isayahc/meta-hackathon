@@ -166,6 +166,24 @@ test('compares: bad spot id and missing images are 400, never shelled', async (t
   assert.equal(noScanImage.status, 400);
 });
 
+test('scan-video: missing video and bad mime are 400, never shelled', async (t: TestContext) => {
+  const root = await scratch(t);
+  const missing = await call(root, 'POST', '/api/scan-video', {});
+  assert.equal(missing.status, 400);
+  assert.match(missing.json.error, /mp4\/webm\/mov/);
+  const badMime = await call(root, 'POST', '/api/scan-video', {
+    videoData: 'data:image/png;base64,iVBORw0KGgo=',
+  });
+  assert.equal(badMime.status, 400);
+  const passThrough = await call(root, 'POST', '/api/scan-video', {
+    videoUrl: 'https://example.com/clip.mp4',
+    frames: 99,
+  });
+  // URL passes validation; the job itself needs ffmpeg + key, so it must
+  // fail as 400/500/502 — never 404, never a hang.
+  assert.ok(passThrough.status !== null && [400, 500, 502].includes(passThrough.status));
+});
+
 test('unknown routes 404; non-JSON bodies 400', async (t: TestContext) => {
   const root = await scratch(t);
   assert.equal((await call(root, 'GET', '/api/nope')).status, 404);

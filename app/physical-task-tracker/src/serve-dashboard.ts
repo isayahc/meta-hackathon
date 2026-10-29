@@ -76,6 +76,25 @@ export async function materializeImage(img: ImageInput, dir: string, base: strin
   return path;
 }
 
+const VIDEO_MIMES = ['video/mp4', 'video/webm', 'video/quicktime'] as const;
+
+export async function materializeVideo(
+  input: { videoUrl?: unknown; videoData?: unknown },
+  dir: string
+): Promise<string> {
+  if (typeof input?.videoUrl === 'string' && input.videoUrl) return input.videoUrl;
+  const m = /^data:(video\/(mp4|webm|quicktime));base64,([A-Za-z0-9+/=]+)$/.exec(
+    typeof input?.videoData === 'string' ? input.videoData : ''
+  );
+  if (!m || !(VIDEO_MIMES as readonly string[]).includes(m[1] as string)) {
+    throw new Error('Provide {videoUrl} or {videoData} as an mp4/webm/mov data URL.');
+  }
+  const ext = m[2] === 'quicktime' ? 'mov' : (m[2] as string);
+  const path = join(dir, `clip.${ext}`);
+  await writeFile(path, Buffer.from(m[3] as string, 'base64'));
+  return path;
+}
+
 export function cleanSpotId(id: unknown): string {
   if (typeof id !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,60}$/.test(id)) {
     throw new Error(`Bad spot id "${String(id)}": letters, numbers, - and _ only.`);
@@ -193,6 +212,19 @@ export function createServer(root: string, { eco = null }: { eco?: string | null
           const { imageUrl, imageData } = await readBody(req);
           const src = await materializeImage({ imageUrl, imageData }, workdir, 'visit');
           const analysis = await runScript('task-scan.js', [src]);
+          json(200, { ok: true, analysis });
+        } finally {
+          await rm(workdir, { recursive: true, force: true });
+        }
+        return;
+      }
+      if (req.method === 'POST' && url.pathname === '/api/scan-video') {
+        const workdir = await mkdtemp(join(tmpdir(), 'fieldops-video-'));
+        try {
+          const { videoUrl, videoData, frames = 4 } = await readBody(req, 200 * 1024 * 1024);
+          const n = Math.min(12, Math.max(1, Number(frames) || 4));
+          const src = await materializeVideo({ videoUrl, videoData }, workdir);
+          const analysis = await runScript('task-scan-video.js', [src, '--frames', String(n)]);
           json(200, { ok: true, analysis });
         } finally {
           await rm(workdir, { recursive: true, force: true });
