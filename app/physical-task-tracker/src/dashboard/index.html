@@ -501,7 +501,32 @@ document.addEventListener('click', (e) => {
   if (counter) counter.textContent = `${i + 1} / ${n}`;
 });
 
-function renderTaskList(el, tasksEl, a) {
+function actionItems(actions, fallbackSteps) {
+  const list = Array.isArray(actions) && actions.length
+    ? actions.map((it) => ({ id: it.id ?? null, text: String(it.text ?? ''), status: it.status ?? 'open' }))
+    : (fallbackSteps ?? []).map((s) => ({ id: null, text: String(s ?? ''), status: 'open' }));
+  if (!list.length) return '';
+  return '<ul class="tasks">' + list.map((it) =>
+    `<li><label><input type="checkbox"${it.id ? ` data-aid="${esc(it.id)}"` : ''}${it.status === 'done' ? ' checked' : ''}> ${esc(it.text)}</label></li>`
+  ).join('') + '</ul>';
+}
+
+document.addEventListener('change', async (e) => {
+  const box = e.target && e.target.closest ? e.target.closest('input[data-aid]') : null;
+  if (!box) return;
+  const want = box.checked ? 'done' : 'open';
+  try {
+    await api(`/api/actions/${encodeURIComponent(box.dataset.aid)}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: want }),
+    });
+  } catch (err) {
+    box.checked = !box.checked;
+    setStatus(`failed: ${err.message}`, true, 8000);
+  }
+});
+
+function renderTaskList(el, tasksEl, a, actions = null) {
   const seq = linearizeSequence(a);
   const seqGifs = Array.isArray(a.gifs) ? a.gifs : [];
   const steps = Array.isArray(a.suggested_next_steps) ? a.suggested_next_steps : [];
@@ -517,8 +542,8 @@ function renderTaskList(el, tasksEl, a) {
       : `<p class="hint">recorded: ${esc(a.recorded_at)}</p>`) : '') +
     (seq.length ? `<div style="margin-top:8px;font-weight:650">Sequence</div>` + seqCarousel(seq, seqGifs) : '');
   tasksEl.innerHTML =
-    (steps.length
-      ? '<ul class="tasks">' + steps.map((s) => `<li><label><input type="checkbox"> ${esc(s)}</label></li>`).join('') + '</ul>'
+    ((actions && actions.length) || steps.length
+      ? actionItems(actions, steps)
       : '<p>No next steps suggested.</p>');
   el.innerHTML +=
     (a.confidence ? `<p class="hint">confidence: ${esc(a.confidence)}</p>` : '') +
@@ -535,7 +560,14 @@ $('videoform').addEventListener('submit', (e) => {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ videoData, frames: Number(f.frames.value) || 4 }),
     });
-    renderTaskList($('videoresult'), $('videotasks'), analysis);
+    let scanActions = null;
+    if (analysis && typeof analysis.event === 'string' && analysis.event) {
+      try {
+        const detail = await api(`/api/events/${encodeURIComponent(analysis.event)}`);
+        scanActions = detail.actions ?? null;
+      } catch { scanActions = null; }
+    }
+    renderTaskList($('videoresult'), $('videotasks'), analysis, scanActions);
     return analysis;
   }, 'video analyzed — task list below');
 });
@@ -563,7 +595,14 @@ function evChip(e, clickable = false) {
     (e.time ? `<span class="t">${esc(e.time)}</span> ` : '') + `${esc(e.title)}</div>`;
 }
 
-function renderCalDetail(box, e) {
+async function renderCalDetail(box, e, actions = null) {
+  if ((!actions || !actions.length) && e && e.kind === 'scan' && e.id) {
+    box.innerHTML = '<p class="hint">Loading…</p>';
+    try {
+      const detail = await api(`/api/events/${encodeURIComponent(e.id)}`);
+      actions = detail.actions ?? null;
+    } catch { actions = null; }
+  }
   let a = null;
   try {
     a = typeof e.payload === 'string' ? JSON.parse(e.payload) : e.payload;
@@ -576,9 +615,9 @@ function renderCalDetail(box, e) {
     `<h3 style="margin:.4em 0">${esc(e.title)}</h3>` +
     `<p class="hint">${esc(e.date)}${e.detail ? ` — ${esc(e.detail)}` : ''}</p>` +
     (seq.length ? `<div style="margin-top:8px;font-weight:650">Sequence</div>` + seqCarousel(seq, seqGifs) : '') +
-    (steps.length ? '<ul class="tasks">' +
-      steps.map((s) => `<li><label><input type="checkbox"> ${esc(s)}</label></li>`).join('') + '</ul>' : '') +
-    (!seq.length && !steps.length && !e.media ? '<p class="hint">No stored analysis or clip on this entry — re-analyze the video to fill it in.</p>' : '') +
+    actionItems(actions, steps) +
+    '' +
+    (!seq.length && !steps.length && !(actions && actions.length) && !e.media ? '<p class="hint">No stored analysis or clip on this entry — re-analyze the video to fill it in.</p>' : '') +
     (e.media ? `<video controls preload="metadata" src="/media/${encodeURIComponent(e.media)}"></video>` : '');
 }
 
@@ -698,9 +737,12 @@ $('compareform').addEventListener('submit', (e) => {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
     });
     showResult($('compareresult'), out.analysis);
+    if (out.analysis && out.analysis.same_location === false) {
+      $('compareresult').insertAdjacentHTML('afterbegin', '<p><span class="chip risk">quarantined</span> <span class="hint">model doubts this visit matches the spot — state left untouched, session kept.</span></p>');
+    }
     tick(false);
     return out;
-  }, 'compare saved to spot state');
+  }, 'compare complete — see result below');
 });
 
 $('goalform').addEventListener('submit', (e) => {

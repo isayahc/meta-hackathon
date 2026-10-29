@@ -42,6 +42,13 @@ CREATE TABLE IF NOT EXISTS events(
 CREATE TABLE IF NOT EXISTS docs(
   key TEXT PRIMARY KEY, body TEXT NOT NULL, updated_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS actions(
+  id TEXT PRIMARY KEY, event_id TEXT NOT NULL REFERENCES events(id),
+  idx INTEGER NOT NULL, text TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'open',
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+  UNIQUE(event_id, idx)
+);
 `;
 
 function readJsonFile(path: string): unknown {

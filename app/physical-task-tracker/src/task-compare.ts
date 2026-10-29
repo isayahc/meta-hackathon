@@ -175,6 +175,9 @@ if (spotFlag) {
     process.exit(1);
   }
   const root = rootFlag ?? dirname(dirname(spotFlag));
-  const { sessionId } = await appendSession(root, id, result.analysis as VisitAnalysis);
+  const { sessionId, quarantined } = await appendSession(root, id, result.analysis as VisitAnalysis);
   console.error(`Saved session ${sessionId} to ${spotFlag}.`);
+  if (quarantined) {
+    console.error('Quarantined: model doubts same_location — standing state left untouched.');
+  }
 }

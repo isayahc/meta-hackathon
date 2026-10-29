@@ -69,6 +69,32 @@ describe('spot-state', () => {
     assert.deepEqual(state.session_ids, ['s1', 's2']);
   });
 
+  it('quarantines mismatched visits: session kept, state untouched', async (t: TestContext) => {
+    const root = await freshRoot(t);
+    await initSpot(root, 'bed-1');
+    await appendSession(root, 'bed-1', DIFF, 's1');
+    const bad = {
+      stage: 'wrong-field',
+      suggested_state_update: 'Bogus update.',
+      new_issues: ['bogus'],
+      same_location: false,
+    };
+    const { state, quarantined } = await appendSession(root, 'bed-1', bad, 's2');
+    assert.equal(quarantined, true);
+    assert.equal(state.stage, 'mid-harvest');
+    assert.equal(state.summary, 'Row half-crated, crew moving east.');
+    assert.deepEqual(state.open_issues, ['soft ground near gate']);
+    assert.deepEqual(state.session_ids, ['s1', 's2']);
+    assert.equal((await readSession(root, 'bed-1', 's2')).stage, 'wrong-field');
+  });
+
+  it('treats a missing same_location as trusted (legacy analyses)', async (t: TestContext) => {
+    const root = await freshRoot(t);
+    await initSpot(root, 'bed-1');
+    const { quarantined } = await appendSession(root, 'bed-1', DIFF, 's1');
+    assert.equal(quarantined, false);
+  });
+
   it('lists briefs for briefings and the overview', async (t: TestContext) => {
     const root = await freshRoot(t);
     await initSpot(root, 'bed-1', 'Bed one');
