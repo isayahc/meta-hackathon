@@ -12,10 +12,72 @@
 
 import { createServer as createHttpServer } from 'node:http';
 import { execFile } from 'node:child_process';
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir, readFile, writeFile, rm, mkdtemp } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { listGoals, setGoalStatus } from './lib/goals.mjs';
+import { listGoals, setGoalStatus, addGoal } from './lib/goals.mjs';
+
+export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // data-URL image cap
+const JOB_TIMEOUT_MS = 300000; // model calls are slow; surface hangs as 502s
+
+// Shell out to a sibling CLI, parse its stdout JSON. Nonzero exit (bad key,
+// API error, truncated output) rejects with the script's stderr.
+export function runScript(name, args, { timeoutMs = JOB_TIMEOUT_MS } = {}) {
+  return new Promise((resolve, reject) => {
+    execFile(
+      process.execPath,
+      [join(HERE, name), ...args],
+      { cwd: HERE, timeout: timeoutMs },
+      (err, stdout, stderr) => {
+        if (err) {
+          const why = err.killed ? `timed out after ${timeoutMs}ms` : `${stderr || err.message}`;
+          reject(new Error(`${name}: ${why}`.slice(0, 500)));
+        } else {
+          try {
+            resolve(JSON.parse(stdout));
+          } catch {
+            reject(new Error(`${name} returned non-JSON: ${stdout.slice(0, 200)}`));
+          }
+        }
+      }
+    );
+  });
+}
+
+export async function readBody(req, limit = MAX_UPLOAD_BYTES) {
+  let size = 0;
+  let body = '';
+  for await (const chunk of req) {
+    size += chunk.length;
+    if (size > limit) throw new Error(`Body over ${limit} bytes.`);
+    body += chunk;
+  }
+  try {
+    return JSON.parse(body || '{}');
+  } catch {
+    throw new Error('Body is not JSON.');
+  }
+}
+
+// {imageUrl} passes through; {imageData} must be a png/jpeg/webp data URL
+// and is written to dir. Returns a path or URL the CLIs accept.
+export async function materializeImage(img, dir, base) {
+  if (img?.imageUrl) return img.imageUrl;
+  const m = /^data:(image\/(png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/.exec(img?.imageData ?? '');
+  if (!m) throw new Error('Provide {imageUrl} or {imageData} as a png/jpeg/webp data URL.');
+  const ext = m[2] === 'jpeg' ? 'jpg' : m[2];
+  const path = join(dir, `${base}.${ext}`);
+  await writeFile(path, Buffer.from(m[3], 'base64'));
+  return path;
+}
+
+export function cleanSpotId(id) {
+  if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,60}$/.test(id ?? '')) {
+    throw new Error(`Bad spot id "${id}": letters, numbers, - and _ only.`);
+  }
+  return id;
+}
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -93,33 +155,68 @@ export function createServer(root, { eco = null } = {}) {
         json(200, { spots, goals, plan, eco: ecoDoc?.summary ?? null, feed: buildFeed(spots) });
         return;
       }
+      if (req.method === 'POST' && url.pathname === '/api/goals') {
+        const { text, deadline = null, weight = 3 } = await readBody(req);
+        const goal = await addGoal(root, { text, deadline, weight });
+        json(200, { ok: true, goal });
+        return;
+      }
       const goalMatch = req.method === 'POST' && /^\/api\/goals\/([^/]+)$/.exec(url.pathname);
       if (goalMatch) {
-        let body = '';
-        for await (const chunk of req) body += chunk;
-        const { status } = JSON.parse(body || '{}');
+        const { status } = await readBody(req);
         const goal = await setGoalStatus(root, decodeURIComponent(goalMatch[1]), status);
         json(200, { ok: true, goal });
         return;
       }
+      if (req.method === 'POST' && url.pathname === '/api/scans') {
+        const workdir = await mkdtemp(join(tmpdir(), 'fieldops-scan-'));
+        try {
+          const { imageUrl, imageData } = await readBody(req);
+          const src = await materializeImage({ imageUrl, imageData }, workdir, 'visit');
+          const analysis = await runScript('task-scan.mjs', [src]);
+          json(200, { ok: true, analysis });
+        } finally {
+          await rm(workdir, { recursive: true, force: true });
+        }
+        return;
+      }
+      if (req.method === 'POST' && url.pathname === '/api/compares') {
+        const workdir = await mkdtemp(join(tmpdir(), 'fieldops-compare-'));
+        try {
+          const { spot, before, after, goal = null } = await readBody(req);
+          const id = cleanSpotId(spot);
+          const a = await materializeImage(before, workdir, 'before');
+          const b = await materializeImage(after, workdir, 'after');
+          const args = [a, b, '--spot', join(root, 'spots', id)];
+          if (goal) args.push('--goal', goal);
+          const analysis = await runScript('task-compare.mjs', args);
+          json(200, { ok: true, spot: id, analysis });
+        } finally {
+          await rm(workdir, { recursive: true, force: true });
+        }
+        return;
+      }
+      if (req.method === 'POST' && url.pathname === '/api/briefing') {
+        const briefing = await runScript('task-briefing.mjs', [root]);
+        json(200, { ok: true, briefing });
+        return;
+      }
       if (req.method === 'POST' && url.pathname === '/api/refresh') {
-        const args = [join(HERE, 'task-optimize.mjs'), root, '--out', join(root, 'plan.json')];
+        const args = ['task-optimize.mjs', root, '--out', join(root, 'plan.json')];
         if (eco) args.push('--eco', eco);
-        await new Promise((resolve, reject) => {
-          execFile(process.execPath, args, { cwd: HERE }, (err, stdout, stderr) => {
-            if (err) reject(new Error(`${stderr || err.message}`.slice(0, 500)));
-            else resolve(stdout);
-          });
-        });
+        await runScript(args.shift(), args);
         json(200, { ok: true });
         return;
       }
       json(404, { ok: false, error: 'not found' });
     } catch (err) {
-      json(err.message.includes('No goal') || err.message.includes('Bad status') ? 400 : 500, {
-        ok: false,
-        error: err.message.slice(0, 500),
-      });
+      const msg = err.message;
+      const code = /No goal|Bad status|Bad spot|Provide \{|not JSON|over \d+|Bad --eco|Bad location|No spots|Nothing to optimize|Set META_API_KEY|Empty key|required/i.test(msg)
+        ? 400
+        : /task-\w+\.mjs:|timed out/i.test(msg)
+          ? 502
+          : 500;
+      json(code, { ok: false, error: msg.slice(0, 500) });
     }
   });
   return server;

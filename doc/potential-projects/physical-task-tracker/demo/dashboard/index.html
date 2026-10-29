@@ -22,18 +22,25 @@
     font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
     font-size: 14px; line-height: 1.45;
   }
-  header {
-    display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap;
-    padding: 10px 16px; background: var(--panel); border-bottom: 2px solid var(--soil);
+  header { background: var(--panel); border-bottom: 2px solid var(--soil); }
+  .topbar { display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; padding: 10px 16px 0; }
+  .topbar h1 { font-size: 17px; margin: 0; font-weight: 650; }
+  .topbar .strip { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+  .topbar .strip b { color: var(--ink); font-weight: 600; }
+  nav.tabs { display: flex; gap: 2px; padding: 8px 16px 0; }
+  nav.tabs button {
+    font: inherit; font-size: 14px; font-weight: 600; padding: 8px 16px;
+    border: 1px solid transparent; border-bottom: 0; border-radius: 6px 6px 0 0;
+    background: transparent; color: var(--muted); cursor: pointer;
   }
-  header h1 { font-size: 17px; margin: 0; font-weight: 650; }
-  header .strip { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
-  header .strip b { color: var(--ink); font-weight: 600; }
-  main {
-    display: grid; gap: 12px; padding: 12px 16px;
-    grid-template-columns: minmax(280px, 5fr) minmax(360px, 7fr);
+  nav.tabs button[aria-selected="true"] {
+    background: var(--paper); color: var(--ink); border-color: var(--line);
   }
-  section { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
+  main { padding: 12px 16px; }
+  .view { display: none; }
+  .view.active { display: block; }
+  .cols { display: grid; gap: 12px; grid-template-columns: minmax(280px, 5fr) minmax(360px, 7fr); }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; }
   section h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 8px; font-weight: 650; }
   #spots { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   .spot { border: 1px solid var(--line); border-radius: 4px; padding: 8px; cursor: pointer; background: #fff; text-align: left; font: inherit; }
@@ -44,40 +51,59 @@
   .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex: none; margin-top: 5px; }
   .dot.warn { background: var(--amber); }
   .chip { display: inline-block; font-size: 11px; font-weight: 650; padding: 1px 7px; border-radius: 20px; background: #e4e1d3; }
-  .chip.done { background: #cfe3d0; color: var(--green); }
   .chip.risk { background: #f3d9a7; color: var(--amber); }
+  .chip.done { background: #cfe3d0; color: var(--green); }
   ol.actions { margin: 0; padding-left: 20px; }
   ol.actions li { margin-bottom: 8px; }
   ol.actions .why { color: var(--muted); font-size: 13px; }
-  ol.actions button, .rowbtn {
+  button.btn {
+    font: inherit; font-size: 13px; padding: 6px 14px; border-radius: 4px;
+    border: 1px solid var(--soil); background: var(--soil); color: #fff; cursor: pointer;
+  }
+  button.btn:disabled { opacity: 0.55; cursor: wait; }
+  button.ghost {
     font: inherit; font-size: 12px; padding: 2px 10px; margin-left: 8px;
     border: 1px solid var(--line); border-radius: 4px; background: #fff; cursor: pointer;
   }
-  ol.actions button:hover, .rowbtn:hover { border-color: var(--green); color: var(--green); }
+  button.ghost:hover { border-color: var(--green); color: var(--green); }
   details.deferred { margin-top: 6px; color: var(--muted); font-size: 13px; }
   #feed { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow: auto; }
   #feed li { padding: 4px 0; border-top: 1px dotted var(--line); font-size: 13px; }
   #feed li:first-child { border-top: 0; }
   #feed time { color: var(--muted); margin-right: 6px; font-variant-numeric: tabular-nums; }
-  #detail .sess { font-size: 13px; color: var(--muted); }
-  #detail ul { margin: 6px 0; padding-left: 18px; }
-  #toolbar { display: flex; gap: 8px; align-items: center; }
-  #toolbar button { font: inherit; font-size: 13px; padding: 4px 12px; border-radius: 4px; border: 1px solid var(--soil); background: var(--soil); color: #fff; cursor: pointer; }
-  #toolbar button:disabled { opacity: 0.55; cursor: wait; }
-  #status { font-size: 13px; color: var(--muted); }
+  form.run { display: grid; gap: 10px; }
+  form.run label { display: grid; gap: 4px; font-weight: 600; font-size: 13px; }
+  form.run input[type="text"], form.run select {
+    font: inherit; font-weight: 400; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: #fff; width: 100%;
+  }
+  form.run input[type="file"] { font: inherit; font-size: 13px; }
+  .hint { font-weight: 400; color: var(--muted); font-size: 12px; }
+  #status { font-size: 13px; color: var(--muted); padding: 0 16px 8px; min-height: 1.4em; display: block; }
   #status.err { color: var(--red); }
+  pre.result {
+    background: #fff; border: 1px solid var(--line); border-radius: 4px;
+    padding: 10px; overflow: auto; max-height: 320px; font-size: 12px;
+  }
+  ul.goals { list-style: none; margin: 0 0 10px; padding: 0; }
+  ul.goals li { padding: 6px 0; border-top: 1px dotted var(--line); display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  ul.goals li:first-child { border-top: 0; }
+  ul.goals .meta { color: var(--muted); font-size: 12px; }
+  .addrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .addrow input[type="text"] { flex: 3 1 180px; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; }
+  .addrow select, .addrow input[type="date"] { flex: 1 1 90px; font: inherit; padding: 8px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
   @media (max-width: 760px) {
-    main { grid-template-columns: 1fr; padding: 8px; }
-    header { gap: 8px; }
-    #toolbar { width: 100%; }
-    #toolbar button { flex: 1; padding: 10px 12px; }
+    main { padding: 8px; }
+    .cols { grid-template-columns: 1fr; }
+    nav.tabs { padding: 8px 8px 0; overflow-x: auto; }
+    nav.tabs button { flex: 1; padding: 10px 8px; white-space: nowrap; }
     #spots { grid-template-columns: repeat(2, 1fr); }
     section { padding: 8px 10px; }
-    ol.actions li { margin-bottom: 12px; }
+    button.btn { width: 100%; padding: 12px; }
   }
   @media (pointer: coarse) {
     .spot { padding: 12px 10px; }
-    ol.actions button, .rowbtn { min-height: 44px; padding: 8px 14px; }
+    button.ghost { min-height: 44px; padding: 8px 14px; }
+    nav.tabs button { min-height: 44px; }
     details.deferred summary { min-height: 44px; display: inline-flex; align-items: center; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -85,29 +111,87 @@
 </head>
 <body>
 <header>
-  <h1>Field Ops</h1>
-  <div class="strip" id="strip"><span>loading…</span></div>
-  <div id="toolbar">
-    <button id="refresh" type="button">Re-run optimizer</button>
-    <span id="status" role="status"></span>
+  <div class="topbar">
+    <h1>Field Ops</h1>
+    <div class="strip" id="strip"><span>loading…</span></div>
   </div>
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button role="tab" data-view="spots" aria-selected="true">Spots</button>
+    <button role="tab" data-view="run" aria-selected="false">Run</button>
+    <button role="tab" data-view="plan" aria-selected="false">Plan</button>
+    <button role="tab" data-view="activity" aria-selected="false">Activity</button>
+  </nav>
 </header>
+<span id="status" role="status"></span>
 <main>
-  <div>
-    <section aria-label="Spots">
-      <h2>Spots</h2>
-      <div id="spots"></div>
+  <div class="view active" id="view-spots">
+    <div class="cols">
+      <section aria-label="Spots">
+        <h2>Spots</h2>
+        <div id="spots"></div>
+      </section>
+      <section aria-label="Spot detail" id="detail"><h2>Spot detail</h2><p>Select a spot.</p></section>
+    </div>
+  </div>
+  <div class="view" id="view-run">
+    <section aria-label="Scan a visit">
+      <h2>Scan a visit (photo → task analysis)</h2>
+      <form class="run" id="scanform">
+        <label>Photo
+          <input type="file" name="file" accept="image/png,image/jpeg,image/webp">
+          <span class="hint">…or paste an image URL below. File wins when both are set.</span>
+        </label>
+        <label>Image URL <input type="text" name="url" placeholder="https://…"></label>
+        <div><button class="btn" type="submit">Scan visit</button></div>
+      </form>
+      <div id="scanresult"></div>
     </section>
-    <section aria-label="Briefing feed" style="margin-top:12px">
+    <section aria-label="Compare two visits">
+      <h2>Compare two visits (diff → spot state)</h2>
+      <form class="run" id="compareform">
+        <label>Spot id <input type="text" name="spot" required placeholder="north-fence" title="letters, numbers, - and _ only"></label>
+        <label>Before photo <input type="file" name="beforefile" accept="image/png,image/jpeg,image/webp"></label>
+        <label>Before URL <input type="text" name="beforeurl" placeholder="https://…"></label>
+        <label>After photo <input type="file" name="afterfile" accept="image/png,image/jpeg,image/webp"></label>
+        <label>After URL <input type="text" name="afterurl" placeholder="https://…"></label>
+        <label>Goal (optional) <input type="text" name="goal" placeholder="what should this advance?"></label>
+        <div><button class="btn" type="submit">Run compare</button></div>
+      </form>
+      <div id="compareresult"></div>
+    </section>
+  </div>
+  <div class="view" id="view-plan">
+    <section aria-label="Goals">
+      <h2>Goals</h2>
+      <ul class="goals" id="goals"></ul>
+      <form class="addrow" id="goalform">
+        <input type="text" name="text" required placeholder="New goal…" aria-label="Goal text">
+        <select name="weight" aria-label="Weight">
+          <option value="5">weight 5</option>
+          <option value="4">weight 4</option>
+          <option value="3" selected>weight 3</option>
+          <option value="2">weight 2</option>
+          <option value="1">weight 1</option>
+        </select>
+        <input type="date" name="deadline" aria-label="Deadline">
+        <button class="btn" type="submit">Add</button>
+      </form>
+    </section>
+    <section aria-label="Next actions">
+      <h2>Next actions</h2>
+      <div style="margin-bottom:8px"><button class="btn" id="refresh" type="button">Re-run optimizer</button></div>
+      <div id="actions"><p>No plan yet — run the optimizer.</p></div>
+    </section>
+  </div>
+  <div class="view" id="view-activity">
+    <section aria-label="Briefing">
+      <h2>Briefing</h2>
+      <div style="margin-bottom:8px"><button class="btn" id="brief" type="button">Brief me</button></div>
+      <div id="briefresult"></div>
+    </section>
+    <section aria-label="Briefing feed">
       <h2>Briefing feed</h2>
       <ol id="feed"></ol>
-    </section>
-  </div>
-  <div>
-    <section aria-label="Spot detail" id="detail"><h2>Spot detail</h2><p>Select a spot.</p></section>
-    <section aria-label="Next actions" style="margin-top:12px">
-      <h2>Next actions</h2>
-      <div id="actions"><p>No plan yet — run the optimizer.</p></div>
     </section>
   </div>
 </main>
@@ -115,16 +199,35 @@
 const $ = (id) => document.getElementById(id);
 let selected = null;
 let lastSeen = {};
+let lastJson = '';
+let noticeUntil = 0;
 
 async function api(path, opts) {
   const r = await fetch(path, opts);
-  if (!r.ok) throw new Error(`${opts?.method ?? 'GET'} ${path}: ${r.status}`);
-  return r.json();
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error ?? `${opts?.method ?? 'GET'} ${path}: ${r.status}`);
+  return data;
 }
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
+
+function setStatus(msg, isErr, stickyMs = 0) {
+  const el = $('status');
+  el.textContent = msg;
+  el.classList.toggle('err', !!isErr);
+  if (stickyMs) noticeUntil = Date.now() + stickyMs;
+}
+
+// Tabs
+document.querySelectorAll('nav.tabs button').forEach((b) =>
+  b.addEventListener('click', () => {
+    document.querySelectorAll('nav.tabs button').forEach((x) => x.setAttribute('aria-selected', 'false'));
+    b.setAttribute('aria-selected', 'true');
+    document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
+    $('view-' + b.dataset.view).classList.add('active');
+  }));
 
 function renderStrip(ov) {
   const eco = ov.eco ? esc(ov.eco.split('. ')[0]) : 'no ecology data';
@@ -149,7 +252,7 @@ function renderSpots(ov) {
     b.addEventListener('click', () => { selected = s.id; lastSeen[s.id] = s.updated_at ?? lastSeen[s.id]; tick(false); });
     box.appendChild(b);
   }
-  if (!ov.spots.length) box.innerHTML = '<p>No spots yet — run a compare with --spot first.</p>';
+  if (!ov.spots.length) box.innerHTML = '<p>No spots yet — run a compare first.</p>';
 }
 
 function renderDetail(ov) {
@@ -161,8 +264,29 @@ function renderDetail(ov) {
   el.innerHTML = `<h2>Spot detail</h2><h3 style="margin:.2em 0">${esc(s.name)} <span class="chip">${esc(s.stage ?? 'unknown')}</span></h3>` +
     `<p>${esc(s.summary ?? '(no standing state)')}</p>` +
     `<h2>Open issues</h2><ul>${issues}</ul>` +
-    `<h2>Recent sessions</h2><ul class="sess">${sessions}</ul>` +
-    `<p class="sess">${s.session_count ?? 0} sessions · updated ${esc(s.updated_at ?? 'never')}</p>`;
+    `<h2>Recent sessions</h2><ul class="sess" style="font-size:13px;color:var(--muted)">${sessions}</ul>` +
+    `<p style="font-size:13px;color:var(--muted)">${s.session_count ?? 0} sessions · updated ${esc(s.updated_at ?? 'never')}</p>`;
+}
+
+function renderGoals(ov) {
+  const el = $('goals');
+  el.innerHTML = ov.goals.map((g) =>
+    `<li><span class="chip${g.status === 'done' ? ' done' : g.status === 'at-risk' ? ' risk' : ''}">${esc(g.status)}</span>` +
+    `<span>${esc(g.text)}</span><span class="meta">weight ${g.weight}/5${g.deadline ? ` · due ${esc(g.deadline)}` : ''}</span>` +
+    (g.status !== 'done' ? ` <button type="button" class="ghost" data-goal="${esc(g.id)}">done</button>` : '') + '</li>'
+  ).join('') || '<li>No goals yet — add one below.</li>';
+  el.querySelectorAll('button[data-goal]').forEach((b) =>
+    b.addEventListener('click', () => setGoal(b.dataset.goal, 'done', b)));
+}
+
+async function setGoal(id, status, btn) {
+  if (btn) btn.disabled = true;
+  try {
+    await api(`/api/goals/${encodeURIComponent(id)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+    setStatus(`goal ${status}`, false, 5000);
+  } catch (e) { setStatus(`goal update failed: ${e.message}`, true, 8000); }
+  if (btn) btn.disabled = false;
+  tick(false);
 }
 
 function renderActions(ov) {
@@ -170,40 +294,23 @@ function renderActions(ov) {
   const plan = ov.plan?.plan ?? ov.plan;
   const ranked = plan?.ranked_actions ?? [];
   if (!ranked.length) { el.innerHTML = '<p>No plan yet — run the optimizer.</p>'; return; }
-  el.innerHTML = '<ol class="actions">' + ranked.map((a, i) =>
+  el.innerHTML = '<ol class="actions">' + ranked.map((a) =>
     `<li>${esc(a.action)} <span class="why">— ${esc(a.why)}${a.effort ? ` (${esc(a.effort)})` : ''}</span>` +
-    (a.goal_id ? ` <button type="button" data-goal="${esc(a.goal_id)}">done</button>` : '') + '</li>'
+    (a.goal_id ? ` <button type="button" class="ghost" data-goal="${esc(a.goal_id)}">done</button>` : '') + '</li>'
   ).join('') + '</ol>' +
     ((plan?.deferred ?? []).length ? `<details class="deferred"><summary>deferred (${plan.deferred.length})</summary><ul>` +
       plan.deferred.map((d) => `<li>${esc(d.action)} — ${esc(d.why)}</li>`).join('') + '</ul></details>' : '');
   el.querySelectorAll('button[data-goal]').forEach((b) =>
-    b.addEventListener('click', async () => {
-      b.disabled = true;
-      try { await api(`/api/goals/${encodeURIComponent(b.dataset.goal)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'done' }) }); }
-      catch (e) { setStatus(`goal update failed: ${e.message}`, true); }
-      tick(false);
-    }));
+    b.addEventListener('click', () => setGoal(b.dataset.goal, 'done', b)));
 }
 
 function renderFeed(ov) {
-  const el = $('feed');
-  el.innerHTML = (ov.feed ?? []).map((e) => `<li><time>${esc(e.at)}</time>${esc(e.text)}</li>`).join('') || '<li>No events yet.</li>';
+  $('feed').innerHTML = (ov.feed ?? []).map((e) => `<li><time>${esc(e.at)}</time>${esc(e.text)}</li>`).join('') || '<li>No events yet.</li>';
 }
 
-let noticeUntil = 0;
-function setStatus(msg, isErr, stickyMs = 0) {
-  const el = $('status');
-  el.textContent = msg;
-  el.classList.toggle('err', !!isErr);
-  if (stickyMs) noticeUntil = Date.now() + stickyMs;
-}
-
-let lastJson = '';
 async function tick(markSeen = true) {
   try {
     const ov = await api('/api/overview');
-    // Skip re-render when nothing changed: rebuilding the spot buttons
-    // under the user's cursor would eat in-flight clicks.
     const snapshot = JSON.stringify([selected, ov.spots, ov.goals, ov.plan, ov.eco, ov.feed]);
     if (snapshot === lastJson) {
       if (Date.now() > noticeUntil) setStatus(`updated ${new Date().toLocaleTimeString()}`, false);
@@ -213,6 +320,7 @@ async function tick(markSeen = true) {
     renderStrip(ov);
     renderSpots(ov);
     renderDetail(ov);
+    renderGoals(ov);
     renderActions(ov);
     renderFeed(ov);
     if (markSeen) for (const s of ov.spots) lastSeen[s.id] = lastSeen[s.id] ?? s.updated_at ?? null;
@@ -220,14 +328,92 @@ async function tick(markSeen = true) {
   } catch (e) { setStatus(`load failed: ${e.message}`, true); }
 }
 
-$('refresh').addEventListener('click', async () => {
-  const b = $('refresh');
-  b.disabled = true;
-  setStatus('optimizer running…', false);
-  try { await api('/api/refresh', { method: 'POST' }); setStatus('plan refreshed', false, 8000); }
-  catch (e) { setStatus(`refresh failed: ${e.message}`, true); }
-  b.disabled = false;
-  tick(false);
+function fileData(input) {
+  const f = input.files?.[0];
+  if (!f) return Promise.resolve(null);
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(new Error(`Could not read ${f.name}.`));
+    r.readAsDataURL(f);
+  });
+}
+
+async function busy(btn, fn, doneMsg) {
+  btn.disabled = true;
+  setStatus('working — model calls take a minute or more…', false);
+  try {
+    const out = await fn();
+    setStatus(doneMsg, false, 8000);
+    return out;
+  } catch (e) {
+    setStatus(`failed: ${e.message}`, true, 12000);
+    return null;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function showResult(el, data) {
+  el.innerHTML = `<pre class="result">${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+$('scanform').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const f = e.target;
+  busy(f.querySelector('button'), async () => {
+    const imageData = await fileData(f.file);
+    const imageUrl = f.url.value.trim() || undefined;
+    const { analysis } = await api('/api/scans', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageData: imageData ?? undefined, imageUrl }),
+    });
+    showResult($('scanresult'), analysis);
+    return analysis;
+  }, 'scan complete');
+});
+
+$('compareform').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const f = e.target;
+  busy(f.querySelector('button'), async () => {
+    const payload = {
+      spot: f.spot.value.trim(),
+      before: { imageData: await fileData(f.beforefile) ?? undefined, imageUrl: f.beforeurl.value.trim() || undefined },
+      after: { imageData: await fileData(f.afterfile) ?? undefined, imageUrl: f.afterurl.value.trim() || undefined },
+    };
+    if (f.goal.value.trim()) payload.goal = f.goal.value.trim();
+    const out = await api('/api/compares', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+    });
+    showResult($('compareresult'), out.analysis);
+    tick(false);
+    return out;
+  }, 'compare saved to spot state');
+});
+
+$('goalform').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const f = e.target;
+  busy(f.querySelector('button'), async () => {
+    const payload = { text: f.text.value.trim(), weight: Number(f.weight.value) };
+    if (f.deadline.value) payload.deadline = f.deadline.value;
+    await api('/api/goals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    f.reset();
+    tick(false);
+  }, 'goal added');
+});
+
+$('refresh').addEventListener('click', (e) => {
+  busy(e.target, () => api('/api/refresh', { method: 'POST' }), 'plan refreshed');
+});
+
+$('brief').addEventListener('click', (e) => {
+  busy(e.target, async () => {
+    const { briefing } = await api('/api/briefing', { method: 'POST' });
+    showResult($('briefresult'), briefing);
+    return briefing;
+  }, 'briefing complete');
 });
 
 tick();

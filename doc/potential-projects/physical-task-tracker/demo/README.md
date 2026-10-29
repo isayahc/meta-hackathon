@@ -191,14 +191,16 @@ Tests: `node --test goals.test.mjs`.
 
 ## Live dashboard
 
-`serve-dashboard.mjs` is the run script for the Field Ops dashboard
-(`dashboard/index.html`, single file, no dependencies): spot grid with
-stage chips, text-first spot detail (state, open issues, recent sessions —
-sessions store analysis, not images, so there is no photo slider yet),
-optimizer-ranked next actions with done buttons that write back to
-`goals.json`, a briefing feed, and the eco strip. Polls `/api/overview`
-every 5s; "Re-run optimizer" shells to `task-optimize.mjs`
-(`--eco` passes through, Meta key required):
+`serve-dashboard.mjs` is the Field Ops app server and `dashboard/index.html`
+(single file, no dependencies) is the app: tabbed mobile-friendly UI over
+Spots (grid + detail), Run (scan a photo, compare two visits into spot
+state — uploads or URLs), Plan (goals with add/done, ranked actions,
+optimizer refresh), and Activity (on-demand briefing + feed). The server
+shells to the sibling CLIs for model work (Meta key required; keyless
+requests fail as 400/502 with the reason, never hang); uploads arrive as
+data URLs, are materialized to temp files, and cleaned up. Polls
+`/api/overview` every 5s. Sessions store analysis, not images, so detail
+is text-first (no photo slider yet):
 
 ```bash
 node task-optimize.mjs ./my-farm --out ./my-farm/plan.json   # optional, seeds the actions panel
