@@ -6,7 +6,7 @@
 //
 // Same env as task-scan.mjs (key prompt with outside-the-repo persistence).
 
-import { readdir, readFile, writeFile, mkdtemp, rm } from 'node:fs/promises';
+import { readdir, readFile, writeFile, mkdtemp, rm, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, extname, basename } from 'node:path';
 import { execFile } from 'node:child_process';
@@ -118,7 +118,7 @@ const FRAME_COUNT = Math.max(
   Number.parseInt(framesFlag?.split('=')[1] ?? args[args.indexOf('--frames') + 1] ?? '4', 10) || 4
 );
 if (!input) {
-  console.error('Usage: node task-scan-video.mjs <video-file | frames-dir> [--frames N] [--srt] [--duration SECS]');
+  console.error('Usage: node task-scan-video.mjs <video-file | frames-dir> [--frames N] [--srt] [--duration SECS] [--gifs <dir>]');
   process.exit(1);
 }
 const SRT_MODE = args.includes('--srt');
@@ -191,6 +191,38 @@ if (classifySource(st.isDirectory(), extname(input)) === 'image') {
       out,
     ]);
     framePaths.push(out);
+  }
+  // Optional GIF slices: one cheap looping gif per frame interval, so the
+  // dashboard can show each observed step without serving full video.
+  //   --gifs <dir> [--gif-prefix <p>]  (video files only; stdout stays JSON)
+  const gifsArg = args.find((a) => a === '--gifs' || a.startsWith('--gifs='));
+  const gifsDir = !gifsArg
+    ? null
+    : gifsArg.includes('=')
+      ? (gifsArg.split('=')[1] ?? null)
+      : (args[args.indexOf(gifsArg) + 1] ?? null);
+  const prefixArg = args.find((a) => a === '--gif-prefix' || a.startsWith('--gif-prefix='));
+  const gifPrefix = !prefixArg
+    ? 'seg'
+    : prefixArg.includes('=')
+      ? (prefixArg.split('=')[1] ?? 'seg')
+      : (args[args.indexOf(prefixArg) + 1] ?? 'seg');
+  if (gifsDir) {
+    await mkdir(gifsDir, { recursive: true });
+    const slice = duration > 0 ? duration / FRAME_COUNT : 2;
+    for (let i = 0; i < framePaths.length; i++) {
+      const start = duration > 0 ? i * slice : i * 2;
+      await execFileAsync('ffmpeg', [
+        '-v', 'error',
+        '-ss', String(start),
+        '-i', input,
+        '-t', String(slice),
+        '-vf', 'fps=8,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer',
+        '-loop', '0',
+        join(gifsDir, `${gifPrefix}-${i}.gif`),
+      ]).catch((e: unknown) => console.error(`gif slice ${i} failed: ${(e as Error).message.slice(0, 120)}`));
+    }
+    console.error(`Sliced ${framePaths.length} gifs into ${gifsDir}.`);
   }
   console.error(`Extracted ${framePaths.length} frames.`);
 }

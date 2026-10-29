@@ -4,9 +4,9 @@
 // (frames directory input), no API key (explicit dummy env wins over .env).
 import { test, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFile } from 'node:child_process';
+import { execFile, execFileSync } from 'node:child_process';
 import { promisify } from 'node:util';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -52,4 +52,32 @@ test('video scan prints pure JSON to stdout, notes to stderr', async (t: TestCon
   assert.ok(parsed.recorded_at && !Number.isNaN(Date.parse(String(parsed.recorded_at))));
   assert.match(stderr, /\(via frames:/);
   assert.match(stderr, /Estimated .* \(file date only; treat as an estimate\)\./);
+});
+
+function hasFfmpeg(): boolean {
+  try {
+    execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+test('video file slices one gif per frame interval, stdout stays JSON', { skip: !hasFfmpeg() }, async (t: TestContext) => {
+  const dir = await mkdtemp(join(tmpdir(), 'scan-video-gifs-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const clip = join(dir, 'clip.mp4');
+  execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'testsrc=duration=2:size=160x120:rate=10', '-pix_fmt', 'yuv420p', clip]);
+  const stub = join(dir, 'stub-fetch.mjs');
+  await writeFile(stub, STUB);
+  const { stdout, stderr } = await execFileAsync(
+    process.execPath,
+    ['--import', pathToFileURL(stub).href, SCRIPT, clip, '--frames', '2', '--gifs', dir, '--gif-prefix', 't'],
+    { cwd: dir, env: { ...process.env, META_API_KEY: 'test-key-for-gifs' } }
+  );
+  const gifs = (await readdir(dir)).filter((f) => f.endsWith('.gif')).sort();
+  assert.deepEqual(gifs, ['t-0.gif', 't-1.gif']);
+  // GIF chatter stays on stderr; stdout is still pure analysis JSON.
+  assert.match(stderr, /Sliced 2 gifs/);
+  assert.equal((JSON.parse(stdout) as Record<string, unknown>).observed_task, ANALYSIS.observed_task);
 });

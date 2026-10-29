@@ -7,7 +7,7 @@
 
 import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { execFile } from 'node:child_process';
-import { readFile, writeFile, rm, mkdtemp, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, readdir, rm, mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -213,18 +213,30 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
         const n = Math.min(12, Math.max(1, Number(frames) || 4));
         let src: string;
         let media: string | null = null;
+        let gifPrefix: string | null = null;
+        let mediaDir = '';
         if (typeof videoUrl === 'string' && videoUrl) {
           src = videoUrl;
         } else {
-          const mediaDir = join(root, 'media');
+          mediaDir = join(root, 'media');
           await mkdir(mediaDir, { recursive: true });
           const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-          src = await materializeVideo({ videoUrl, videoData }, mediaDir, `clip-${stamp}`);
+          gifPrefix = `clip-${stamp}`;
+          src = await materializeVideo({ videoUrl, videoData }, mediaDir, gifPrefix);
           media = src.split(/[\\/]/).pop() ?? null;
         }
-        const analysis = await runScript('task-scan-video.js', [src, '--frames', String(n)]);
+        const scanArgs = [src, '--frames', String(n)];
+        if (gifPrefix) scanArgs.push('--gifs', mediaDir, '--gif-prefix', gifPrefix);
+        const analysis = await runScript('task-scan-video.js', scanArgs);
         try {
-          const a = (analysis ?? {}) as { observed_task?: unknown; stage?: unknown; recorded_at?: unknown };
+          const a = (analysis ?? {}) as { observed_task?: unknown; stage?: unknown; recorded_at?: unknown; gifs?: unknown };
+          if (gifPrefix) {
+            try {
+              a.gifs = (await readdir(mediaDir))
+                .filter((f) => f.startsWith(`${gifPrefix}-`) && f.endsWith('.gif'))
+                .sort();
+            } catch { a.gifs = []; }
+          }
           if (typeof a.observed_task === 'string' && a.observed_task.trim()) {
             await addEvent(root, {
               title: a.observed_task.trim().slice(0, 120),
@@ -241,13 +253,19 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
       }
       if (req.method === 'GET' && url.pathname.startsWith('/media/')) {
         const name = decodeURIComponent(url.pathname.slice('/media/'.length));
-        if (!name || name.includes('/') || name.includes('\\') || !/\.(mp4|webm|mov)$/i.test(name)) {
+        if (!name || name.includes('/') || name.includes('\\') || !/\.(mp4|webm|mov|gif)$/i.test(name)) {
           json(404, { ok: false, error: 'not found' });
           return;
         }
         try {
           const data = await readFile(join(root, 'media', name));
-          const type = /\.webm$/i.test(name) ? 'video/webm' : /\.mov$/i.test(name) ? 'video/quicktime' : 'video/mp4';
+          const type = /\.webm$/i.test(name)
+            ? 'video/webm'
+            : /\.mov$/i.test(name)
+              ? 'video/quicktime'
+              : /\.gif$/i.test(name)
+                ? 'image/gif'
+                : 'video/mp4';
           res.writeHead(200, { 'Content-Type': type });
           res.end(data);
         } catch {

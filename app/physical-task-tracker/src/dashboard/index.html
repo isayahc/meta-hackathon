@@ -98,6 +98,7 @@
   .ev.goal { background: #f3d9a7; }
   .ev.clickable { cursor: pointer; outline: 1px solid var(--soil); outline-offset: -1px; }
   #caldetail video { width: 100%; max-height: 340px; border-radius: 4px; background: #000; margin-top: 8px; }
+  ol.actions img { width: 100%; max-width: 420px; border-radius: 4px; margin-top: 4px; }
   .ev .t { font-weight: 650; }
   .daylist { display: grid; gap: 6px; }
   .daylist .ev { white-space: normal; padding: 6px 8px; font-size: 13px; }
@@ -457,8 +458,16 @@ function linearizeSequence(a) {
   return [];
 }
 
+function seqGif(gifs, i) {
+  const g = Array.isArray(gifs) ? gifs[i] : null;
+  return typeof g === 'string' && g
+    ? `<br><img loading="lazy" src="/media/${encodeURIComponent(g)}" alt="clip slice">`
+    : '';
+}
+
 function renderTaskList(el, tasksEl, a) {
   const seq = linearizeSequence(a);
+  const seqGifs = Array.isArray(a.gifs) ? a.gifs : [];
   const steps = Array.isArray(a.suggested_next_steps) ? a.suggested_next_steps : [];
   const unknowns = Array.isArray(a.unknowns) && a.unknowns.length
     ? `<details class="deferred"><summary>unknowns (${a.unknowns.length})</summary><ul>` +
@@ -470,7 +479,7 @@ function renderTaskList(el, tasksEl, a) {
     (a.recorded_at ? (a.recorded_estimate
       ? `<p class="hint">estimated: ${esc(a.recorded_at)} (file date only — treat as an estimate)</p>`
       : `<p class="hint">recorded: ${esc(a.recorded_at)}</p>`) : '') +
-    (seq.length ? `<div style="margin-top:8px;font-weight:650">Sequence</div><ol class="actions">` + seq.map((s) => `<li>${esc(s)}</li>`).join('') + '</ol>' : '');
+    (seq.length ? `<div style="margin-top:8px;font-weight:650">Sequence</div><ol class="actions">` + seq.map((s, i) => `<li>${esc(s)}${seqGif(seqGifs, i)}</li>`).join('') + '</ol>' : '');
   tasksEl.innerHTML =
     (steps.length
       ? '<ul class="tasks">' + steps.map((s) => `<li><label><input type="checkbox"> ${esc(s)}</label></li>`).join('') + '</ul>'
@@ -525,12 +534,13 @@ function renderCalDetail(box, e) {
   } catch { a = null; }
   if (!a || typeof a !== 'object') a = null;
   const seq = a ? linearizeSequence(a) : [];
+  const seqGifs = a && Array.isArray(a.gifs) ? a.gifs : [];
   const steps = a && Array.isArray(a.suggested_next_steps) ? a.suggested_next_steps : [];
   box.innerHTML =
     `<h3 style="margin:.4em 0">${esc(e.title)}</h3>` +
     `<p class="hint">${esc(e.date)}${e.detail ? ` — ${esc(e.detail)}` : ''}</p>` +
     (seq.length ? `<div style="margin-top:8px;font-weight:650">Sequence</div><ol class="actions">` +
-      seq.map((s) => `<li>${esc(s)}</li>`).join('') + '</ol>' : '') +
+      seq.map((s, i) => `<li>${esc(s)}${seqGif(seqGifs, i)}</li>`).join('') + '</ol>' : '') +
     (steps.length ? '<ul class="tasks">' +
       steps.map((s) => `<li><label><input type="checkbox"> ${esc(s)}</label></li>`).join('') + '</ul>' : '') +
     (!seq.length && !steps.length && !e.media ? '<p class="hint">No stored analysis or clip on this entry — re-analyze the video to fill it in.</p>' : '') +

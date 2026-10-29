@@ -219,6 +219,8 @@ test('media: serves stored clips, blocks traversal and odd extensions', async (t
   await mkdir(join(root, 'media'), { recursive: true });
   await writeFile(join(root, 'media', 'clip-x.mp4'), Buffer.from([0, 1, 2, 3]));
   assert.equal((await call(root, 'GET', '/media/clip-x.mp4')).status, 200);
+  await writeFile(join(root, 'media', 'clip-x-0.gif'), Buffer.from('GIF89a'));
+  assert.equal((await call(root, 'GET', '/media/clip-x-0.gif')).status, 200);
   assert.equal((await call(root, 'GET', '/media/..%2F..%2Fsecret')).status, 404);
   assert.equal((await call(root, 'GET', '/media/nope.mp4')).status, 404);
   assert.equal((await call(root, 'GET', '/media/x.txt')).status, 404);

@@ -164,7 +164,9 @@ new dependencies): `goals`, `spots` + `sessions`, `events`, and `docs`
 leaves them in place, unread afterwards. Only the API key stays out of the
 db (`%APPDATA%\meta-hackathon\demo-key.json`, never committed).
 Uploaded clips persist under `<project>/media/` (served back at
-`/media/<file>`) so calendar entries keep their referenced video.
+`/media/<file>`) so calendar entries keep their referenced video. Each
+scan also slices one small GIF per observed step (`--gifs`), shown under
+each sequence item as a cheap stand-in for the full clip.
 
 ## Spots + state
 
