@@ -16,21 +16,22 @@ goals + optimizer, ecology fusion, live dashboard. All on `main`.
 - Live dashboard (#16): `serve-dashboard.mjs` + `dashboard/index.html`
   (spots, detail, actions with done-buttons, feed, eco strip, 5s poll).
 
-Tests: 52 total, 48 pass, 0 fail, 4 skip (HTTP-bind tests skip in sandbox,
-run on host). Live-verified so far: photo analysis, video SRT, SAM pivots,
-PhenoCam compare, clip metadata.
+Tests: 55 total, 55 pass, 0 fail, 0 skip (TypeScript, run from `dist/`
+via `npm test`). Live-verified so far: photo analysis, video SRT, SAM
+pivots, PhenoCam compare, clip metadata, headless dashboard drives.
 
 ## Run it (in order)
 
 ```bash
 cd app/physical-task-tracker
-node task-scan.mjs <photo-url>                          # single-visit analysis (Meta key)
-node task-compare.mjs <visit-a> <visit-b> --spot ./my-farm/spots/north-fence
-node task-briefing.mjs ./my-farm --out briefing.json
-node task-optimize.mjs ./my-farm --goal "Transplant bed 3 by Friday" --weight 5 --out plan.json
-node eco.mjs 38.5,-98.0 --out ./my-farm/eco.json        # no key needed
-node task-optimize.mjs ./my-farm --eco 38.5,-98.0 --out plan.json
-node serve-dashboard.mjs ./my-farm --port 8123          # open http://localhost:8123
+npm install && npm run build                      # TypeScript into dist/
+node dist/task-scan.js <photo-url>                # single-visit analysis (Meta key)
+node dist/task-compare.js <visit-a> <visit-b> --spot ./my-farm/spots/north-fence
+node dist/task-briefing.js ./my-farm --out briefing.json
+node dist/task-optimize.js ./my-farm --goal "Transplant bed 3 by Friday" --weight 5 --out plan.json
+node dist/lib/eco.js 38.5,-98.0 --out ./my-farm/eco.json   # no key needed
+node dist/task-optimize.js ./my-farm --eco 38.5,-98.0 --out plan.json
+node dist/serve-dashboard.js ./my-farm --port 8123 --open
 ```
 
 Key handling: `META_API_KEY` env → saved key

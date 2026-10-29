@@ -6,23 +6,26 @@ tabbed browser UI backed by small Node scripts (zero dependencies).
 
 ## Start here
 
-Prerequisites: Node 18+ (`node --version`). No `npm install` — zero
-dependencies. Every command runs from this directory:
+TypeScript sources live in `src/` and compile to `dist/` (gitignored).
+Prerequisites: Node 18+. One-time setup:
 
 ```bash
 cd C:\Users\isaya\meta-hackathon\app\physical-task-tracker
+npm install   # typescript only; zero runtime dependencies
+npm run build # strict tsc + copy dashboard/samples into dist/
 ```
 
 Fastest start — dashboard up in two commands, no API key, no network:
 
 ```bash
-node task-optimize.mjs ./my-farm --goal "Transplant bed 3 by Friday" --weight 5 --offline
-node serve-dashboard.mjs ./my-farm --port 8123 --open
+node dist/task-optimize.js ./my-farm --goal "Transplant bed 3 by Friday" --weight 5 --offline
+node dist/serve-dashboard.js ./my-farm --port 8123 --open
 ```
 
 The first command creates `./my-farm/goals.json`; the second serves the
 dashboard and loads http://localhost:8123 in your browser (spots/actions/eco
 panels fill in as you add data below). Stop the server with Ctrl+C.
+`npm test` rebuilds and runs the suite from `dist/`.
 
 ## Run the full loop
 
@@ -31,40 +34,40 @@ see below); steps 4 and 6 need none.
 
 ```bash
 # 1. Scan one visit (photo or video frames)
-node task-scan.mjs https://upload.wikimedia.org/wikipedia/commons/0/0a/Harvesting_carrots.jpg
+node dist/task-scan.js https://upload.wikimedia.org/wikipedia/commons/0/0a/Harvesting_carrots.jpg
 
 # 2. Compare two visits into a tracked spot (saves state + session)
-node task-compare.mjs <visit-a> <visit-b> --spot ./my-farm/spots/north-fence
+node dist/task-compare.js <visit-a> <visit-b> --spot ./my-farm/spots/north-fence
 
 # 3. Brief + set goals + optimize into a plan
-node task-briefing.mjs ./my-farm --out briefing.json
-node task-optimize.mjs ./my-farm --goal "Transplant bed 3 by Friday" --weight 5 --out ./my-farm/plan.json
+node dist/task-briefing.js ./my-farm --out briefing.json
+node dist/task-optimize.js ./my-farm --goal "Transplant bed 3 by Friday" --weight 5 --out ./my-farm/plan.json
 
 # 4. (Optional, no key) Fuse weather + soil into the plan
-node eco.mjs 38.5,-98.0 --out ./my-farm/eco.json
-node task-optimize.mjs ./my-farm --eco 38.5,-98.0 --out ./my-farm/plan.json
+node dist/lib/eco.js 38.5,-98.0 --out ./my-farm/eco.json
+node dist/task-optimize.js ./my-farm --eco 38.5,-98.0 --out ./my-farm/plan.json
 
 # 5. (Optional) Segment a field feature with SAM 3.1
-node sam-segment.mjs <image> "<noun>" --out segment.svg
+node dist/sam-segment.js <image> "<noun>" --out segment.svg
 
 # 6. Open the live dashboard (no key to view; refresh needs one)
-node serve-dashboard.mjs ./my-farm --port 8123 --open
+node dist/serve-dashboard.js ./my-farm --port 8123 --open
 ```
 
 Key handling: `META_API_KEY` env → saved key, then hidden prompt. Say yes
 once and it's remembered in `%APPDATA%\meta-hackathon\demo-key.json`
-(outside the repo, never committed). `example.env` lists every variable
-(placeholders only). Run `node --test <name>.test.mjs` per script, or pass
-all test files in one `node --test` for the suite.
+(outside the repo, never committed). `src/example.env` lists every variable
+(placeholders only). `npm test` rebuilds and runs the suite from `dist/`.
 
-Layout: `lib/` holds the shared modules (request/prompt builders,
-goals model, ecology, spot state); `task-*.mjs` are thin CLI wrappers;
-`serve-dashboard.mjs` + `dashboard/` is the web app (mobile-friendly).
+Layout: `src/lib/` holds the shared TypeScript modules (request/prompt
+builders, goals model, ecology, spot state, flag helpers); `src/task-*.ts`
+are thin CLI wrappers; `src/serve-dashboard.ts` + `src/dashboard/` is the
+web app (mobile-friendly). `dist/` is compiled output (gitignored).
 
 ## Run
 
 ```bash
-node task-scan.mjs https://upload.wikimedia.org/wikipedia/commons/0/0a/Harvesting_carrots.jpg
+node dist/task-scan.js https://upload.wikimedia.org/wikipedia/commons/0/0a/Harvesting_carrots.jpg
 ```
 
 You'll be prompted for your Meta API key (typed blind) — once. Say yes when
@@ -85,7 +88,7 @@ never printed as successful analysis.
 ## Regression test
 
 ```bash
-node --test task-scan.test.mjs
+node --test dist/task-scan.test.js
 ```
 
 Covers the captured `length`/null-content failure shape plus the request
@@ -93,11 +96,11 @@ builder defaults.
 
 ## Video understanding test
 
-`task-scan-video.mjs` sends N time-ordered frames (default 4) and asks what
+`src/task-scan-video.ts` sends N time-ordered frames (default 4) and asks what
 changed between them — task progression, the tracker's core mechanic:
 
 ```bash
-node task-scan-video.mjs <phone-video.mp4 | frames-dir> [--frames 6]
+node dist/task-scan-video.js <phone-video.mp4 | frames-dir> [--frames 6]
 ```
 
 Video files need `ffmpeg` (`ffprobe` for duration); a directory of frame
@@ -112,7 +115,7 @@ Add `--srt` to get timestamped action segments as a subtitle file instead of
 the progression JSON (frame dirs also need `--duration SECS`):
 
 ```bash
-node task-scan-video.mjs <phone-video.mp4> --frames 6 --srt
+node dist/task-scan-video.js <phone-video.mp4> --frames 6 --srt
 ```
 
 Writes `<video>.srt` (or `actions.srt` inside a frames dir). Try it on
@@ -122,27 +125,27 @@ model's cues against the official temporal annotations.
 
 ## Field segmentation (SAM 3.1)
 
-`sam-segment.mjs` sends an image plus a short noun-phrase concept to SAM 3.1
+`src/sam-segment.ts` sends an image plus a short noun-phrase concept to SAM 3.1
 (via `/v1/responses` — the chat endpoint rejects SAM) and writes an SVG
 overlay of boxes + decoded mask paths:
 
 ```bash
-node sam-segment.mjs samples/kansas-tile.jpg "center pivot irrigation field" --out pivots.svg
+node dist/sam-segment.js src/samples/kansas-tile.jpg "center pivot irrigation field" --out pivots.svg
 ```
 
 Prompts must be bare noun phrases (`agricultural field`), never instructions
 (`segment the fields`) — the latter returns nothing. Generic concepts merge
 everything into one mask; specific ones separate instances. Needs
-`@meta-sam/parser` (`npm install`). Tests: `node --test sam-segment.test.mjs`.
+`@meta-sam/parser` (`npm install`). Tests: `node --test dist/sam-segment.test.js`.
 
 ## Compare mode (two visits, one diff)
 
-`task-compare.mjs` takes two visits to the same spot — videos or frame
+`src/task-compare.ts` takes two visits to the same spot — videos or frame
 directories — and returns a structured diff: same-location evidence, changed
 vs unchanged, progress delta, new issues, and a suggested state update:
 
 ```bash
-node task-compare.mjs <visit-a> <visit-b> [--frames 3] [--goal "established row before the dry spell"]
+node dist/task-compare.js <visit-a> <visit-b> [--frames 3] [--goal "established row before the dry spell"]
 ```
 
 With `--goal`, every change is mapped to goal movement and risks. This is the
@@ -152,46 +155,46 @@ tracking inflection point: single-visit analysis becomes longitudinal state.
 
 A spot is a fixed viewpoint with a memory: `spots/<id>/spot.json`,
 `sessions/<timestamp>/analysis.json`, and a rolling `state.json` (stage,
-summary, open issues). `spot-state.mjs` implements init/read/append;
-`task-compare.mjs --spot <project>/spots/<id>` saves each run as a session
+summary, open issues). `src/lib/spot-state.ts` implements init/read/append;
+`src/task-compare.ts --spot <project>/spots/<id>` saves each run as a session
 and folds it into state (auto-creating the spot on first use):
 
 ```bash
-node task-compare.mjs visit-a visit-b --spot ./my-farm/spots/north-fence
+node dist/task-compare.js visit-a visit-b --spot ./my-farm/spots/north-fence
 ```
 
-Tests: `node --test spot-state.test.mjs`.
+Tests: `node --test dist/spot-state.test.js`.
 ## Resume briefing
 
-`task-briefing.mjs` reads every spot's state and briefs the operator —
+`src/task-briefing.ts` reads every spot's state and briefs the operator —
 overall standing, per-spot status, blockers, next actions, and goal status:
 
 ```bash
-node task-briefing.mjs ./my-farm [--goal "clean September harvest"] [--out briefing.json]
+node dist/task-briefing.js ./my-farm [--goal "clean September harvest"] [--out briefing.json]
 ```
 
 Text-only call (no images). Reads `spots/<id>/{spot.json,state.json}` as
-produced by the spots layer. Tests: `node --test briefing.test.mjs`.
+produced by the spots layer. Tests: `node --test dist/briefing.test.js`.
 ## Goals + optimizer
 
 Goals are first-class objects in `<project>/goals.json` — `{ id, text,
 deadline, weight 1-5, status }`, status moving `open -> at-risk -> done`.
-`task-optimize.mjs` ranks next actions from open goals, every spot's state,
+`src/task-optimize.ts` ranks next actions from open goals, every spot's state,
 and hard constraints (never violated; conflicting work is deferred with a
 reason). Optimizer v1 is structured Muse reasoning, not a solver matrix:
 
 ```bash
-node task-optimize.mjs ./my-farm --goal "Transplant bed 3 by Friday" --deadline 2026-10-31 --weight 5 --constraint "No watering after 10am heat" --out plan.json
-node task-optimize.mjs ./my-farm --set-status transplant-bed-3-by-friday-1=done
-node task-optimize.mjs ./my-farm --offline   # print the prompt, no API call
+node dist/task-optimize.js ./my-farm --goal "Transplant bed 3 by Friday" --deadline 2026-10-31 --weight 5 --constraint "No watering after 10am heat" --out plan.json
+node dist/task-optimize.js ./my-farm --set-status transplant-bed-3-by-friday-1=done
+node dist/task-optimize.js ./my-farm --offline   # print the prompt, no API call
 ```
 
 Text-only call (no images). Works goals-only before any spots exist.
-Tests: `node --test goals.test.mjs`.
+Tests: `node --test dist/goals.test.js`.
 
 ## Live dashboard
 
-`serve-dashboard.mjs` is the Field Ops app server and `dashboard/index.html`
+`src/serve-dashboard.ts` is the Field Ops app server and `dashboard/index.html`
 (single file, no dependencies) is the app: tabbed mobile-friendly UI over
 Spots (grid + detail), Run (scan a photo, compare two visits into spot
 state — uploads or URLs), Plan (goals with add/done, ranked actions,
@@ -203,18 +206,18 @@ data URLs, are materialized to temp files, and cleaned up. Polls
 is text-first (no photo slider yet):
 
 ```bash
-node task-optimize.mjs ./my-farm --out ./my-farm/plan.json   # optional, seeds the actions panel
-node eco.mjs 38.5,-98.0 --out ./my-farm/eco.json   # optional, powers the eco strip
-node serve-dashboard.mjs ./my-farm --port 8123 [--eco 38.5,-98.0] --open
+node dist/task-optimize.js ./my-farm --out ./my-farm/plan.json   # optional, seeds the actions panel
+node dist/lib/eco.js 38.5,-98.0 --out ./my-farm/eco.json   # optional, powers the eco strip
+node dist/serve-dashboard.js ./my-farm --port 8123 [--eco 38.5,-98.0] --open
 ```
 
 Without `plan.json` / `eco.json`, those panels simply stay empty. Tests:
-`node --test dashboard.test.mjs` (HTTP tests skip where listen() is
+`node --test dist/dashboard.test.js` (HTTP tests skip where listen() is
 blocked and run on host).
 
 ## Ecology fusion
 
-`eco.mjs` pulls open weather + soil data for a site and turns it into
+`src/lib/eco.ts` pulls open weather + soil data for a site and turns it into
 optimizer input — no API keys needed. Open-Meteo gives current conditions
 plus a 3-day field-work outlook (rain, heat, frost, wind); SoilGrids v2
 gives topsoil texture, organic matter, and pH. Signals become hard
@@ -223,15 +226,15 @@ spraying, frost/heat reschedule transplant); soil texture/pH add their own
 (work-dry-only clay, short-cycle sandy irrigation, pH lockout checks):
 
 ```bash
-node eco.mjs 38.5,-98.0 --out samples/eco-kansas.json
-node task-optimize.mjs ./my-farm --eco 38.5,-98.0 --out plan.json
-node task-optimize.mjs ./my-farm --eco-file samples/eco-kansas.json --offline
+node dist/lib/eco.js 38.5,-98.0 --out src/samples/eco-kansas.json
+node dist/task-optimize.js ./my-farm --eco 38.5,-98.0 --out plan.json
+node dist/task-optimize.js ./my-farm --eco-file src/samples/eco-kansas.json --offline
 ```
 
-`--eco-file` replays a saved capture (same shape as `eco.mjs --out`) for
+`--eco-file` replays a saved capture (same shape as `src/lib/eco.ts --out`) for
 offline runs and tests. Samples: `samples/eco-kansas.json` (documented
 shapes, fictional readings — recapture live with the first command).
-Tests: `node --test eco.test.mjs`.
+Tests: `node --test dist/eco.test.js`.
 
 ## Sample
 

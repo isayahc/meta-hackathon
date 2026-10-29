@@ -17,7 +17,9 @@ import {
   DEFAULT_MAX_TOKENS,
   classifySource,
   resolveApiKey,
-} from './lib/analyze-response.mjs';
+} from './lib/analyze-response.js';
+import type { VisitAnalysis } from './lib/spot-state.js';
+import { flagValue } from './lib/args.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -26,15 +28,9 @@ const MODEL = process.env.MUSE_MODEL ?? 'muse-spark-1.1';
 
 const args = process.argv.slice(2);
 const positionals = args.filter((a) => !a.startsWith('--'));
-const flagValue = (name, def) => {
-  const eq = args.find((a) => a.startsWith(name + '='));
-  if (eq) return eq.slice(name.length + 1);
-  const i = args.indexOf(name);
-  return i >= 0 && args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : def;
-};
 const [visitA, visitB] = positionals;
-const PER_VISIT = Math.max(1, Number.parseInt(flagValue('--frames', '3'), 10) || 3);
-const GOAL = flagValue('--goal', null);
+const PER_VISIT = Math.max(1, Number.parseInt(flagValue(args, '--frames', '3'), 10) || 3);
+const GOAL = flagValue(args, '--goal', null);
 if (!visitA || !visitB) {
   console.error('Usage: node task-compare.mjs <visit-a> <visit-b> [--frames N] [--goal "..."]');
   process.exit(1);
@@ -42,16 +38,16 @@ if (!visitA || !visitB) {
 
 const KEY = await resolveApiKey();
 const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp']);
-const tmpDirs = [];
+const tmpDirs: string[] = [];
 
-function pickEven(files, n) {
+function pickEven(files: string[], n: number): string[] {
   if (files.length <= n) return files;
-  const out = [];
-  for (let i = 0; i < n; i++) out.push(files[Math.floor((i * files.length) / n)]);
+  const out: string[] = [];
+  for (let i = 0; i < n; i++) out.push(files[Math.floor((i * files.length) / n)] as string);
   return out;
 }
 
-async function loadFrames(source, n, tag) {
+async function loadFrames(source: string, n: number, tag: string): Promise<string[]> {
   const st = await stat(source).catch(() => null);
   if (!st) {
     console.error(`Not found: ${source}`);
@@ -96,12 +92,12 @@ async function loadFrames(source, n, tag) {
     }
     console.error(`${tag}: extracted ${paths.length} frames.`);
   }
-  const toDataUrl = async (p) => {
+  const toDataUrl = async (p: string): Promise<string> => {
     const bytes = await readFile(p);
     const ext = extname(p).toLowerCase() === '.png' ? 'png' : 'jpeg';
     return `data:image/${ext};base64,${bytes.toString('base64')}`;
   };
-  const urls = [];
+  const urls: string[] = [];
   for (const p of paths) urls.push(await toDataUrl(p));
   return urls;
 }
@@ -165,11 +161,11 @@ if (!result.ok) {
 }
 console.log(JSON.stringify(result.analysis, null, 2));
 
-const spotFlag = flagValue('--spot', null);
+const spotFlag = flagValue(args, '--spot', null);
 if (spotFlag) {
-  const { appendSession } = await import('./lib/spot-state.mjs');
+  const { appendSession } = await import('./lib/spot-state.js');
   const id = basename(spotFlag);
   const root = dirname(dirname(spotFlag));
-  const { sessionId } = await appendSession(root, id, result.analysis);
+  const { sessionId } = await appendSession(root, id, result.analysis as VisitAnalysis);
   console.error(`Saved session ${sessionId} to ${spotFlag}.`);
 }

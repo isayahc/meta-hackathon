@@ -2,16 +2,30 @@
 // req/res objects — no listen(), so they run in the sandbox and on host.
 // Exec-backed jobs (scans/compares/briefing/refresh) are covered on their
 // validation paths; live model runs need a key and stay manual.
-import test from 'node:test';
+import { test, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
-import { EventEmitter } from 'node:events';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { mkdtemp, mkdir, rm, writeFile, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createServer, loadSpots, buildFeed, waitForOk } from './serve-dashboard.mjs';
-import { addGoal, listGoals } from './lib/goals.mjs';
+import { createServer, loadSpots, buildFeed, waitForOk } from './serve-dashboard.js';
+import { addGoal, listGoals } from './lib/goals.js';
 
-async function scratch(t) {
+// Minimal HTTP shape: just what the handler touches.
+interface MockReq {
+  method: string;
+  url: string;
+  [Symbol.asyncIterator](): AsyncGenerator<Buffer>;
+}
+
+interface MockRes {
+  status: number | null;
+  body: string;
+  writeHead(s: number): void;
+  end(b?: string): void;
+}
+
+async function scratch(t: TestContext) {
   const root = await mkdtemp(join(tmpdir(), 'dash-test-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const spot = join(root, 'spots', 'north-fence');
@@ -31,36 +45,40 @@ async function scratch(t) {
   return root;
 }
 
-function mockReq(method, url, body = null) {
-  const req = new EventEmitter();
-  req.method = method;
-  req.url = url;
-  req[Symbol.asyncIterator] = async function* () {
-    if (body !== null) yield Buffer.from(typeof body === 'string' ? body : JSON.stringify(body));
-  };
-  return req;
-}
-
-function mockRes() {
+function mockReq(method: string, url: string, body: unknown = null): MockReq {
   return {
-    status: null, body: '',
-    writeHead(s) { this.status = s; },
-    end(b) { this.body += b ?? ''; },
+    method,
+    url,
+    async *[Symbol.asyncIterator]() {
+      if (body !== null) yield Buffer.from(typeof body === 'string' ? body : JSON.stringify(body));
+    },
   };
 }
 
-async function call(root, method, url, body = null, opts = {}) {
+function mockRes(): MockRes {
+  return {
+    status: null,
+    body: '',
+    writeHead(s: number) { this.status = s; },
+    end(b?: string) { this.body += b ?? ''; },
+  };
+}
+
+type Handler = (req: IncomingMessage, res: ServerResponse) => Promise<void> | void;
+
+async function call(root: string, method: string, url: string, body: unknown = null, opts: { eco?: string | null } = {}) {
   const server = createServer(root, opts);
   const res = mockRes();
-  await server.listeners('request')[0](mockReq(method, url, body), res);
-  let parsed = null;
+  const handler = server.listeners('request')[0] as unknown as Handler;
+  await handler(mockReq(method, url, body) as unknown as IncomingMessage, res as unknown as ServerResponse);
+  let parsed: any = null;
   try {
     parsed = JSON.parse(res.body);
   } catch { /* HTML page */ }
   return { status: res.status, body: res.body, json: parsed };
 }
 
-test('loadSpots reads spot meta + state + sessions', async (t) => {
+test('loadSpots reads spot meta + state + sessions', async (t: TestContext) => {
   const spots = await loadSpots(await scratch(t));
   assert.equal(spots.length, 1);
   assert.equal(spots[0].name, 'North fence');
@@ -69,7 +87,7 @@ test('loadSpots reads spot meta + state + sessions', async (t) => {
   assert.deepEqual(spots[0].recent_sessions, ['2026-10-28T09-00-00']);
 });
 
-test('loadSpots skips spots without state; empty project gives []', async (t) => {
+test('loadSpots skips spots without state; empty project gives []', async (t: TestContext) => {
   const root = await scratch(t);
   await mkdir(join(root, 'spots', 'empty-spot'), { recursive: true });
   assert.equal((await loadSpots(root)).length, 1);
@@ -78,7 +96,7 @@ test('loadSpots skips spots without state; empty project gives []', async (t) =>
   assert.deepEqual(await loadSpots(bare), []);
 });
 
-test('buildFeed orders newest first and names spots', async (t) => {
+test('buildFeed orders newest first and names spots', async (t: TestContext) => {
   const feed = buildFeed(await loadSpots(await scratch(t)));
   assert.ok(feed.length >= 2);
   assert.match(feed[0].text, /North fence/);
@@ -101,13 +119,13 @@ test('dashboard page contains the app shell', async () => {
   assert.match(html, /id="goalform"/);
 });
 
-test('serves the dashboard page', async (t) => {
+test('serves the dashboard page', async (t: TestContext) => {
   const r = await call(await scratch(t), 'GET', '/');
   assert.equal(r.status, 200);
   assert.match(r.body, /Field Ops/);
 });
 
-test('overview exposes spots, goals, plan, eco, feed', async (t) => {
+test('overview exposes spots, goals, plan, eco, feed', async (t: TestContext) => {
   const root = await scratch(t);
   await writeFile(join(root, 'plan.json'), JSON.stringify({ plan: { ranked_actions: [] } }));
   await writeFile(join(root, 'eco.json'), JSON.stringify({ summary: 'Site (38.5, -98). Now: test.' }));
@@ -120,7 +138,7 @@ test('overview exposes spots, goals, plan, eco, feed', async (t) => {
   assert.ok(r.json.feed.length >= 2);
 });
 
-test('goals: create, done-writeback, bad id and status are 400', async (t) => {
+test('goals: create, done-writeback, bad id and status are 400', async (t: TestContext) => {
   const root = await scratch(t);
   const created = await call(root, 'POST', '/api/goals', { text: 'Water bed 3', weight: 2 });
   assert.equal(created.status, 200);
@@ -135,7 +153,7 @@ test('goals: create, done-writeback, bad id and status are 400', async (t) => {
   assert.equal(bad.status, 400);
 });
 
-test('compares: bad spot id and missing images are 400, never shelled', async (t) => {
+test('compares: bad spot id and missing images are 400, never shelled', async (t: TestContext) => {
   const root = await scratch(t);
   const pic = { imageUrl: 'https://example.com/a.jpg' };
   const badSpot = await call(root, 'POST', '/api/compares', { spot: '../evil', before: pic, after: pic });
@@ -148,7 +166,7 @@ test('compares: bad spot id and missing images are 400, never shelled', async (t
   assert.equal(noScanImage.status, 400);
 });
 
-test('unknown routes 404; non-JSON bodies 400', async (t) => {
+test('unknown routes 404; non-JSON bodies 400', async (t: TestContext) => {
   const root = await scratch(t);
   assert.equal((await call(root, 'GET', '/api/nope')).status, 404);
   const server = createServer(root);
@@ -158,7 +176,7 @@ test('unknown routes 404; non-JSON bodies 400', async (t) => {
   assert.equal(res.status, 400);
 });
 
-test('overview degrades on an empty project dir', async (t) => {
+test('overview degrades on an empty project dir', async (t: TestContext) => {
   const root = await mkdtemp(join(tmpdir(), 'dash-empty-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const ov = (await call(root, 'GET', '/api/overview')).json;

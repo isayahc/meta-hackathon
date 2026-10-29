@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   buildOverlaySvg,
   resolveApiKey,
-} from './lib/analyze-response.mjs';
+} from './lib/analyze-response.js';
 
 describe('buildOverlaySvg', () => {
   it('renders image, paths, and boxes exactly', () => {

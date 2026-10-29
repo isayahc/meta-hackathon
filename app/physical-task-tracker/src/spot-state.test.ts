@@ -1,4 +1,4 @@
-import { describe, it } from 'node:test';
+import { describe, it, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -9,9 +9,9 @@ import {
   readState,
   listSessions,
   appendSession,
-} from './lib/spot-state.mjs';
+} from './lib/spot-state.js';
 
-async function freshRoot(t) {
+async function freshRoot(t: TestContext) {
   const dir = await mkdtemp(join(tmpdir(), 'spot-test-'));
   t.after(async () => {
     await rm(dir, { recursive: true, force: true });
@@ -27,7 +27,7 @@ const DIFF = {
 };
 
 describe('spot-state', () => {
-  it('inits a spot with unobserved state', async (t) => {
+  it('inits a spot with unobserved state', async (t: TestContext) => {
     const root = await freshRoot(t);
     const { dir, meta, state } = await initSpot(root, 'north-fence', 'North fence');
     assert.equal(dir, spotDir(root, 'north-fence'));
@@ -37,7 +37,7 @@ describe('spot-state', () => {
     assert.deepEqual(await listSessions(root, 'north-fence'), []);
   });
 
-  it('appends a session and folds it into state', async (t) => {
+  it('appends a session and folds it into state', async (t: TestContext) => {
     const root = await freshRoot(t);
     await initSpot(root, 'bed-1');
     const { sessionId, state } = await appendSession(root, 'bed-1', DIFF, 's1');
@@ -53,14 +53,14 @@ describe('spot-state', () => {
     assert.deepEqual(await readState(root, 'bed-1'), state);
   });
 
-  it('auto-inits a missing spot on append', async (t) => {
+  it('auto-inits a missing spot on append', async (t: TestContext) => {
     const root = await freshRoot(t);
     const { state } = await appendSession(root, 'new-spot', DIFF);
     assert.equal(state.session_ids.length, 1);
     assert.equal((await listSessions(root, 'new-spot')).length, 1);
   });
 
-  it('keeps prior summary when the analysis lacks one', async (t) => {
+  it('keeps prior summary when the analysis lacks one', async (t: TestContext) => {
     const root = await freshRoot(t);
     await initSpot(root, 'bed-2');
     await appendSession(root, 'bed-2', DIFF, 's1');

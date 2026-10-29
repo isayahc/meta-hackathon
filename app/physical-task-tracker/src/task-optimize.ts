@@ -16,25 +16,19 @@ import {
   extractAnalysis,
   DEFAULT_MAX_TOKENS,
   resolveApiKey,
-} from './lib/analyze-response.mjs';
-import { addGoal, listGoals, setGoalStatus } from './lib/goals.mjs';
-import { fetchEco, normalizeSoil, ecoConstraints, summarizeEco } from './lib/eco.mjs';
+} from './lib/analyze-response.js';
+import { addGoal, listGoals, setGoalStatus } from './lib/goals.js';
+import { fetchEco, normalizeSoil, ecoConstraints, summarizeEco, type WeatherDoc } from './lib/eco.js';
+import { type SpotBrief } from './lib/analyze-response.js';
+import { flagValue, flagAll } from './lib/args.js';
 
 const API_BASE = process.env.META_API_BASE ?? 'https://api.meta.ai/v1';
 const MODEL = process.env.MUSE_MODEL ?? 'muse-spark-1.1';
 
 const args = process.argv.slice(2);
 const positionals = args.filter((a) => !a.startsWith('--'));
-const flagValue = (name, def) => {
-  const eq = args.find((a) => a.startsWith(name + '='));
-  if (eq) return eq.slice(name.length + 1);
-  const i = args.indexOf(name);
-  return i >= 0 && args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : def;
-};
-const flagAll = (name) =>
-  args.flatMap((a, i) => (a === name && args[i + 1] && !args[i + 1].startsWith('--') ? [args[i + 1]] : []));
 const root = positionals[0];
-const outPath = flagValue('--out', null);
+const outPath = flagValue(args, '--out', null);
 const offline = args.includes('--offline');
 if (!root) {
   console.error(
@@ -45,15 +39,15 @@ if (!root) {
   process.exit(1);
 }
 
-for (const text of flagAll('--goal')) {
+for (const text of flagAll(args, '--goal')) {
   const g = await addGoal(root, {
     text,
-    deadline: flagValue('--deadline', null),
-    weight: flagValue('--weight', 3),
+    deadline: flagValue(args, '--deadline', null),
+    weight: Number(flagValue(args, '--weight', '3')),
   });
   console.error(`goal added: ${g.id}`);
 }
-const assign = flagValue('--set-status', null);
+const assign = flagValue(args, '--set-status', null);
 if (assign) {
   const i = assign.indexOf('=');
   if (i === -1) {
@@ -66,15 +60,20 @@ if (assign) {
   });
   console.error(`goal ${g.id} -> ${g.status}`);
 }
-const constraints = flagAll('--constraint');
+const constraints = flagAll(args, '--constraint');
 
 // Ecology fusion: live fetch (--eco lat,lon) or a saved capture
-// (--eco-file samples/eco-x.json, same shape as eco.mjs --out).
-let ecoSummary = null;
-const ecoLoc = flagValue('--eco', null);
-const ecoFile = flagValue('--eco-file', null);
+// (--eco-file samples/eco-x.json, same shape as eco --out).
+let ecoSummary: string | null = null;
+const ecoLoc = flagValue(args, '--eco', null);
+const ecoFile = flagValue(args, '--eco-file', null);
 if (ecoLoc || ecoFile) {
-  const doc = ecoFile ? JSON.parse(await readFile(ecoFile, 'utf8')) : null;
+  const doc = (ecoFile ? JSON.parse(await readFile(ecoFile, 'utf8')) : null) as {
+    location?: { lat: number; lon: number };
+    weather?: WeatherDoc;
+    soilDoc?: unknown;
+    soil?: unknown;
+  } | null;
   const [lat, lon] = doc?.location
     ? [doc.location.lat, doc.location.lon]
     : (ecoLoc ?? ',').split(',').map(Number);
@@ -82,35 +81,36 @@ if (ecoLoc || ecoFile) {
     console.error(`Bad location: want --eco <lat,lon> or an --eco-file with .location.`);
     process.exit(1);
   }
-  let weather, soil;
-  if (doc) {
+  let weather: WeatherDoc;
+  let soil: ReturnType<typeof normalizeSoil>;
+  if (doc?.weather) {
     weather = doc.weather;
-    soil = normalizeSoil(doc.soilDoc ?? doc.soil);
+    soil = normalizeSoil((doc.soilDoc ?? doc.soil) as Parameters<typeof normalizeSoil>[0]);
   } else {
-    ({ weather, soil } = await fetchEco(lat, lon).catch((e) => {
-      console.error(`eco fetch failed: ${e.message}`);
+    ({ weather, soil } = await fetchEco(lat as number, lon as number).catch((e: unknown) => {
+      console.error(`eco fetch failed: ${(e as Error).message}`);
       process.exit(1);
     }));
   }
   const ecoRules = ecoConstraints(weather, soil);
   constraints.push(...ecoRules);
-  ecoSummary = summarizeEco(weather, soil, lat, lon);
+  ecoSummary = summarizeEco(weather, soil, lat as number, lon as number);
   console.error(`eco: ${lat},${lon} -> ${ecoRules.length} weather/soil constraints`);
 }
 
-let spotIds = [];
+let spotIds: string[] = [];
 try {
   spotIds = (await readdir(join(root, 'spots'))).sort();
 } catch { /* goals-only project: optimize from goals alone */ }
 
-const spots = [];
+const spots: SpotBrief[] = [];
 for (const id of spotIds) {
   const dir = join(root, 'spots', id);
-  let meta = { id, name: id };
+  let meta: { id: string; name: unknown } = { id, name: id };
   try {
-    meta = { id, name: id, ...JSON.parse(await readFile(join(dir, 'spot.json'), 'utf8')) };
+    meta = { id, name: id, ...(JSON.parse(await readFile(join(dir, 'spot.json'), 'utf8')) as Record<string, unknown>) };
   } catch { /* uninitialized spot: name falls back to id */ }
-  let state = {};
+  let state: any = {};
   try {
     state = JSON.parse(await readFile(join(dir, 'state.json'), 'utf8'));
   } catch {
@@ -119,7 +119,7 @@ for (const id of spotIds) {
   }
   spots.push({
     id,
-    name: meta.name ?? id,
+    name: (meta.name ?? id) as string,
     stage: state.stage,
     summary: state.summary,
     open_issues: state.open_issues,

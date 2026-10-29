@@ -19,7 +19,7 @@ import {
 import {
   resolveApiKey,
   buildOverlaySvg,
-} from './lib/analyze-response.mjs';
+} from './lib/analyze-response.js';
 
 const API_BASE = process.env.META_API_BASE ?? 'https://api.meta.ai/v1';
 const MODEL = process.env.MUSE_MODEL ?? 'sam-3.1';
@@ -27,10 +27,10 @@ const MODEL = process.env.MUSE_MODEL ?? 'sam-3.1';
 const args = process.argv.slice(2);
 const input = args.find((a) => !a.startsWith('--'));
 const outFlag = args.find((a) => a.startsWith('--out'));
-const outPath = outFlag
+const outPath: string | null = outFlag
   ? outFlag.includes('=')
-    ? outFlag.split('=')[1]
-    : args[args.indexOf(outFlag) + 1]
+    ? (outFlag.split('=')[1] ?? null)
+    : (args[args.indexOf(outFlag) + 1] ?? null)
   : null;
 const concept = args.filter((a) => !a.startsWith('--'))[1];
 if (!input || !concept) {
@@ -40,7 +40,7 @@ if (!input || !concept) {
 
 const KEY = await resolveApiKey();
 
-let imageUrl;
+let imageUrl: string | undefined;
 let imageHref = input;
 if (/^https?:\/\//i.test(input)) {
   imageUrl = input;
@@ -76,14 +76,14 @@ if (!res.ok) {
   process.exit(1);
 }
 
-const data = await res.json();
+const data: any = await res.json();
 if (data.status && data.status !== 'completed') {
   console.error(`ERROR: response status '${data.status}': ${JSON.stringify(data.error ?? data.incomplete_details ?? '').slice(0, 300)}`);
   process.exit(1);
 }
 const lane = data.output
-  ?.find((o) => o.type === 'message')
-  ?.content?.find((c) => c.type === 'output_text')?.text;
+  ?.find((o: any) => o.type === 'message')
+  ?.content?.find((c: any) => c.type === 'output_text')?.text;
 if (!lane) {
   console.error('ERROR [no_output]: model returned no segmentation lane.');
   process.exit(1);

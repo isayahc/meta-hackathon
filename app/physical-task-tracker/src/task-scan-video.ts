@@ -21,7 +21,7 @@ import {
   getVideoMeta,
   loadSavedKey,
   saveKey,
-} from './lib/analyze-response.mjs';
+} from './lib/analyze-response.js';
 
 // Inspect a clip without spending an API call:
 //   node task-scan-video.mjs --meta <video-file>
@@ -34,7 +34,7 @@ if (process.argv.includes('--meta')) {
   try {
     console.log(JSON.stringify(await getVideoMeta(target), null, 2));
   } catch (e) {
-    console.error(`ERROR: ${e.message}`);
+    console.error(`ERROR: ${(e as Error).message}`);
     process.exit(1);
   }
   process.exit(0);
@@ -45,7 +45,7 @@ const execFileAsync = promisify(execFile);
 const API_BASE = process.env.META_API_BASE ?? 'https://api.meta.ai/v1';
 const MODEL = process.env.MUSE_MODEL ?? 'muse-spark-1.1';
 
-function readHidden(query) {
+function readHidden(query: string): Promise<string> {
   return new Promise((resolve) => {
     const stdin = process.stdin;
     process.stdout.write(query);
@@ -53,7 +53,7 @@ function readHidden(query) {
     stdin.resume();
     stdin.setEncoding('utf8');
     let buf = '';
-    const onData = (ch) => {
+    const onData = (ch: string) => {
       if (ch === '\r' || ch === '\n' || ch === '\u0004') {
         stdin.setRawMode(false);
         stdin.pause();
@@ -73,13 +73,13 @@ function readHidden(query) {
   });
 }
 
-async function askYesNo(query) {
+async function askYesNo(query: string): Promise<boolean> {
   process.stdout.write(query);
   return new Promise((resolve) => {
     const stdin = process.stdin;
     stdin.resume();
     stdin.setEncoding('utf8');
-    const onData = (ch) => {
+    const onData = (ch: string) => {
       stdin.pause();
       stdin.removeListener('data', onData);
       resolve(/^\s*y(es)?\s*$/i.test(ch));
@@ -88,7 +88,7 @@ async function askYesNo(query) {
   });
 }
 
-let KEY = process.env.META_API_KEY ?? (await loadSavedKey());
+let KEY: string | null = process.env.META_API_KEY ?? (await loadSavedKey());
 if (!KEY) {
   if (!process.stdin.isTTY) {
     console.error('Set META_API_KEY first (no terminal to prompt on).');
@@ -117,7 +117,7 @@ if (!input) {
   process.exit(1);
 }
 const SRT_MODE = args.includes('--srt');
-let videoDuration = null;
+let videoDuration: number | null = null;
 
 const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp']);
 const { stat } = await import('node:fs/promises');
@@ -127,8 +127,8 @@ if (!st) {
   process.exit(1);
 }
 
-let framePaths = [];
-let tmpDir = null;
+let framePaths: string[] = [];
+let tmpDir: string | null = null;
 if (classifySource(st.isDirectory(), extname(input)) === 'image') {
   framePaths = [input];
 } else if (st.isDirectory()) {
@@ -148,7 +148,7 @@ if (classifySource(st.isDirectory(), extname(input)) === 'image') {
         ? dArg.split('=')[1]
         : args[args.indexOf(dArg) + 1]
       : null;
-    videoDuration = Number.parseFloat(dVal) || null;
+    videoDuration = Number.parseFloat(dVal ?? '') || null;
     if (!videoDuration) {
       console.error('--srt with a frames directory needs --duration SECS (video length).');
       process.exit(1);
@@ -188,16 +188,16 @@ if (classifySource(st.isDirectory(), extname(input)) === 'image') {
   console.error(`Extracted ${framePaths.length} frames.`);
 }
 
-function pickEven(files, n) {
+function pickEven(files: string[], n: number): string[] {
   if (files.length <= n) return files;
-  const out = [];
+  const out: string[] = [];
   for (let i = 0; i < n; i++) {
-    out.push(files[Math.floor((i * files.length) / n)]);
+    out.push(files[Math.floor((i * files.length) / n)] as string);
   }
   return out;
 }
 
-const toDataUrl = async (p) => {
+const toDataUrl = async (p: string): Promise<string> => {
   const bytes = await readFile(p);
   const ext = extname(p).toLowerCase() === '.png' ? 'png' : 'jpeg';
   return `data:image/${ext};base64,${bytes.toString('base64')}`;
@@ -264,7 +264,10 @@ if (!result.ok) {
   process.exit(1);
 }
 if (SRT_MODE) {
-  const segments = normalizeSegments(result.analysis, videoDuration);
+  const segments = normalizeSegments(
+    result.analysis as Array<{ start?: unknown; end?: unknown; label?: unknown }>,
+    videoDuration
+  );
   if (!segments) {
     console.error('ERROR [no_segments]: model returned no usable action segments.');
     console.error(`--- raw model output ---\n${JSON.stringify(result.analysis).slice(0, 1000)}`);
