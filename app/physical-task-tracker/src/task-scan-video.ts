@@ -286,5 +286,5 @@ if (SRT_MODE) {
   console.log(srt);
 } else {
   console.log(JSON.stringify(result.analysis, null, 2));
-  console.log(`\n(via frames: ${framePaths.map((p) => basename(p)).join(', ')})`);
+  console.error(`(via frames: ${framePaths.map((p) => basename(p)).join(', ')})`);
 }
