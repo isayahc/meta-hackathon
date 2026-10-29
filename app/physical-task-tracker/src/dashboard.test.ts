@@ -5,7 +5,7 @@
 import { test, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { mkdtemp, mkdir, rm, readFile, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readdir, rm, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createServer, loadSpots, buildFeed, waitForOk } from './serve-dashboard.js';
@@ -199,6 +199,19 @@ test('events: list carries the spot update, add persists, bad date is 400', asyn
   const bad = await call(root, 'POST', '/api/events', { title: 'Spray test', date: 'tomorrow' });
   assert.equal(bad.status, 400);
   assert.match(bad.json.error, /YYYY-MM-DD/);
+});
+
+test('scan-video persists uploads where CLI children can find them', async (t: TestContext) => {
+  // Relative roots (npm start's ./my-farm) must still land absolute paths:
+  // children run from dist/ and resolve relative paths against it.
+  const rel = `dash-rel-${process.pid}`;
+  t.after(() => rm(join(process.cwd(), rel), { recursive: true, force: true }));
+  const r = await call(rel, 'POST', '/api/scan-video', { videoData: 'data:video/mp4;base64,AAAA', frames: 1 });
+  // No ffmpeg/key here, so the job itself must fail — but only AFTER persist.
+  assert.ok(r.status !== null && [400, 500, 502].includes(r.status));
+  const files = await readdir(join(process.cwd(), rel, 'media'));
+  assert.equal(files.length, 1);
+  assert.match(files[0] as string, /^clip-.*\.mp4$/);
 });
 
 test('media: serves stored clips, blocks traversal and odd extensions', async (t: TestContext) => {

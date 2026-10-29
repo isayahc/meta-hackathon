@@ -9,7 +9,7 @@ import { createServer as createHttpServer, type IncomingMessage, type ServerResp
 import { execFile } from 'node:child_process';
 import { readFile, writeFile, rm, mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listGoals, setGoalStatus, addGoal } from './lib/goals.js';
 import { listStoredEvents, addEvent, dayOf, isDay, type CalendarEvent } from './lib/events.js';
@@ -156,7 +156,10 @@ export function buildFeed(spots: OverviewSpot[]): FeedEvent[] {
   return events.sort((a, b) => (b.sort > a.sort ? 1 : -1)).slice(0, 15);
 }
 
-export function createServer(root: string, { eco = null }: { eco?: string | null } = {}) {
+export function createServer(rootArg: string, { eco = null }: { eco?: string | null } = {}) {
+  // Absolute from the start: CLI children run from dist/, so stored paths
+  // (media clips, the db) must resolve identically in every process.
+  const root = resolve(rootArg);
   const server = createHttpServer(async (req: IncomingMessage, res: ServerResponse) => {
     const url = new URL(req.url ?? '/', 'http://localhost');
     const json = (code: number, obj: unknown) => {
@@ -359,13 +362,16 @@ if (invokedAsMain) {
   // .env (cwd, then app root) fills gaps; children inherit it. Real env wins.
   loadEnvSync();
   const args = process.argv.slice(2);
-  const root = args.find((a) => !a.startsWith('--')) ?? null;
-  if (!root) {
+  const rootArg = args.find((a) => !a.startsWith('--')) ?? null;
+  if (!rootArg) {
     console.error(
       'Usage: node dist/serve-dashboard.js <projectDir> [--port 8123] [--eco <lat,lon>] [--open]'
     );
     process.exit(2);
   }
+  // Absolute: CLI children run from dist/, so every stored path must
+  // resolve identically no matter the child's working directory.
+  const root = resolve(rootArg);
   const port = Number(flagValue(args, '--port', '8123'));
   const eco = flagValue(args, '--eco', null);
   const open = args.includes('--open');
