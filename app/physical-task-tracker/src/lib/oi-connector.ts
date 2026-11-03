@@ -47,7 +47,7 @@ export type Point2 = [number, number];
 export interface ObservedSite {
   width_m: number;
   depth_m: number;
-  height_m: number;
+  height_m?: number | null; // null = unknown vertical extent; width/depth stay metric
 }
 export interface ObservedRoom {
   label: string;
@@ -177,16 +177,32 @@ function obsError(code: string, message: string): OiError {
   return new OiError(code, message);
 }
 
+// Value/type rendering for shape errors: bounded, JSON-free for numbers
+// (JSON turns NaN into null), single-line.
+function describeValue(v: unknown): string {
+  if (v === undefined) return 'missing';
+  if (v === null) return 'null';
+  if (typeof v === 'number') return `number ${String(v)}`;
+  if (typeof v === 'string') return `string ${JSON.stringify(v).slice(0, 60)}`;
+  if (typeof v !== 'object') return `${typeof v} ${String(v).slice(0, 60)}`;
+  if (Array.isArray(v)) return `array[${v.length}]`;
+  return `object {${Object.keys(v).slice(0, 5).join(', ')}}`;
+}
+
 function checkObservations(obs: unknown): asserts obs is FloorPlanObservations {
   if (!isRecord(obs)) throw obsError('OBS_BAD_SHAPE', 'Observations must be an object.');
   if (obs.site !== null && !isRecord(obs.site)) {
     throw obsError('OBS_BAD_SHAPE', 'observations.site must be an object or null.');
   }
   if (isRecord(obs.site)) {
-    for (const k of ['width_m', 'depth_m', 'height_m']) {
+    for (const k of ['width_m', 'depth_m']) {
       if (typeof obs.site[k] !== 'number' || !Number.isFinite(obs.site[k])) {
-        throw obsError('OBS_BAD_SHAPE', `observations.site.${k} must be a finite number.`);
+        throw obsError('OBS_BAD_SHAPE', `observations.site.${k} must be a finite number (got ${describeValue(obs.site[k])}).`);
       }
+    }
+    const height = obs.site.height_m;
+    if (height !== null && height !== undefined && (typeof height !== 'number' || !Number.isFinite(height))) {
+      throw obsError('OBS_BAD_SHAPE', `observations.site.height_m must be a finite number or null (got ${describeValue(height)}).`);
     }
   }
   for (const k of ['rooms', 'walls', 'openings', 'equipment', 'unresolved']) {
@@ -199,16 +215,42 @@ function toMeters(p: Point2, site: ObservedSite): Point2 {
   return [(p[0] - 0.5) * site.width_m, (p[1] - 0.5) * site.depth_m];
 }
 
+// Explicit footprint assumption for scale-less plans: fills a null site
+// with user-supplied meters (height stays unknown) and records provenance
+// in siteEvidence, which the builder carries into unresolved notes.
+// Observed sites pass through untouched.
+export function applySizeAssumption(obs: FloorPlanObservations, widthM: number, depthM: number): FloorPlanObservations {
+  if (obs.site !== null) return obs;
+  const prior = typeof obs.siteEvidence === 'string' && obs.siteEvidence ? ` ${obs.siteEvidence}` : '';
+  return {
+    ...obs,
+    site: { width_m: widthM, depth_m: depthM, height_m: null },
+    siteEvidence: `User-assumed footprint ${widthM}x${depthM} m (explicit --assume-size; not observed).${prior}`,
+  };
+}
+
 export function buildSpaceIr(
   obs: FloorPlanObservations,
   source: OiSource,
-  opts: { docId?: string; revision?: string } = {}
+  opts: { docId?: string; revision?: string; assumedHeightM?: number } = {}
 ): OiSpaceIrDoc {
   checkObservations(obs);
   const docId = opts.docId ?? `fieldops-${source.sourceId}`;
   const revision = opts.revision ?? 'r1';
   const capturedAt = source.capturedAt ?? new Date().toISOString();
   const scaled = obs.site !== null;
+
+  const siteHeightM = obs.site?.height_m ?? null;
+  const assumedHeightM = opts.assumedHeightM ?? null;
+  if (scaled && siteHeightM === null && assumedHeightM === null) {
+    throw obsError(
+      'OBS_MISSING_HEIGHT',
+      'Site width/depth are known but height_m is unknown: pass --assume-height <meters> to record an explicit assumption, or supply site.height_m.'
+    );
+  }
+  if (assumedHeightM !== null && (!Number.isFinite(assumedHeightM) || assumedHeightM <= 0)) {
+    throw obsError('OBS_BAD_SHAPE', `assumedHeightM must be a positive finite number (got ${describeValue(assumedHeightM)}).`);
+  }
 
   const evidence: Array<Record<string, unknown>> = [];
   const evIdFor = (entityId: string): string => {
@@ -346,6 +388,9 @@ export function buildSpaceIr(
   if (!scaled) {
     unresolved.push('Site has no metric scale: geometry omitted, topology retained.');
   }
+  if (scaled && siteHeightM === null && assumedHeightM !== null) {
+    unresolved.push(`Site height assumed: ${assumedHeightM} m via explicit user assumption (not observed).`);
+  }
   if (obs.siteEvidence) unresolved.push(`Scale provenance: ${obs.siteEvidence}`);
 
   return {
@@ -358,7 +403,7 @@ export function buildSpaceIr(
           frame_id: 'world',
           width_m: (obs.site as ObservedSite).width_m,
           depth_m: (obs.site as ObservedSite).depth_m,
-          height_m: (obs.site as ObservedSite).height_m,
+          height_m: ((obs.site as ObservedSite).height_m ?? assumedHeightM) as number,
         }
       : null,
     frames: [{ id: 'world', units: 'm', axes: 'XZ' }],
@@ -607,6 +652,7 @@ export interface FloorPlanFlowInput {
     sceneId?: string;
     baseRevision?: number;
     requestId?: string;
+    assumedHeightM?: number;
     docId?: string;
     agent?: string;
   };
@@ -625,7 +671,7 @@ export interface FloorPlanFlowResult {
 // diagnostics, conflicts) propagate untouched; only transport and
 // request-shaping failures originate here.
 export async function runFloorPlanFlow(input: FloorPlanFlowInput): Promise<FloorPlanFlowResult> {
-  const spaceIr = buildSpaceIr(input.observations, input.source, { docId: input.oi.docId });
+  const spaceIr = buildSpaceIr(input.observations, input.source, { docId: input.oi.docId, assumedHeightM: input.oi.assumedHeightM });
   const oiIdentity = input.run.mock
     ? { repo: OI_REPO, pinnedSha: OI_PIN_SHA, actualSha: null, version: null, pinned: false, markers: { spaceIr: false, compiler: false, planViewport: false, localBackend: false } }
     : await readOiIdentity(input.oi.root);

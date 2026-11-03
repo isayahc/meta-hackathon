@@ -127,6 +127,97 @@ type ExecFn = (
 
 // Probe a video file with ffprobe. execFile is injected so tests can stub
 // it; defaults to node:child_process.
+// Transport-failure detail: the underlying cause chain (code + message per
+// link, AggregateError contents flattened) as one bounded line. Only codes
+// and messages are ever emitted — never stacks, headers, keys, or payload
+// bytes — with bearer/data-URL shapes redacted defensively. Class names
+// are omitted: callers assert /AggregateError/ stays out of stderr.
+const TRANSPORT_PART_MAX = 200;
+const TRANSPORT_LINKS_MAX = 6;
+const TRANSPORT_TOTAL_MAX = 800;
+
+function sanitizeTransportText(s: string): string {
+  return s
+    .replace(/Bearer\s+[A-Za-z0-9._~+/-]+/g, 'Bearer [REDACTED]')
+    .replace(/data:(image|video)\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=]+/gi, 'data:...[REDACTED]');
+}
+
+function collectTransportLinks(err: unknown, out: string[]): void {
+  if (out.length >= TRANSPORT_LINKS_MAX || err === null || err === undefined) return;
+  if (Array.isArray(err)) {
+    for (const item of err) collectTransportLinks(item, out);
+    return;
+  }
+  if (typeof err !== 'object') {
+    out.push(String(err));
+    return;
+  }
+  const rec = err as { errors?: unknown; cause?: unknown; code?: unknown; message?: unknown };
+  if (Array.isArray(rec.errors) && rec.errors.length) {
+    for (const item of rec.errors) collectTransportLinks(item, out);
+  } else {
+    const code = typeof rec.code === 'string' && rec.code ? rec.code : null;
+    const msg = typeof rec.message === 'string' && rec.message ? rec.message : null;
+    if (code && msg) out.push(`${code}: ${msg}`);
+    else if (code) out.push(code);
+    else if (msg) out.push(msg);
+  }
+  collectTransportLinks(rec.cause, out);
+}
+
+// Full error detail for the server log: JSON-safe serialization of the
+// failure with nested cause/errors, redacted and bounded. Temporary
+// diagnostic companion to the one-line summary above.
+const SERIALIZE_DEPTH_MAX = 4;
+const SERIALIZE_KEYS_MAX = 20;
+const SERIALIZE_STRING_MAX = 500;
+const SERIALIZE_TOTAL_MAX = 2000;
+
+function toPlainError(err: unknown, depth: number, seen: Set<object>): unknown {
+  if (err === null || err === undefined) return err;
+  if (typeof err === 'string') return sanitizeTransportText(err.slice(0, SERIALIZE_STRING_MAX));
+  if (typeof err !== 'object') return err;
+  if (seen.has(err)) return '[Circular]';
+  if (depth <= 0) return '[Truncated]';
+  seen.add(err);
+  if (Array.isArray(err)) {
+    return err.slice(0, SERIALIZE_KEYS_MAX).map((item) => toPlainError(item, depth - 1, seen));
+  }
+  const rec = err as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  if (typeof rec.name === 'string') out.name = rec.name.slice(0, 80);
+  if (typeof rec.code === 'string') out.code = rec.code.slice(0, 80);
+  if (typeof rec.message === 'string') out.message = sanitizeTransportText(rec.message.slice(0, SERIALIZE_STRING_MAX));
+  for (const key of Object.keys(rec)) {
+    if (Object.keys(out).length >= SERIALIZE_KEYS_MAX) break;
+    if (key === 'name' || key === 'code' || key === 'message' || key === 'stack' || key === 'cause' || key === 'errors') continue;
+    if (/^(authorization|api[_-]?key|apikey|token|secret|passwd|password)$/i.test(key)) out[key] = '[REDACTED]';
+    else out[key] = toPlainError(rec[key], depth - 1, seen);
+  }
+  if (rec.cause !== undefined) out.cause = toPlainError(rec.cause, depth - 1, seen);
+  if (rec.errors !== undefined) out.errors = toPlainError(rec.errors, depth - 1, seen);
+  return out;
+}
+
+export function serializeTransportError(err: unknown): string {
+  try {
+    const json = JSON.stringify(toPlainError(err, SERIALIZE_DEPTH_MAX, new Set()));
+    return (typeof json === 'string' ? json : 'null').slice(0, SERIALIZE_TOTAL_MAX);
+  } catch {
+    return '"[Unserializable]"';
+  }
+}
+
+export function formatTransportError(err: unknown): string {
+  const links: string[] = [];
+  collectTransportLinks(err, links);
+  const parts = links.length ? links : ['unknown network error'];
+  return parts
+    .map((p) => sanitizeTransportText(p.replace(/\s+/g, ' ').trim()).slice(0, TRANSPORT_PART_MAX))
+    .join(' <- ')
+    .slice(0, TRANSPORT_TOTAL_MAX);
+}
+
 // POST JSON with Bearer auth. Network failures exit cleanly on stderr
 // (stdout stays pure JSON) instead of an undici stack dump.
 export async function postApi(url: string, key: string, body: unknown): Promise<Response> {
@@ -137,7 +228,8 @@ export async function postApi(url: string, key: string, body: unknown): Promise<
       body: JSON.stringify(body),
     });
   } catch (e) {
-    console.error(`API unreachable: ${((e as Error)?.message ?? String(e)).slice(0, 200)}`);
+    console.error(`API unreachable: ${formatTransportError(e)}`);
+    console.error(`detail: ${serializeTransportError(e)}`);
     process.exit(1);
   }
 }
@@ -294,6 +386,25 @@ export function buildOptimizerPrompt(
     (ecoSummary ? `\nField conditions (ecology data):\n${ecoSummary}\n` : '') +
     constraintBlock
   );
+}
+
+// Floor-plan prompt: strict observation JSON over a plan image. Versioned:
+// run evidence records which prompt produced each observation set.
+export const FLOORPLAN_PROMPT_VERSION = 'floorplan-v5';
+
+export function buildFloorplanPrompt(): string {
+  return `You are the vision layer of a Field Ops task tracker reading a floor-plan image.
+Report ONLY what the drawing shows. Reply with strict JSON, no markdown fences:
+{
+  "site": {"width_m": 0, "depth_m": 0, "height_m": 0 or null} or null,
+  "siteEvidence": "where any dimensions came from, or why scale is unknown",
+  "rooms": [{"label": "name", "kind": "room|zone|outdoor|volume", "polygon": [[0,0]] or null, "status": "observed|inferred"}],
+  "walls": [{"label": "name", "kind": "wall|partition", "regions": ["room label", "optional second"], "path": [[0,0],[1,1]] or null, "thickness_m": 0 or null, "height_m": 0 or null, "status": "observed|inferred"}],
+  "openings": [{"wall": 0, "kind": "door|passage|window|gate", "span": [0.4, 0.6], "traversable": true, "status": "observed|inferred"}],
+  "equipment": [{"label": "name", "region": "room label", "polygon": [[0,0]] or null, "status": "observed|inferred"}],
+  "unresolved": ["what you cannot tell: missing scale, unreadable labels, ambiguous connectivity"]
+}
+Rules: polygons/paths are normalized [0,1] plan coordinates with origin top-left. "wall" is a wall-array index. Spans are fractions along the wall within [0,1]. NEVER invent dimensions: site null when no scale bar or figured dimensions are visible; height_m null (never 0, never a guess) when plan dimensions are visible but heights are not; geometry null when unmeasurable; put every ambiguity in unresolved. A wall path is exactly its two endpoints and touches at most two rooms: split angled, bay, or multi-room walls into one wall entry per straight run. Equipment is furniture/fixtures with visible footprints. Walls reference room labels exactly: exterior walls list only interior rooms, never the words room, zone, outdoor, or volume unless you emitted a room with that exact label. Before replying, verify every wall path has exactly two points, every wall touches at most two rooms, every region names a room label from this reply, and every opening wall index exists; fix any violation first.`;
 }
 
 export interface MaskPath {
@@ -457,7 +568,7 @@ interface ProviderResponse {
 }
 
 export type AnalysisResult =
-  | { ok: true; analysis: unknown; raw: string }
+  | { ok: true; analysis: unknown; raw: string; usage?: unknown }
   | { ok: false; code: string; error: string; usage?: unknown; raw?: string; detail?: unknown };
 
 export function extractAnalysis(data: ProviderResponse): AnalysisResult {
@@ -495,7 +606,7 @@ export function extractAnalysis(data: ProviderResponse): AnalysisResult {
   }
   const text = String(content);
   try {
-    return { ok: true, analysis: JSON.parse(text), raw: text };
+    return { ok: true, analysis: JSON.parse(text), raw: text, usage };
   } catch {
     return {
       ok: false,

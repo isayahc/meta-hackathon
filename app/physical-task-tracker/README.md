@@ -275,6 +275,11 @@ scene store defaults to `<project>/oi-scenes`). `--mock-oi` runs the full
 flow against a labeled scripted transport for offline demos and tests.
 Evidence lands in `<project>/oi-evidence/<scene-id>/`; the result JSON
 carries OI preview links (`revision_url`) for the workbench 2D plan.
+When the plan shows width/depth but no heights, the model reports
+`height_m: null` (never 0, never a guess); pass `--assume-height <m>`
+(or the Space tab field) to record an explicit, evidence-labeled
+assumption — OI requires metric dimensions to compile. Fully unscaled plans
+need `--assume-size <WIDTHxDEPTH>` too (same explicit labeling).
 Dashboard: the Space tab posts to `/api/floorplan`. Tests: `node --test
 dist/task-floorplan.test.js dist/lib/oi-connector.test.js
 dist/lib/oi-links.test.js dist/lib/oi-integration.test.js` (live-OI tests

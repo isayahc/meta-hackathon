@@ -10,6 +10,7 @@ import {
   OI_REPO,
   OI_SPACE_IR_SCHEMA,
   OI_SPACE_IR_VERSION,
+  applySizeAssumption,
   buildSpaceIr,
   resolveOiRoot,
   runFloorPlanFlow,
@@ -119,6 +120,43 @@ describe('buildSpaceIr', () => {
       (e: unknown) => e instanceof OiError && e.code === 'OBS_BAD_SHAPE'
     );
   });
+
+  it('rejects a null height as missing information, not malformed output', () => {
+    assert.throws(
+      () => buildSpaceIr({ ...CABIN, site: { width_m: 8, depth_m: 6, height_m: null } }, SRC),
+      (e: unknown) => e instanceof OiError && e.code === 'OBS_MISSING_HEIGHT' && /assume-height/.test(e.message)
+    );
+  });
+
+  it('treats an absent height key as unknown, not malformed', () => {
+    assert.throws(
+      () => buildSpaceIr({ ...CABIN, site: { width_m: 8, depth_m: 6 } }, SRC),
+      (e: unknown) => e instanceof OiError && e.code === 'OBS_MISSING_HEIGHT'
+    );
+  });
+
+  it('rejects non-numeric heights as malformed, naming the offending value', () => {
+    for (const bad of ['2.7m', 'tall']) {
+      assert.throws(
+        () => buildSpaceIr({ ...CABIN, site: { width_m: 8, depth_m: 6, height_m: bad as unknown as number } }, SRC),
+        (e: unknown) => e instanceof OiError && e.code === 'OBS_BAD_SHAPE' && e.message.includes(`string "${bad}"`)
+      );
+    }
+  });
+
+  it('keeps metric plan geometry under an explicit height assumption', () => {
+    const doc = buildSpaceIr({ ...CABIN, site: { width_m: 8, depth_m: 6, height_m: null } }, SRC, { assumedHeightM: 2.7 });
+    assert.deepEqual(doc.site, { frame_id: 'world', width_m: 8, depth_m: 6, height_m: 2.7 });
+    assert.deepEqual((doc.regions[0] as { polygon: Array<[number, number]> | null }).polygon?.[1], [4, -3]);
+    assert.ok(doc.unresolved.some((u) => /assumed/i.test(u) && /2\.7/.test(u)));
+  });
+
+  it('rejects a non-positive height assumption', () => {
+    assert.throws(
+      () => buildSpaceIr({ ...CABIN, site: { width_m: 8, depth_m: 6, height_m: null } }, SRC, { assumedHeightM: 0 }),
+      (e: unknown) => e instanceof OiError && e.code === 'OBS_BAD_SHAPE'
+    );
+  });
 });
 
 describe('resolveOiRoot', () => {
@@ -219,5 +257,44 @@ describe('runFloorPlanFlow', () => {
     await runFloorPlanFlow({ ...base, transport });
     assert.deepEqual(transport.calls.map((c) => c.op), ['validate', 'compile', 'commit']);
     assert.equal((transport.calls[2]?.payload as { baseRevision: unknown }).baseRevision, 0);
+  });
+
+  it('sends the assumed site downstream and commits', async () => {
+    const transport = new OiMockTransport();
+    const flow = await runFloorPlanFlow({
+      ...base,
+      observations: { ...CABIN, site: { width_m: 8, depth_m: 6, height_m: null } },
+      oi: { ...base.oi, assumedHeightM: 3 },
+      transport,
+    });
+    assert.equal(flow.committed.revision, 1);
+    const sent = transport.calls[0]?.payload.spaceIr as { site: unknown; unresolved: string[] };
+    assert.deepEqual(sent.site, { frame_id: 'world', width_m: 8, depth_m: 6, height_m: 3 });
+    assert.ok(sent.unresolved.some((u) => /assumed/i.test(u)));
+  });
+
+  it('fails before any OI call when height is unknown', async () => {
+    const transport = new OiMockTransport();
+    await assert.rejects(
+      () => runFloorPlanFlow({ ...base, observations: { ...CABIN, site: { width_m: 8, depth_m: 6, height_m: null } }, transport }),
+      (e: unknown) => e instanceof OiError && e.code === 'OBS_MISSING_HEIGHT'
+    );
+    assert.deepEqual(transport.calls, []);
+  });
+});
+
+describe('applySizeAssumption', () => {
+  it('fills a null site and records provenance', () => {
+    const obs = { ...CABIN, site: null, siteEvidence: 'No scale visible.' };
+    const out = applySizeAssumption(obs, 12, 9);
+    assert.deepEqual(out.site, { width_m: 12, depth_m: 9, height_m: null });
+    assert.match(out.siteEvidence as string, /User-assumed footprint 12x9 m/);
+    assert.match(out.siteEvidence as string, /No scale visible\./);
+    assert.equal(obs.site, null);
+  });
+
+  it('leaves observed sites untouched', () => {
+    const out = applySizeAssumption(CABIN, 12, 9);
+    assert.equal(out, CABIN);
   });
 });
