@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="687" viewBox="0 0 760 687">
+<rect x="0" y="0" width="760" height="687" fill="#ffffff"/>
+<text x="12" y="24" font-family="sans-serif" font-size="16" font-weight="bold" fill="#111827">08-barnimstrasse-prison-cell</text>
+<text x="12" y="44" font-family="sans-serif" font-size="11" fill="#4b5563">site 18x14x2.7 m · 15 regions · 11 walls · 3 portals · 0 equipment · top-down, x=+X east, y=−Z north</text>
+<g transform="translate(716,100)"><circle r="16" fill="#f3f4f6" stroke="#9ca3af"/><path d="M0,10 L0,-10 M-6,-3 L0,-10 L6,-3" stroke="#111827" stroke-width="2" fill="none"/><text y="-20" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">N</text></g>
+<rect x="52.41" y="106.77" width="655.17" height="509.58" fill="none" stroke="#9ca3af" stroke-dasharray="6,4"><title>site 18x14x2.7 m</title></rect>
+<polygon points="113.34,542.97 242.41,542.97 242.41,325.89 113.34,325.89" fill="#fef3c7" stroke="#d97706" stroke-width="1"><title>room-administration (zone)</title></polygon>
+<text x="177.88" y="434.43" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Administration</text>
+<polygon points="113.34,252 159.86,252 159.86,140.91 113.34,140.91" fill="#fef3c7" stroke="#d97706" stroke-width="1"><title>room-porter-s-residence (zone)</title></polygon>
+<text x="136.6" y="196.45" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Porter's residence</text>
+<polygon points="243.72,215.82 438.31,215.82 438.31,140.4 243.72,140.4" fill="#fef3c7" stroke="#d97706" stroke-width="1"><title>room-housekeeping-building (zone)</title></polygon>
+<text x="341.02" y="178.11" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Housekeeping building</text>
+<polygon points="252.24,540.93 539.21,540.93 539.21,224.99 252.24,224.99" fill="#fef3c7" stroke="#d97706" stroke-width="1"><title>room-cell-wing (zone)</title></polygon>
+<text x="395.72" y="382.96" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Cell wing</text>
+<polygon points="539.86,541.44 681.38,541.44 681.38,387.03 539.86,387.03" fill="#fef3c7" stroke="#d97706" stroke-width="1"><title>room-hospital (zone)</title></polygon>
+<text x="610.62" y="464.24" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Hospital</text>
+<polygon points="159.86,276.97 243.72,276.97 243.72,140.91 159.86,140.91" fill="#dcfce7" stroke="#16a34a" stroke-width="1"><title>room-atrium (outdoor)</title></polygon>
+<text x="201.79" y="208.94" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Atrium</text>
+<polygon points="174.28,462.96 218.17,462.96 218.17,348.31 174.28,348.31" fill="#dcfce7" stroke="#16a34a" stroke-width="1"><title>room-staff-courtyard (outdoor)</title></polygon>
+<text x="196.22" y="405.63" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Staff courtyard</text>
+<polygon points="260.76,477.74 466.48,477.74 466.48,388.05 260.76,388.05" fill="#dcfce7" stroke="#16a34a" stroke-width="1"><title>room-walking-yard-north (outdoor)</title></polygon>
+<text x="363.62" y="432.9" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Walking yard north</text>
+<polygon points="259.45,267.79 436.34,267.79 436.34,218.36 259.45,218.36" fill="#dcfce7" stroke="#16a34a" stroke-width="1"><title>room-walking-yard-south (outdoor)</title></polygon>
+<text x="347.9" y="243.08" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Walking yard south</text>
+<polygon points="489.41,473.15 637.48,473.15 637.48,260.66 489.41,260.66" fill="#dcfce7" stroke="#16a34a" stroke-width="1"><title>room-walking-yard-hospital (outdoor)</title></polygon>
+<text x="563.45" y="366.91" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Walking yard hospital</text>
+<polygon points="438.97,387.03 681.38,387.03 681.38,151.61 438.97,151.61" fill="#dcfce7" stroke="#16a34a" stroke-width="1"><title>room-extension (outdoor)</title></polygon>
+<text x="560.17" y="269.32" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Extension</text>
+<polygon points="119.9,537.36 138.9,537.36 138.9,489.46 119.9,489.46" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-matron (room)</title></polygon>
+<text x="129.4" y="513.41" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Matron</text>
+<polygon points="144.79,537.36 184.1,537.36 184.1,506.79 144.79,506.79" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-accounting (room)</title></polygon>
+<text x="164.45" y="522.07" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Accounting</text>
+<polygon points="225.38,288.18 258.79,288.18 258.79,238.24 225.38,238.24" fill="#fef3c7" stroke="#d97706" stroke-width="1"><title>room-intake-cells-lower (zone)</title></polygon>
+<text x="242.09" y="263.21" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Intake cells lower</text>
+<polygon points="315.79,207.15 366.9,207.15 366.9,161.29 315.79,161.29" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-kitchen (room)</title></polygon>
+<text x="341.34" y="184.22" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Kitchen</text>
+<polyline data-layer="boundary" points="113.34,542.97 242.41,542.97" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-north-wall-administration (wall)</title></polyline>
+<polyline data-layer="boundary" points="242.41,542.46 539.21,542.46" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-north-wall-cell-wing (wall)</title></polyline>
+<polyline data-layer="boundary" points="539.21,541.95 681.38,541.95" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-north-wall-hospital (wall)</title></polyline>
+<polyline data-layer="boundary" points="114,140.91 438.31,140.91" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-south-wall-housekeeping (wall)</title></polyline>
+<polyline data-layer="boundary" points="680.72,541.44 680.72,388.56" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-east-wall-hospital (wall)</title></polyline>
+<polyline data-layer="boundary" points="113.34,542.97 113.34,326.39" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-west-wall-administration (wall)</title></polyline>
+<polyline data-layer="boundary" points="113.34,252 113.34,140.91" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-west-wall-porters (wall)</title></polyline>
+<polyline data-layer="boundary" points="241.76,542.97 241.76,325.89" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-division-between-administration-and-cell-wing (partition)</title></polyline>
+<polyline data-layer="boundary" points="539.21,541.44 539.21,388.56" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-division-between-cell-wing-and-hospital (partition)</title></polyline>
+<polyline data-layer="boundary" points="243.72,215.82 438.31,215.82" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-north-wall-of-housekeeping-building (wall)</title></polyline>
+<polyline data-layer="boundary" points="680.07,387.03 680.07,151.61" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-east-wall-extension (wall)</title></polyline>
+<polyline data-layer="portal" points="241.76,445.28 241.76,423.57" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-1 (passage) on wall-division-between-administration-and-cell-wing</title></polyline>
+<polyline data-layer="portal" points="539.21,480.29 539.21,461.94" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-2 (passage) on wall-division-between-cell-wing-and-hospital</title></polyline>
+<polyline data-layer="portal" points="282.64,215.82 294.32,215.82" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-3 (door) on wall-north-wall-of-housekeeping-building</title></polyline>
+<g><rect x="564.01" y="640" width="181.99" height="5" fill="#111827"/><text x="655.005" y="636" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#111827">5 m</text></g>
+<text x="12" y="677" font-family="sans-serif" font-size="10" fill="#6b7280">10 unresolved notes</text>
+</svg>

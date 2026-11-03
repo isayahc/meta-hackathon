@@ -1,0 +1,1245 @@
+{
+  "schema_id": "mapped-assembly.space-ir",
+  "schema_version": "0.1.0",
+  "id": "fieldops-07-bently-reserve-office.png",
+  "revision": "r1",
+  "site": {
+    "frame_id": "world",
+    "width_m": 18,
+    "depth_m": 14,
+    "height_m": 2.7
+  },
+  "frames": [
+    {
+      "id": "world",
+      "units": "m",
+      "axes": "XZ"
+    }
+  ],
+  "regions": [
+    {
+      "id": "room-adriatic-room",
+      "kind": "room",
+      "label": "Adriatic Room",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -8.693999999999999,
+          -6.6499999999999995
+        ],
+        [
+          -4.806,
+          -6.6499999999999995
+        ],
+        [
+          -4.806,
+          -3.9200000000000004
+        ],
+        [
+          -8.693999999999999,
+          -3.9200000000000004
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-adriatic-room"
+      ]
+    },
+    {
+      "id": "room-charging-station",
+      "kind": "zone",
+      "label": "Charging Station",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -7.56,
+          -3.71
+        ],
+        [
+          -5.130000000000001,
+          -3.71
+        ],
+        [
+          -5.130000000000001,
+          -0.91
+        ],
+        [
+          -7.56,
+          -0.91
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-charging-station"
+      ]
+    },
+    {
+      "id": "room-sansome-lobby",
+      "kind": "room",
+      "label": "Sansome Lobby",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -8.693999999999999,
+          -0.7699999999999999
+        ],
+        [
+          -5.148000000000001,
+          -0.7699999999999999
+        ],
+        [
+          -5.148000000000001,
+          2.1700000000000004
+        ],
+        [
+          -8.693999999999999,
+          2.1700000000000004
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-sansome-lobby"
+      ]
+    },
+    {
+      "id": "room-green-room",
+      "kind": "room",
+      "label": "Green Room",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -8.693999999999999,
+          3.99
+        ],
+        [
+          -4.824,
+          3.99
+        ],
+        [
+          -4.824,
+          6.622
+        ],
+        [
+          -8.693999999999999,
+          6.622
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-green-room"
+      ]
+    },
+    {
+      "id": "room-2nd-floor-elevator-lobby",
+      "kind": "zone",
+      "label": "2nd Floor Elevator Lobby",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -7.524,
+          2.380000000000001
+        ],
+        [
+          -5.166,
+          2.380000000000001
+        ],
+        [
+          -5.166,
+          3.7800000000000002
+        ],
+        [
+          -7.524,
+          3.7800000000000002
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-2nd-floor-elevator-lobby"
+      ]
+    },
+    {
+      "id": "room-main-hall",
+      "kind": "room",
+      "label": "Main Hall",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -4.734,
+          -2.59
+        ],
+        [
+          3.869999999999999,
+          -2.59
+        ],
+        [
+          3.869999999999999,
+          3.99
+        ],
+        [
+          -4.734,
+          3.99
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-main-hall"
+      ]
+    },
+    {
+      "id": "room-farallon-room",
+      "kind": "room",
+      "label": "Farallon Room",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -2.7900000000000005,
+          -6.58
+        ],
+        [
+          3.8339999999999996,
+          -6.58
+        ],
+        [
+          3.8339999999999996,
+          -3.3179999999999996
+        ],
+        [
+          -2.7900000000000005,
+          -3.3179999999999996
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-farallon-room"
+      ]
+    },
+    {
+      "id": "room-gateway-room",
+      "kind": "room",
+      "label": "Gateway Room",
+      "frame_id": "world",
+      "polygon": [
+        [
+          4.2299999999999995,
+          -6.608
+        ],
+        [
+          8.586,
+          -6.608
+        ],
+        [
+          8.586,
+          -2.8280000000000003
+        ],
+        [
+          4.2299999999999995,
+          -2.8280000000000003
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-gateway-room"
+      ]
+    },
+    {
+      "id": "room-bathrooms-north",
+      "kind": "room",
+      "label": "Bathrooms North",
+      "frame_id": "world",
+      "polygon": [
+        [
+          5.220000000000001,
+          -4.130000000000001
+        ],
+        [
+          7.506,
+          -4.130000000000001
+        ],
+        [
+          7.506,
+          -1.82
+        ],
+        [
+          5.220000000000001,
+          -1.82
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-bathrooms-north"
+      ]
+    },
+    {
+      "id": "room-coats",
+      "kind": "zone",
+      "label": "Coats",
+      "frame_id": "world",
+      "polygon": [
+        [
+          5.220000000000001,
+          -1.708
+        ],
+        [
+          6.426,
+          -1.708
+        ],
+        [
+          6.426,
+          -0.9800000000000001
+        ],
+        [
+          5.220000000000001,
+          -0.9800000000000001
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-coats"
+      ]
+    },
+    {
+      "id": "room-registration",
+      "kind": "zone",
+      "label": "Registration",
+      "frame_id": "world",
+      "polygon": [
+        [
+          6.57,
+          -1.708
+        ],
+        [
+          8.586,
+          -1.708
+        ],
+        [
+          8.586,
+          -0.28000000000000025
+        ],
+        [
+          6.57,
+          -0.28000000000000025
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-registration"
+      ]
+    },
+    {
+      "id": "room-battery-lobby",
+      "kind": "room",
+      "label": "Battery Lobby",
+      "frame_id": "world",
+      "polygon": [
+        [
+          5.166,
+          -0.882
+        ],
+        [
+          8.604,
+          -0.882
+        ],
+        [
+          8.604,
+          2.5200000000000005
+        ],
+        [
+          5.166,
+          2.5200000000000005
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-battery-lobby"
+      ]
+    },
+    {
+      "id": "room-bathrooms-south",
+      "kind": "room",
+      "label": "Bathrooms South",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -3.7980000000000005,
+          4.074000000000001
+        ],
+        [
+          -0.8819999999999998,
+          4.074000000000001
+        ],
+        [
+          -0.8819999999999998,
+          6.327999999999999
+        ],
+        [
+          -3.7980000000000005,
+          6.327999999999999
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-bathrooms-south"
+      ]
+    },
+    {
+      "id": "room-elev-lobby-south",
+      "kind": "zone",
+      "label": "Elev Lobby South",
+      "frame_id": "world",
+      "polygon": [
+        [
+          4.212,
+          2.9959999999999996
+        ],
+        [
+          6.084,
+          2.9959999999999996
+        ],
+        [
+          6.084,
+          4.858
+        ],
+        [
+          4.212,
+          4.858
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-elev-lobby-south"
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "id": "wall-adriatic-north-exterior",
+      "kind": "wall",
+      "region_ids": [
+        "room-adriatic-room"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -8.73,
+          -6.6499999999999995
+        ],
+        [
+          -4.806,
+          -6.6499999999999995
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-adriatic-north-exterior"
+      ]
+    },
+    {
+      "id": "wall-adriatic-west-exterior",
+      "kind": "wall",
+      "region_ids": [
+        "room-adriatic-room"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -8.73,
+          -6.6499999999999995
+        ],
+        [
+          -8.73,
+          -3.9200000000000004
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-adriatic-west-exterior"
+      ]
+    },
+    {
+      "id": "wall-adriatic-south-charging-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-adriatic-room",
+        "room-charging-station"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -8.459999999999999,
+          -3.9200000000000004
+        ],
+        [
+          -5.220000000000001,
+          -3.9200000000000004
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-adriatic-south-charging-north"
+      ]
+    },
+    {
+      "id": "wall-charging-east-main-west-upper",
+      "kind": "wall",
+      "region_ids": [
+        "room-charging-station",
+        "room-main-hall"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -5.148000000000001,
+          -3.71
+        ],
+        [
+          -5.148000000000001,
+          -0.91
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-charging-east-main-west-upper"
+      ]
+    },
+    {
+      "id": "wall-sansome-east-main-west-middle",
+      "kind": "wall",
+      "region_ids": [
+        "room-sansome-lobby",
+        "room-main-hall"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -5.148000000000001,
+          -0.7699999999999999
+        ],
+        [
+          -5.148000000000001,
+          2.1700000000000004
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-sansome-east-main-west-middle"
+      ]
+    },
+    {
+      "id": "wall-farallon-south-main-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-farallon-room",
+        "room-main-hall"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -2.7900000000000005,
+          -3.29
+        ],
+        [
+          3.8339999999999996,
+          -3.29
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-farallon-south-main-north"
+      ]
+    },
+    {
+      "id": "wall-farallon-north-exterior",
+      "kind": "wall",
+      "region_ids": [
+        "room-farallon-room"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -2.7900000000000005,
+          -6.58
+        ],
+        [
+          3.8339999999999996,
+          -6.58
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-farallon-north-exterior"
+      ]
+    },
+    {
+      "id": "wall-gateway-north-exterior",
+      "kind": "wall",
+      "region_ids": [
+        "room-gateway-room"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          4.2299999999999995,
+          -6.608
+        ],
+        [
+          8.586,
+          -6.608
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-gateway-north-exterior"
+      ]
+    },
+    {
+      "id": "wall-gateway-south-main-north-east",
+      "kind": "wall",
+      "region_ids": [
+        "room-gateway-room",
+        "room-main-hall"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          4.2299999999999995,
+          -2.8280000000000003
+        ],
+        [
+          5.256,
+          -2.8280000000000003
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-gateway-south-main-north-east"
+      ]
+    },
+    {
+      "id": "wall-battery-west-main-east",
+      "kind": "wall",
+      "region_ids": [
+        "room-battery-lobby",
+        "room-main-hall"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          3.869999999999999,
+          -1.12
+        ],
+        [
+          3.869999999999999,
+          2.5200000000000005
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-battery-west-main-east"
+      ]
+    },
+    {
+      "id": "wall-green-north-2nd-floor-south",
+      "kind": "wall",
+      "region_ids": [
+        "room-green-room",
+        "room-2nd-floor-elevator-lobby"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -8.693999999999999,
+          3.7800000000000002
+        ],
+        [
+          -5.166,
+          3.7800000000000002
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-green-north-2nd-floor-south"
+      ]
+    },
+    {
+      "id": "wall-green-south-exterior",
+      "kind": "wall",
+      "region_ids": [
+        "room-green-room"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -8.693999999999999,
+          6.622
+        ],
+        [
+          -4.824,
+          6.622
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-green-south-exterior"
+      ]
+    },
+    {
+      "id": "wall-main-south-bathrooms-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-main-hall",
+        "room-bathrooms-south"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -3.7980000000000005,
+          3.99
+        ],
+        [
+          -0.8819999999999998,
+          3.99
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-main-south-bathrooms-north"
+      ]
+    },
+    {
+      "id": "wall-main-south-exterior-center",
+      "kind": "wall",
+      "region_ids": [
+        "room-main-hall"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -0.8819999999999998,
+          3.99
+        ],
+        [
+          4.212,
+          3.99
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-main-south-exterior-center"
+      ]
+    },
+    {
+      "id": "wall-bathrooms-south-south-exterior",
+      "kind": "wall",
+      "region_ids": [
+        "room-bathrooms-south"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -3.7980000000000005,
+          6.327999999999999
+        ],
+        [
+          -0.8819999999999998,
+          6.327999999999999
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-bathrooms-south-south-exterior"
+      ]
+    },
+    {
+      "id": "wall-battery-east-exterior",
+      "kind": "wall",
+      "region_ids": [
+        "room-battery-lobby"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          8.586,
+          -0.882
+        ],
+        [
+          8.586,
+          2.5200000000000005
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-battery-east-exterior"
+      ]
+    }
+  ],
+  "portals": [
+    {
+      "id": "portal-1",
+      "kind": "door",
+      "boundary_id": "wall-adriatic-south-charging-north",
+      "connects": [
+        "room-adriatic-room",
+        "room-charging-station"
+      ],
+      "span": [
+        0.35,
+        0.55
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-1"
+      ]
+    },
+    {
+      "id": "portal-2",
+      "kind": "door",
+      "boundary_id": "wall-charging-east-main-west-upper",
+      "connects": [
+        "room-charging-station",
+        "room-main-hall"
+      ],
+      "span": [
+        0.25,
+        0.45
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-2"
+      ]
+    },
+    {
+      "id": "portal-3",
+      "kind": "door",
+      "boundary_id": "wall-sansome-east-main-west-middle",
+      "connects": [
+        "room-sansome-lobby",
+        "room-main-hall"
+      ],
+      "span": [
+        0.3,
+        0.5
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-3"
+      ]
+    },
+    {
+      "id": "portal-4",
+      "kind": "passage",
+      "boundary_id": "wall-farallon-south-main-north",
+      "connects": [
+        "room-farallon-room",
+        "room-main-hall"
+      ],
+      "span": [
+        0.1,
+        0.2
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-4"
+      ]
+    },
+    {
+      "id": "portal-5",
+      "kind": "passage",
+      "boundary_id": "wall-farallon-south-main-north",
+      "connects": [
+        "room-farallon-room",
+        "room-main-hall"
+      ],
+      "span": [
+        0.3,
+        0.4
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-5"
+      ]
+    },
+    {
+      "id": "portal-6",
+      "kind": "passage",
+      "boundary_id": "wall-farallon-south-main-north",
+      "connects": [
+        "room-farallon-room",
+        "room-main-hall"
+      ],
+      "span": [
+        0.5,
+        0.6
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-6"
+      ]
+    },
+    {
+      "id": "portal-7",
+      "kind": "passage",
+      "boundary_id": "wall-farallon-south-main-north",
+      "connects": [
+        "room-farallon-room",
+        "room-main-hall"
+      ],
+      "span": [
+        0.7,
+        0.8
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-7"
+      ]
+    },
+    {
+      "id": "portal-8",
+      "kind": "door",
+      "boundary_id": "wall-gateway-south-main-north-east",
+      "connects": [
+        "room-gateway-room",
+        "room-main-hall"
+      ],
+      "span": [
+        0.2,
+        0.7
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-8"
+      ]
+    },
+    {
+      "id": "portal-9",
+      "kind": "door",
+      "boundary_id": "wall-green-north-2nd-floor-south",
+      "connects": [
+        "room-green-room",
+        "room-2nd-floor-elevator-lobby"
+      ],
+      "span": [
+        0.15,
+        0.35
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-9"
+      ]
+    },
+    {
+      "id": "portal-10",
+      "kind": "door",
+      "boundary_id": "wall-main-south-bathrooms-north",
+      "connects": [
+        "room-main-hall",
+        "room-bathrooms-south"
+      ],
+      "span": [
+        0.3,
+        0.45
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-10"
+      ]
+    }
+  ],
+  "spatial_relations": [],
+  "occupancies": [],
+  "constraints": [],
+  "evidence": [
+    {
+      "id": "ev-room-adriatic-room",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-room-charging-station",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-room-sansome-lobby",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-room-green-room",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-room-2nd-floor-elevator-lobby",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-room-main-hall",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-room-farallon-room",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-room-gateway-room",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-room-bathrooms-north",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-room-coats",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-room-registration",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-room-battery-lobby",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-room-bathrooms-south",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-room-elev-lobby-south",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-wall-adriatic-north-exterior",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-wall-adriatic-west-exterior",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-wall-adriatic-south-charging-north",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-wall-charging-east-main-west-upper",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-wall-sansome-east-main-west-middle",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-wall-farallon-south-main-north",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-wall-farallon-north-exterior",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-wall-gateway-north-exterior",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-wall-gateway-south-main-north-east",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-wall-battery-west-main-east",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-wall-green-north-2nd-floor-south",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-wall-green-south-exterior",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-wall-main-south-bathrooms-north",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-wall-main-south-exterior-center",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-wall-bathrooms-south-south-exterior",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-wall-battery-east-exterior",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-portal-1",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-portal-2",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-portal-3",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-portal-4",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-portal-5",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-portal-6",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-portal-7",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-portal-8",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-portal-9",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    },
+    {
+      "id": "ev-portal-10",
+      "source_id": "07-bently-reserve-office.png",
+      "digest_sha256": "ef4c835f4b3ae9bcb42f5b3f2b5a4fd7e7463f4f54b993290943edcd830a46c8",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:12:30.043Z"
+    }
+  ],
+  "unresolved": [
+    "No scale or dimensions visible so all absolute sizes and heights are unknown",
+    "Exact wall alignments distorted by low resolution scan; polygons are approximate",
+    "Two separate Bathrooms areas share same label in source; disambiguated as North and South",
+    "Small labels 'Sick' '2nd Floor' 'M' 'F' unreadable or ambiguous as to room vs fixture",
+    "Column dots appear as black circles but cannot be quantified as equipment vs structure",
+    "Number and exact position of arches/doors between Farallon Room and Main Hall not precisely measurable",
+    "Elevator shafts and stairwells indicated with X and hatch but extents approximate",
+    "Site height assumed: 2.7 m via explicit user assumption (not observed).",
+    "Scale provenance: User-assumed footprint 18x14 m (explicit --assume-size; not observed). No scale bar, north arrow, or figured dimensions visible in image; plan is schematic labeled only with room names."
+  ]
+}

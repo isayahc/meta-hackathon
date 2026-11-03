@@ -1,0 +1,182 @@
+{
+  "ok": true,
+  "mock": false,
+  "scene_id": "dc61af58-17ea-404c-838b-21ddbd9a0522",
+  "revision": 1,
+  "name": "ds10-10-aquileia-superposed",
+  "head_url": "http://127.0.0.1:5173/?sceneId=dc61af58-17ea-404c-838b-21ddbd9a0522",
+  "revision_url": "http://127.0.0.1:5173/?sceneId=dc61af58-17ea-404c-838b-21ddbd9a0522&revision=1",
+  "bindings": [],
+  "diagnostics": [
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-west-exterior-of-5",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-north-exterior-of-5",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-partition-5-1",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-partition-5-3",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-partition-5-4",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-north-exterior-of-1",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-partition-1-2",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-partition-1-3",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-north-exterior-of-2",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-partition-2-3",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-partition-3-4",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-partition-2-6-upper",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-partition-3-6-middle",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-partition-4-6-lower",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-south-exterior-of-5",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-south-exterior-of-4",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-north-exterior-of-6",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-east-exterior-of-6",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-south-exterior-of-6",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "No metric scale or dimension strings to determine site width_m/depth_m/height_m",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Multiple overlapping plan phases in cyan and black - true current walls vs historic overlay ambiguous",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Dashed interior lines in zones 1 and 2 - whether passages/doors or hypothetical reconstruction unclear",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Meaning of numeric labels 1-6 - room numbers or excavation areas uncertain",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Walls outside black rectangle in teal - apse structures north and octagonal structure south not measured",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Thickness and height of all walls not shown",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Potential doors/gates between 5 and 4 and between 2 and 3 indicated by small gaps but unreadable",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Equipment/furniture symbols in 5 (stepped square) and 2 (circle with dot) not identifiable",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Site height assumed: 2.7 m via explicit user assumption (not observed).",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Scale provenance: User-assumed footprint 18x14 m (explicit --assume-size; not observed). No scale bar, figured dimensions, or north arrow with measurements visible; only relative plan geometry and numeric labels 1-6",
+      "message": "Unresolved source assertion retained as diagnostic."
+    }
+  ],
+  "findings": [],
+  "oiIdentity": {
+    "repo": "Mapped-Assembly/OpenIndustries",
+    "pinnedSha": "50f78e0bef23c5a6958d80c50e9232066ecc11d2",
+    "actualSha": "50f78e0bef23c5a6958d80c50e9232066ecc11d2",
+    "version": "0.1.1",
+    "pinned": true,
+    "markers": {
+      "spaceIr": true,
+      "compiler": true,
+      "planViewport": true,
+      "localBackend": true
+    }
+  },
+  "understanding": {
+    "rooms": 6,
+    "walls": 19,
+    "openings": 0,
+    "equipment": 0,
+    "unresolved": 8,
+    "nullGeometry": 0,
+    "scaled": true
+  },
+  "linked": {},
+  "evidence": "C:\\Users\\isaya\\meta-hackathon\\app\\physical-task-tracker\\datasets\\floorplan-web-10\\runs\\10-aquileia-superposed\\oi-evidence\\dc61af58-17ea-404c-838b-21ddbd9a0522"
+}

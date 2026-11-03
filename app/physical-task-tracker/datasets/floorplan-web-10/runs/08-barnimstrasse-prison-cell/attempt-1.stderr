@@ -1,0 +1,5 @@
+(node:40380) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+model usage: {"completion_tokens":3811,"prompt_tokens":2777,"total_tokens":6588,"completion_tokens_details":{"reasoning_tokens":1829},"prompt_tokens_details":{"cached_tokens":483}}
+Assuming site footprint 18x14 m via explicit --assume-size (recorded in evidence).
+Assuming site height 2.7 m via explicit --assume-height (recorded in evidence).

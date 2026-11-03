@@ -1,0 +1,234 @@
+{
+  "site": {
+    "width_m": 18,
+    "depth_m": 14,
+    "height_m": null
+  },
+  "siteEvidence": "User-assumed footprint 18x14 m (explicit --assume-size; not observed). No scale bar, north arrow, or figured dimensions visible in image; drawing is schematic floor-plan with furniture graphics only, so absolute meters cannot be determined. Height information not present.",
+  "rooms": [
+    {
+      "label": "courtyard",
+      "kind": "outdoor",
+      "polygon": [
+        [
+          0.176,
+          0.248
+        ],
+        [
+          0.808,
+          0.248
+        ],
+        [
+          0.808,
+          0.766
+        ],
+        [
+          0.176,
+          0.766
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "building_ring",
+      "kind": "zone",
+      "polygon": [
+        [
+          0.049,
+          0.119
+        ],
+        [
+          0.931,
+          0.119
+        ],
+        [
+          0.931,
+          0.879
+        ],
+        [
+          0.049,
+          0.879
+        ]
+      ],
+      "status": "inferred"
+    }
+  ],
+  "walls": [
+    {
+      "label": "outer_north",
+      "kind": "wall",
+      "regions": [
+        "building_ring"
+      ],
+      "path": [
+        [
+          0.049,
+          0.119
+        ],
+        [
+          0.931,
+          0.119
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "inferred"
+    },
+    {
+      "label": "outer_east",
+      "kind": "wall",
+      "regions": [
+        "building_ring"
+      ],
+      "path": [
+        [
+          0.931,
+          0.119
+        ],
+        [
+          0.931,
+          0.879
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "outer_south",
+      "kind": "wall",
+      "regions": [
+        "building_ring"
+      ],
+      "path": [
+        [
+          0.931,
+          0.879
+        ],
+        [
+          0.049,
+          0.879
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "inferred"
+    },
+    {
+      "label": "outer_west",
+      "kind": "wall",
+      "regions": [
+        "building_ring"
+      ],
+      "path": [
+        [
+          0.049,
+          0.879
+        ],
+        [
+          0.049,
+          0.119
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "inner_north",
+      "kind": "wall",
+      "regions": [
+        "building_ring",
+        "courtyard"
+      ],
+      "path": [
+        [
+          0.176,
+          0.248
+        ],
+        [
+          0.808,
+          0.248
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "inner_east",
+      "kind": "wall",
+      "regions": [
+        "building_ring",
+        "courtyard"
+      ],
+      "path": [
+        [
+          0.808,
+          0.248
+        ],
+        [
+          0.808,
+          0.766
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "inner_south",
+      "kind": "wall",
+      "regions": [
+        "building_ring",
+        "courtyard"
+      ],
+      "path": [
+        [
+          0.808,
+          0.766
+        ],
+        [
+          0.176,
+          0.766
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "inner_west",
+      "kind": "wall",
+      "regions": [
+        "building_ring",
+        "courtyard"
+      ],
+      "path": [
+        [
+          0.176,
+          0.766
+        ],
+        [
+          0.176,
+          0.248
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    }
+  ],
+  "openings": [],
+  "equipment": [],
+  "unresolved": [
+    "No scale bar or figured dimensions, so site width/depth/height_m cannot be determined",
+    "Height_m null for all walls - plan shows only 2D layout",
+    "Individual dwelling unit labels and room functions unreadable due to small furniture symbols",
+    "Internal partition walls and door swings not legibly measurable - too many small rooms (~100+ units)",
+    "Exact geometry of notched facade along north edge and protruding bays cannot be measured precisely",
+    "Stair cores with triangular, square, circular geometries - traversability and level connectivity ambiguous",
+    "Boundary between building_ring and courtyard is simplified as rectangle; actual inner edge has indentations",
+    "Equipment/furniture footprints visible but not individually identifiable or georeferenceable"
+  ]
+}

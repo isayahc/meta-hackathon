@@ -1,0 +1,162 @@
+{
+  "ok": true,
+  "mock": false,
+  "scene_id": "b071fb55-f901-46c3-ab8b-f766703d1010",
+  "revision": 1,
+  "name": "ds10-07-bently-reserve-office",
+  "head_url": "http://127.0.0.1:5173/?sceneId=b071fb55-f901-46c3-ab8b-f766703d1010",
+  "revision_url": "http://127.0.0.1:5173/?sceneId=b071fb55-f901-46c3-ab8b-f766703d1010&revision=1",
+  "bindings": [],
+  "diagnostics": [
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-adriatic-north-exterior",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-adriatic-west-exterior",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-adriatic-south-charging-north",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-charging-east-main-west-upper",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-sansome-east-main-west-middle",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-farallon-south-main-north",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-farallon-north-exterior",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-gateway-north-exterior",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-gateway-south-main-north-east",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-battery-west-main-east",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-green-north-2nd-floor-south",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-green-south-exterior",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-main-south-bathrooms-north",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-main-south-exterior-center",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-bathrooms-south-south-exterior",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-battery-east-exterior",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "No scale or dimensions visible so all absolute sizes and heights are unknown",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Exact wall alignments distorted by low resolution scan; polygons are approximate",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Two separate Bathrooms areas share same label in source; disambiguated as North and South",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Small labels 'Sick' '2nd Floor' 'M' 'F' unreadable or ambiguous as to room vs fixture",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Column dots appear as black circles but cannot be quantified as equipment vs structure",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Number and exact position of arches/doors between Farallon Room and Main Hall not precisely measurable",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Elevator shafts and stairwells indicated with X and hatch but extents approximate",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Site height assumed: 2.7 m via explicit user assumption (not observed).",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Scale provenance: User-assumed footprint 18x14 m (explicit --assume-size; not observed). No scale bar, north arrow, or figured dimensions visible in image; plan is schematic labeled only with room names.",
+      "message": "Unresolved source assertion retained as diagnostic."
+    }
+  ],
+  "findings": [],
+  "oiIdentity": {
+    "repo": "Mapped-Assembly/OpenIndustries",
+    "pinnedSha": "50f78e0bef23c5a6958d80c50e9232066ecc11d2",
+    "actualSha": "50f78e0bef23c5a6958d80c50e9232066ecc11d2",
+    "version": "0.1.1",
+    "pinned": true,
+    "markers": {
+      "spaceIr": true,
+      "compiler": true,
+      "planViewport": true,
+      "localBackend": true
+    }
+  },
+  "understanding": {
+    "rooms": 14,
+    "walls": 16,
+    "openings": 10,
+    "equipment": 0,
+    "unresolved": 7,
+    "nullGeometry": 0,
+    "scaled": true
+  },
+  "linked": {},
+  "evidence": "C:\\Users\\isaya\\meta-hackathon\\app\\physical-task-tracker\\datasets\\floorplan-web-10\\runs\\07-bently-reserve-office\\oi-evidence\\b071fb55-f901-46c3-ab8b-f766703d1010"
+}

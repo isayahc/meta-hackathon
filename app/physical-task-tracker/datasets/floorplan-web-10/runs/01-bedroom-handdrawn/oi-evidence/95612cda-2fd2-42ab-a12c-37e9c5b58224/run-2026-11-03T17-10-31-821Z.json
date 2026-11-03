@@ -1,0 +1,151 @@
+{
+  "source": {
+    "sourceId": "01-bedroom-handdrawn.jpg",
+    "digestSha256": "442aa0f13d7450516d34845ecae97704512da1d73043122771f4513cc39d89ff"
+  },
+  "model": "muse-spark-1.1",
+  "promptVersion": "floorplan-v5",
+  "heightAssumptionM": 2.7,
+  "sizeAssumptionM": null,
+  "mock": false,
+  "oiIdentity": {
+    "repo": "Mapped-Assembly/OpenIndustries",
+    "pinnedSha": "50f78e0bef23c5a6958d80c50e9232066ecc11d2",
+    "actualSha": "50f78e0bef23c5a6958d80c50e9232066ecc11d2",
+    "version": "0.1.1",
+    "pinned": true,
+    "markers": {
+      "spaceIr": true,
+      "compiler": true,
+      "planViewport": true,
+      "localBackend": true
+    }
+  },
+  "validation": {
+    "valid": true,
+    "findings": []
+  },
+  "compiled": {
+    "source_sha256": "5812fbaa8025f4803573bfe2a0ddb04a9636db02c536fa7176399fd99c936726",
+    "bindings": [],
+    "diagnostics": [
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-top",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-right-upper",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-mid-horizontal",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-door-wall",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-corridor-bottom",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-little-vertical",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-bottom",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-left",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-wardrobe",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-double-bunk-beds",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-computer-desk",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-shelving-units",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-shelving-drawers",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-cupboard",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Overall site width/depth are estimated from scale bar 5cm=1m and figured dims; exact outer dimensions not labeled",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Height not shown anywhere, set to null",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Wardrobe door swing symbol on inner edge 0.8m - is it furniture door vs room door ambiguous",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Computer desk and shelving units boundaries overlap slightly in hand sketch - exact partition unclear",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Cupboard extent along bottom wall not dimensioned, inferred from angled line label",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Thickness of walls not shown",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Site height assumed: 2.7 m via explicit user assumption (not observed).",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Scale provenance: scale bar bottom right shows 0m to 1m with note 5cm=1m; figured dimensions visible: wardrobe 0.7m, wardrobe door 0.8m, computer desk 1.2m x 0.7m, shelving units 1.9m x 0.5m, double bunk beds 0.9m width x 2.1m length, shelving/drawers 0.4m, door 0.8m. Overall width/depth estimated from these dims and scale bar count; height not shown.",
+        "message": "Unresolved source assertion retained as diagnostic."
+      }
+    ]
+  },
+  "committed": {
+    "scene_id": "95612cda-2fd2-42ab-a12c-37e9c5b58224",
+    "revision": 1,
+    "name": "ds10-01-bedroom-handdrawn",
+    "head_url": "http://127.0.0.1:5173/?sceneId=95612cda-2fd2-42ab-a12c-37e9c5b58224",
+    "revision_url": "http://127.0.0.1:5173/?sceneId=95612cda-2fd2-42ab-a12c-37e9c5b58224&revision=1"
+  }
+}

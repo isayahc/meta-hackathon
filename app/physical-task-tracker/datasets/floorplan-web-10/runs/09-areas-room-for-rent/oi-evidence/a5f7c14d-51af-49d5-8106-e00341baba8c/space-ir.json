@@ -1,0 +1,747 @@
+{
+  "schema_id": "mapped-assembly.space-ir",
+  "schema_version": "0.1.0",
+  "id": "fieldops-09-areas-room-for-rent.jpg",
+  "revision": "r1",
+  "site": {
+    "frame_id": "world",
+    "width_m": 18,
+    "depth_m": 14,
+    "height_m": 2.7
+  },
+  "frames": [
+    {
+      "id": "world",
+      "units": "m",
+      "axes": "XZ"
+    }
+  ],
+  "regions": [
+    {
+      "id": "room-room-for-rent",
+      "kind": "room",
+      "label": "ROOM FOR RENT.",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -3.186,
+          -7
+        ],
+        [
+          5.184000000000001,
+          -7
+        ],
+        [
+          5.184000000000001,
+          0.4340000000000004
+        ],
+        [
+          -1.4040000000000004,
+          0.4340000000000004
+        ],
+        [
+          -1.4040000000000004,
+          -1.1340000000000003
+        ],
+        [
+          -3.186,
+          -1.1340000000000003
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-room-for-rent"
+      ]
+    },
+    {
+      "id": "room-closet",
+      "kind": "room",
+      "label": "CLOSET.",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -3.8520000000000003,
+          0.19600000000000017
+        ],
+        [
+          -0.3600000000000003,
+          0.19600000000000017
+        ],
+        [
+          -0.3600000000000003,
+          2.869999999999999
+        ],
+        [
+          -3.8520000000000003,
+          2.869999999999999
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-closet"
+      ]
+    },
+    {
+      "id": "room-bath",
+      "kind": "room",
+      "label": "BATH.",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -0.3600000000000003,
+          0.4340000000000004
+        ],
+        [
+          5.184000000000001,
+          0.4340000000000004
+        ],
+        [
+          5.184000000000001,
+          4.816
+        ],
+        [
+          -3.384,
+          4.816
+        ],
+        [
+          -3.384,
+          2.869999999999999
+        ],
+        [
+          -0.3600000000000003,
+          2.869999999999999
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-bath"
+      ]
+    },
+    {
+      "id": "room-cl",
+      "kind": "room",
+      "label": "CL.",
+      "frame_id": "world",
+      "polygon": [
+        [
+          3.509999999999999,
+          3.556
+        ],
+        [
+          5.184000000000001,
+          3.556
+        ],
+        [
+          5.184000000000001,
+          4.816
+        ],
+        [
+          3.509999999999999,
+          4.816
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-cl"
+      ]
+    },
+    {
+      "id": "room-room-m",
+      "kind": "room",
+      "label": "ROOM M.",
+      "frame_id": "world",
+      "polygon": null,
+      "evidence_ids": [
+        "ev-room-room-m"
+      ]
+    },
+    {
+      "id": "room-room",
+      "kind": "room",
+      "label": "ROOM",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -4.247999999999999,
+          5.04
+        ],
+        [
+          5.184000000000001,
+          5.04
+        ],
+        [
+          5.184000000000001,
+          7
+        ],
+        [
+          -4.247999999999999,
+          7
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-room"
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "id": "wall-west-wall-room-for-rent",
+      "kind": "wall",
+      "region_ids": [
+        "room-room-for-rent"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -3.2039999999999997,
+          -7
+        ],
+        [
+          -3.2039999999999997,
+          -1.1340000000000003
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-west-wall-room-for-rent"
+      ]
+    },
+    {
+      "id": "wall-east-wall-room-for-rent",
+      "kind": "wall",
+      "region_ids": [
+        "room-room-for-rent"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          5.112,
+          -7
+        ],
+        [
+          5.112,
+          0.4200000000000004
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-east-wall-room-for-rent"
+      ]
+    },
+    {
+      "id": "wall-south-wall-room-for-rent",
+      "kind": "wall",
+      "region_ids": [
+        "room-room-for-rent",
+        "room-bath"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.134,
+          0.40600000000000036
+        ],
+        [
+          5.112,
+          0.40600000000000036
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-south-wall-room-for-rent"
+      ]
+    },
+    {
+      "id": "wall-west-wall-closet",
+      "kind": "wall",
+      "region_ids": [
+        "room-closet"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -3.8520000000000003,
+          0.19600000000000017
+        ],
+        [
+          -3.8520000000000003,
+          2.869999999999999
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-west-wall-closet"
+      ]
+    },
+    {
+      "id": "wall-south-wall-closet",
+      "kind": "wall",
+      "region_ids": [
+        "room-closet",
+        "room-bath"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -3.8520000000000003,
+          2.869999999999999
+        ],
+        [
+          -0.39600000000000035,
+          2.869999999999999
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-south-wall-closet"
+      ]
+    },
+    {
+      "id": "wall-east-wall-closet",
+      "kind": "wall",
+      "region_ids": [
+        "room-closet",
+        "room-bath"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -0.39600000000000035,
+          0.19600000000000017
+        ],
+        [
+          -0.39600000000000035,
+          2.869999999999999
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-east-wall-closet"
+      ]
+    },
+    {
+      "id": "wall-north-partition-closet",
+      "kind": "partition",
+      "region_ids": [
+        "room-closet"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -3.8520000000000003,
+          0.8400000000000007
+        ],
+        [
+          -1.6919999999999995,
+          0.8400000000000007
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-north-partition-closet"
+      ]
+    },
+    {
+      "id": "wall-east-wall-bath-upper",
+      "kind": "wall",
+      "region_ids": [
+        "room-bath"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          5.112,
+          0.4200000000000004
+        ],
+        [
+          5.112,
+          3.584
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-east-wall-bath-upper"
+      ]
+    },
+    {
+      "id": "wall-east-wall-cl",
+      "kind": "wall",
+      "region_ids": [
+        "room-cl"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          5.112,
+          3.584
+        ],
+        [
+          5.112,
+          4.816
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-east-wall-cl"
+      ]
+    },
+    {
+      "id": "wall-south-wall-bath-west",
+      "kind": "wall",
+      "region_ids": [
+        "room-bath",
+        "room-room"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -3.8700000000000006,
+          4.787999999999999
+        ],
+        [
+          3.509999999999999,
+          4.787999999999999
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-south-wall-bath-west"
+      ]
+    },
+    {
+      "id": "wall-south-wall-cl",
+      "kind": "wall",
+      "region_ids": [
+        "room-cl",
+        "room-room"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          3.509999999999999,
+          4.787999999999999
+        ],
+        [
+          5.112,
+          4.787999999999999
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-south-wall-cl"
+      ]
+    },
+    {
+      "id": "wall-north-wall-cl",
+      "kind": "partition",
+      "region_ids": [
+        "room-bath",
+        "room-cl"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          3.509999999999999,
+          3.584
+        ],
+        [
+          5.112,
+          3.584
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-north-wall-cl"
+      ]
+    }
+  ],
+  "portals": [
+    {
+      "id": "portal-1",
+      "kind": "door",
+      "boundary_id": "wall-south-wall-room-for-rent",
+      "connects": [
+        "room-room-for-rent",
+        "room-bath"
+      ],
+      "span": [
+        0.15,
+        0.35
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-1"
+      ]
+    },
+    {
+      "id": "portal-2",
+      "kind": "door",
+      "boundary_id": "wall-west-wall-closet",
+      "connects": [
+        "room-closet"
+      ],
+      "span": [
+        0.75,
+        0.95
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-2"
+      ]
+    },
+    {
+      "id": "portal-3",
+      "kind": "door",
+      "boundary_id": "wall-south-wall-cl",
+      "connects": [
+        "room-cl",
+        "room-room"
+      ],
+      "span": [
+        0.2,
+        0.4
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-3"
+      ]
+    }
+  ],
+  "spatial_relations": [],
+  "occupancies": [
+    {
+      "id": "equip-shower",
+      "region_id": "room-bath",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -0.18000000000000016,
+          0.49000000000000044
+        ],
+        [
+          5.040000000000001,
+          0.49000000000000044
+        ],
+        [
+          5.040000000000001,
+          2.0300000000000002
+        ],
+        [
+          -0.18000000000000016,
+          2.0300000000000002
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-shower"
+      ]
+    },
+    {
+      "id": "equip-toilet",
+      "region_id": "room-bath",
+      "frame_id": "world",
+      "polygon": null,
+      "evidence_ids": [
+        "ev-equip-toilet"
+      ]
+    },
+    {
+      "id": "equip-sink",
+      "region_id": "room-room",
+      "frame_id": "world",
+      "polygon": null,
+      "evidence_ids": [
+        "ev-equip-sink"
+      ]
+    }
+  ],
+  "constraints": [],
+  "evidence": [
+    {
+      "id": "ev-room-room-for-rent",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-room-closet",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-room-bath",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-room-cl",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-room-room-m",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-room-room",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-wall-west-wall-room-for-rent",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-wall-east-wall-room-for-rent",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-wall-south-wall-room-for-rent",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-wall-west-wall-closet",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-wall-south-wall-closet",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-wall-east-wall-closet",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-wall-north-partition-closet",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-wall-east-wall-bath-upper",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-wall-east-wall-cl",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-wall-south-wall-bath-west",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-wall-south-wall-cl",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-wall-north-wall-cl",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-portal-1",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-portal-2",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-portal-3",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-equip-shower",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-equip-toilet",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    },
+    {
+      "id": "ev-equip-sink",
+      "source_id": "09-areas-room-for-rent.jpg",
+      "digest_sha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:13:03.830Z"
+    }
+  ],
+  "unresolved": [
+    "overall building width/depth/height not dimensioned; only internal room widths of 10', 14', 5'6\", 5\" noted",
+    "exact footprint of ROOM M. and corridor to west is outside yellow-highlighted area and unclear; polygon null",
+    "north edge of ROOM FOR RENT. is cropped off image; top wall not visible",
+    "window/door swings hand-sketched: precise positions along walls are approximate",
+    "neighbour boundary dashed on far right labeled NEIGHBOUR; setback unknown",
+    "thickness_m and height_m not labeled in plan",
+    "west corridor walls yellow but not connected to main unit; connectivity between ROOM M., ROOM FOR RENT., CLOSET., and lower ROOM ambiguous",
+    "Site height assumed: 2.7 m via explicit user assumption (not observed).",
+    "Scale provenance: User-assumed footprint 18x14 m (explicit --assume-size; not observed). No overall site scale bar. Room for rent annotated '10'' (arrow shows width) and '14'' (length) near center; closet annotated '5'6\"' and '5\"'; no figured overall building dimensions, height not labeled."
+  ]
+}

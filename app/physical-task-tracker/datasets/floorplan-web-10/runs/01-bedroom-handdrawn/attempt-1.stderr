@@ -1,0 +1,7 @@
+(node:3936) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+model usage: {"completion_tokens":4635,"prompt_tokens":4535,"total_tokens":9170,"completion_tokens_details":{"reasoning_tokens":2605},"prompt_tokens_details":{"cached_tokens":355}}
+Assuming site height 2.7 m via explicit --assume-height (recorded in evidence).
+ERROR [OI_SPACE_IR_INVALID]: OI rejected the SpaceIR document: BOUNDARY_REGIONS@boundaries[8]; PORTAL_REGIONS@portals[1].
+--- detail ---
+[{"code":"BOUNDARY_REGIONS","path":"boundaries[8]","message":"Boundary must reference one or two distinct regions.","severity":"error"},{"code":"PORTAL_REGIONS","path":"portals[1]","message":"Portal regions must be distinct regions on the parent boundary.","severity":"error"}]

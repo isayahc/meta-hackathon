@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="687" viewBox="0 0 760 687">
+<rect x="0" y="0" width="760" height="687" fill="#ffffff"/>
+<text x="12" y="24" font-family="sans-serif" font-size="16" font-weight="bold" fill="#111827">07-bently-reserve-office</text>
+<text x="12" y="44" font-family="sans-serif" font-size="11" fill="#4b5563">site 18x14x2.7 m · 14 regions · 16 walls · 10 portals · 0 equipment · top-down, x=+X east, y=−Z north</text>
+<g transform="translate(716,100)"><circle r="16" fill="#f3f4f6" stroke="#9ca3af"/><path d="M0,10 L0,-10 M-6,-3 L0,-10 L6,-3" stroke="#111827" stroke-width="2" fill="none"/><text y="-20" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">N</text></g>
+<rect x="52.41" y="106.77" width="655.17" height="509.58" fill="none" stroke="#9ca3af" stroke-dasharray="6,4"><title>site 18x14x2.7 m</title></rect>
+<polygon points="63.55,603.61 205.07,603.61 205.07,504.24 63.55,504.24" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-adriatic-room (room)</title></polygon>
+<text x="134.31" y="553.92" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Adriatic Room</text>
+<polygon points="104.83,496.59 193.28,496.59 193.28,394.68 104.83,394.68" fill="#fef3c7" stroke="#d97706" stroke-width="1"><title>room-charging-station (zone)</title></polygon>
+<text x="149.05" y="445.64" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Charging Station</text>
+<polygon points="63.55,389.58 192.62,389.58 192.62,282.57 63.55,282.57" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-sansome-lobby (room)</title></polygon>
+<text x="128.09" y="336.08" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Sansome Lobby</text>
+<polygon points="63.55,216.33 204.41,216.33 204.41,120.52 63.55,120.52" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-green-room (room)</title></polygon>
+<text x="133.98" y="168.43" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Green Room</text>
+<polygon points="106.14,274.93 191.97,274.93 191.97,223.97 106.14,223.97" fill="#fef3c7" stroke="#d97706" stroke-width="1"><title>room-2nd-floor-elevator-lobby (zone)</title></polygon>
+<text x="149.05" y="249.45" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">2nd Floor Elevator Lobby</text>
+<polygon points="207.69,455.83 520.86,455.83 520.86,216.33 207.69,216.33" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-main-hall (room)</title></polygon>
+<text x="364.28" y="336.08" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Main Hall</text>
+<polygon points="278.45,601.06 519.55,601.06 519.55,482.33 278.45,482.33" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-farallon-room (room)</title></polygon>
+<text x="399" y="541.69" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Farallon Room</text>
+<polygon points="533.97,602.08 692.52,602.08 692.52,464.49 533.97,464.49" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-gateway-room (room)</title></polygon>
+<text x="613.24" y="533.28" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Gateway Room</text>
+<polygon points="570,511.88 653.21,511.88 653.21,427.8 570,427.8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-bathrooms-north (room)</title></polygon>
+<text x="611.6" y="469.84" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Bathrooms North</text>
+<polygon points="570,423.72 613.9,423.72 613.9,397.23 570,397.23" fill="#fef3c7" stroke="#d97706" stroke-width="1"><title>room-coats (zone)</title></polygon>
+<text x="591.95" y="410.48" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Coats</text>
+<polygon points="619.14,423.72 692.52,423.72 692.52,371.75 619.14,371.75" fill="#fef3c7" stroke="#d97706" stroke-width="1"><title>room-registration (zone)</title></polygon>
+<text x="655.83" y="397.74" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Registration</text>
+<polygon points="568.03,393.66 693.17,393.66 693.17,269.83 568.03,269.83" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-battery-lobby (room)</title></polygon>
+<text x="630.6" y="331.75" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Battery Lobby</text>
+<polygon points="241.76,213.27 347.9,213.27 347.9,131.23 241.76,131.23" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-bathrooms-south (room)</title></polygon>
+<text x="294.83" y="172.25" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Bathrooms South</text>
+<polygon points="533.31,252.51 601.45,252.51 601.45,184.73 533.31,184.73" fill="#fef3c7" stroke="#d97706" stroke-width="1"><title>room-elev-lobby-south (zone)</title></polygon>
+<text x="567.38" y="218.62" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">Elev Lobby South</text>
+<polyline data-layer="boundary" points="62.24,603.61 205.07,603.61" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-adriatic-north-exterior (wall)</title></polyline>
+<polyline data-layer="boundary" points="62.24,603.61 62.24,504.24" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-adriatic-west-exterior (wall)</title></polyline>
+<polyline data-layer="boundary" points="72.07,504.24 190,504.24" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-adriatic-south-charging-north (wall)</title></polyline>
+<polyline data-layer="boundary" points="192.62,496.59 192.62,394.68" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-charging-east-main-west-upper (wall)</title></polyline>
+<polyline data-layer="boundary" points="192.62,389.58 192.62,282.57" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-sansome-east-main-west-middle (wall)</title></polyline>
+<polyline data-layer="boundary" points="278.45,481.31 519.55,481.31" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-farallon-south-main-north (wall)</title></polyline>
+<polyline data-layer="boundary" points="278.45,601.06 519.55,601.06" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-farallon-north-exterior (wall)</title></polyline>
+<polyline data-layer="boundary" points="533.97,602.08 692.52,602.08" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-gateway-north-exterior (wall)</title></polyline>
+<polyline data-layer="boundary" points="533.97,464.49 571.31,464.49" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-gateway-south-main-north-east (wall)</title></polyline>
+<polyline data-layer="boundary" points="520.86,402.32 520.86,269.83" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-battery-west-main-east (wall)</title></polyline>
+<polyline data-layer="boundary" points="63.55,223.97 191.97,223.97" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-green-north-2nd-floor-south (wall)</title></polyline>
+<polyline data-layer="boundary" points="63.55,120.52 204.41,120.52" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-green-south-exterior (wall)</title></polyline>
+<polyline data-layer="boundary" points="241.76,216.33 347.9,216.33" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-main-south-bathrooms-north (wall)</title></polyline>
+<polyline data-layer="boundary" points="347.9,216.33 533.31,216.33" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-main-south-exterior-center (wall)</title></polyline>
+<polyline data-layer="boundary" points="241.76,131.23 347.9,131.23" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-bathrooms-south-south-exterior (wall)</title></polyline>
+<polyline data-layer="boundary" points="692.52,393.66 692.52,269.83" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-battery-east-exterior (wall)</title></polyline>
+<polyline data-layer="portal" points="113.34,504.24 136.93,504.24" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-1 (door) on wall-adriatic-south-charging-north</title></polyline>
+<polyline data-layer="portal" points="192.62,471.11 192.62,450.73" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-2 (door) on wall-charging-east-main-west-upper</title></polyline>
+<polyline data-layer="portal" points="192.62,357.48 192.62,336.08" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-3 (door) on wall-sansome-east-main-west-middle</title></polyline>
+<polyline data-layer="portal" points="302.56,481.31 326.67,481.31" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-4 (passage) on wall-farallon-south-main-north</title></polyline>
+<polyline data-layer="portal" points="350.78,481.31 374.89,481.31" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-5 (passage) on wall-farallon-south-main-north</title></polyline>
+<polyline data-layer="portal" points="399,481.31 423.11,481.31" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-6 (passage) on wall-farallon-south-main-north</title></polyline>
+<polyline data-layer="portal" points="447.22,481.31 471.33,481.31" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-7 (passage) on wall-farallon-south-main-north</title></polyline>
+<polyline data-layer="portal" points="541.43,464.49 560.11,464.49" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-8 (door) on wall-gateway-south-main-north-east</title></polyline>
+<polyline data-layer="portal" points="82.81,223.97 108.5,223.97" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-9 (door) on wall-green-north-2nd-floor-south</title></polyline>
+<polyline data-layer="portal" points="273.6,216.33 289.52,216.33" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-10 (door) on wall-main-south-bathrooms-north</title></polyline>
+<g><rect x="564.01" y="640" width="181.99" height="5" fill="#111827"/><text x="655.005" y="636" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#111827">5 m</text></g>
+<text x="12" y="677" font-family="sans-serif" font-size="10" fill="#6b7280">9 unresolved notes</text>
+</svg>

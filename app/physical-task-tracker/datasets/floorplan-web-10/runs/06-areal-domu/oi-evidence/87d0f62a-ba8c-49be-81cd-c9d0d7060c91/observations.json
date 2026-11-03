@@ -1,0 +1,886 @@
+{
+  "site": {
+    "width_m": 18,
+    "depth_m": 14,
+    "height_m": null
+  },
+  "siteEvidence": "User-assumed footprint 18x14 m (explicit --assume-size; not observed). No scale bar, no figured dimensions, no grid; plan is schematic with text label describing location but no metric values; therefore absolute size unknown",
+  "rooms": [
+    {
+      "label": "(I) Hlavní budova",
+      "kind": "room",
+      "polygon": [
+        [
+          0.069,
+          0.694
+        ],
+        [
+          0.675,
+          0.694
+        ],
+        [
+          0.675,
+          0.966
+        ],
+        [
+          0.069,
+          0.966
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "(II) Dřevěná chodba",
+      "kind": "room",
+      "polygon": [
+        [
+          0.067,
+          0.614
+        ],
+        [
+          0.234,
+          0.614
+        ],
+        [
+          0.234,
+          0.528
+        ],
+        [
+          0.329,
+          0.528
+        ],
+        [
+          0.329,
+          0.696
+        ],
+        [
+          0.067,
+          0.696
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "(III) Skladiště",
+      "kind": "room",
+      "polygon": [
+        [
+          0.127,
+          0.283
+        ],
+        [
+          0.615,
+          0.283
+        ],
+        [
+          0.638,
+          0.316
+        ],
+        [
+          0.638,
+          0.516
+        ],
+        [
+          0.2,
+          0.516
+        ],
+        [
+          0.127,
+          0.516
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "(IV) Dřevěná chodba",
+      "kind": "room",
+      "polygon": [
+        [
+          0.303,
+          0.156
+        ],
+        [
+          0.395,
+          0.156
+        ],
+        [
+          0.395,
+          0.279
+        ],
+        [
+          0.303,
+          0.279
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "(V) Skladiště",
+      "kind": "room",
+      "polygon": [
+        [
+          0.396,
+          0.027
+        ],
+        [
+          0.947,
+          0.027
+        ],
+        [
+          0.947,
+          0.253
+        ],
+        [
+          0.396,
+          0.253
+        ]
+      ],
+      "status": "observed"
+    }
+  ],
+  "walls": [
+    {
+      "label": "I south",
+      "kind": "wall",
+      "regions": [
+        "(I) Hlavní budova"
+      ],
+      "path": [
+        [
+          0.069,
+          0.966
+        ],
+        [
+          0.675,
+          0.966
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "I west",
+      "kind": "wall",
+      "regions": [
+        "(I) Hlavní budova"
+      ],
+      "path": [
+        [
+          0.069,
+          0.694
+        ],
+        [
+          0.069,
+          0.966
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "I east",
+      "kind": "wall",
+      "regions": [
+        "(I) Hlavní budova"
+      ],
+      "path": [
+        [
+          0.675,
+          0.694
+        ],
+        [
+          0.675,
+          0.966
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "I north shared with II",
+      "kind": "wall",
+      "regions": [
+        "(I) Hlavní budova",
+        "(II) Dřevěná chodba"
+      ],
+      "path": [
+        [
+          0.069,
+          0.694
+        ],
+        [
+          0.33,
+          0.694
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "I north exterior",
+      "kind": "wall",
+      "regions": [
+        "(I) Hlavní budova"
+      ],
+      "path": [
+        [
+          0.33,
+          0.694
+        ],
+        [
+          0.675,
+          0.694
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "inferred"
+    },
+    {
+      "label": "II west lower",
+      "kind": "wall",
+      "regions": [
+        "(II) Dřevěná chodba"
+      ],
+      "path": [
+        [
+          0.067,
+          0.614
+        ],
+        [
+          0.067,
+          0.696
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "II west north step",
+      "kind": "wall",
+      "regions": [
+        "(II) Dřevěná chodba"
+      ],
+      "path": [
+        [
+          0.067,
+          0.614
+        ],
+        [
+          0.234,
+          0.614
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "II east lower",
+      "kind": "wall",
+      "regions": [
+        "(II) Dřevěná chodba"
+      ],
+      "path": [
+        [
+          0.234,
+          0.528
+        ],
+        [
+          0.234,
+          0.614
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "II east upper",
+      "kind": "wall",
+      "regions": [
+        "(II) Dřevěná chodba"
+      ],
+      "path": [
+        [
+          0.314,
+          0.528
+        ],
+        [
+          0.314,
+          0.692
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "II north",
+      "kind": "wall",
+      "regions": [
+        "(II) Dřevěná chodba"
+      ],
+      "path": [
+        [
+          0.234,
+          0.528
+        ],
+        [
+          0.314,
+          0.528
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "III west",
+      "kind": "wall",
+      "regions": [
+        "(III) Skladiště"
+      ],
+      "path": [
+        [
+          0.127,
+          0.283
+        ],
+        [
+          0.127,
+          0.518
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "III north",
+      "kind": "wall",
+      "regions": [
+        "(III) Skladiště"
+      ],
+      "path": [
+        [
+          0.127,
+          0.283
+        ],
+        [
+          0.618,
+          0.283
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "III south west",
+      "kind": "wall",
+      "regions": [
+        "(III) Skladiště"
+      ],
+      "path": [
+        [
+          0.2,
+          0.516
+        ],
+        [
+          0.362,
+          0.516
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "III south middle dashed",
+      "kind": "wall",
+      "regions": [
+        "(III) Skladiště"
+      ],
+      "path": [
+        [
+          0.41,
+          0.516
+        ],
+        [
+          0.511,
+          0.516
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "III south east",
+      "kind": "wall",
+      "regions": [
+        "(III) Skladiště"
+      ],
+      "path": [
+        [
+          0.55,
+          0.516
+        ],
+        [
+          0.638,
+          0.516
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "III east lower",
+      "kind": "wall",
+      "regions": [
+        "(III) Skladiště"
+      ],
+      "path": [
+        [
+          0.62,
+          0.46
+        ],
+        [
+          0.638,
+          0.516
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "III east mid dashed",
+      "kind": "wall",
+      "regions": [
+        "(III) Skladiště"
+      ],
+      "path": [
+        [
+          0.609,
+          0.359
+        ],
+        [
+          0.609,
+          0.42
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "IV north",
+      "kind": "wall",
+      "regions": [
+        "(IV) Dřevěná chodba"
+      ],
+      "path": [
+        [
+          0.303,
+          0.158
+        ],
+        [
+          0.397,
+          0.158
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "IV west north",
+      "kind": "wall",
+      "regions": [
+        "(IV) Dřevěná chodba"
+      ],
+      "path": [
+        [
+          0.303,
+          0.158
+        ],
+        [
+          0.303,
+          0.221
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "IV west south",
+      "kind": "wall",
+      "regions": [
+        "(IV) Dřevěná chodba"
+      ],
+      "path": [
+        [
+          0.303,
+          0.246
+        ],
+        [
+          0.303,
+          0.279
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "IV east shared with V west",
+      "kind": "wall",
+      "regions": [
+        "(IV) Dřevěná chodba",
+        "(V) Skladiště"
+      ],
+      "path": [
+        [
+          0.395,
+          0.032
+        ],
+        [
+          0.395,
+          0.26
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "V north",
+      "kind": "wall",
+      "regions": [
+        "(V) Skladiště"
+      ],
+      "path": [
+        [
+          0.395,
+          0.027
+        ],
+        [
+          0.948,
+          0.027
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "V north east partial",
+      "kind": "wall",
+      "regions": [
+        "(V) Skladiště"
+      ],
+      "path": [
+        [
+          0.948,
+          0.027
+        ],
+        [
+          0.944,
+          0.08
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "V east north dashed",
+      "kind": "wall",
+      "regions": [
+        "(V) Skladiště"
+      ],
+      "path": [
+        [
+          0.942,
+          0.104
+        ],
+        [
+          0.94,
+          0.163
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "V east south dashed",
+      "kind": "wall",
+      "regions": [
+        "(V) Skladiště"
+      ],
+      "path": [
+        [
+          0.938,
+          0.192
+        ],
+        [
+          0.935,
+          0.254
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "V south east dashed",
+      "kind": "wall",
+      "regions": [
+        "(V) Skladiště"
+      ],
+      "path": [
+        [
+          0.855,
+          0.251
+        ],
+        [
+          0.935,
+          0.254
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "V south middle dashed",
+      "kind": "wall",
+      "regions": [
+        "(V) Skladiště"
+      ],
+      "path": [
+        [
+          0.74,
+          0.249
+        ],
+        [
+          0.82,
+          0.249
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "V south west",
+      "kind": "wall",
+      "regions": [
+        "(V) Skladiště"
+      ],
+      "path": [
+        [
+          0.438,
+          0.243
+        ],
+        [
+          0.696,
+          0.243
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "Wall between III and V - vertical",
+      "kind": "wall",
+      "regions": [
+        "(III) Skladiště"
+      ],
+      "path": [
+        [
+          0.615,
+          0.283
+        ],
+        [
+          0.615,
+          0.33
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "inferred"
+    }
+  ],
+  "openings": [
+    {
+      "wall": 3,
+      "kind": "passage",
+      "span": [
+        0.75,
+        0.9
+      ],
+      "traversable": true,
+      "status": "inferred"
+    },
+    {
+      "wall": 10,
+      "kind": "passage",
+      "span": [
+        0.3,
+        0.6
+      ],
+      "traversable": true,
+      "status": "inferred"
+    },
+    {
+      "wall": 12,
+      "kind": "passage",
+      "span": [
+        0.9,
+        1
+      ],
+      "traversable": true,
+      "status": "inferred"
+    },
+    {
+      "wall": 11,
+      "kind": "passage",
+      "span": [
+        0.2,
+        0.8
+      ],
+      "traversable": true,
+      "status": "observed"
+    },
+    {
+      "wall": 16,
+      "kind": "passage",
+      "span": [
+        0.35,
+        0.75
+      ],
+      "traversable": true,
+      "status": "observed"
+    },
+    {
+      "wall": 18,
+      "kind": "passage",
+      "span": [
+        0.3,
+        0.7
+      ],
+      "traversable": true,
+      "status": "observed"
+    },
+    {
+      "wall": 19,
+      "kind": "passage",
+      "span": [
+        0.4,
+        0.7
+      ],
+      "traversable": true,
+      "status": "observed"
+    },
+    {
+      "wall": 22,
+      "kind": "passage",
+      "span": [
+        0.15,
+        0.85
+      ],
+      "traversable": true,
+      "status": "observed"
+    },
+    {
+      "wall": 26,
+      "kind": "passage",
+      "span": [
+        0.2,
+        0.85
+      ],
+      "traversable": true,
+      "status": "observed"
+    },
+    {
+      "wall": 27,
+      "kind": "passage",
+      "span": [
+        0.25,
+        0.75
+      ],
+      "traversable": true,
+      "status": "observed"
+    }
+  ],
+  "equipment": [
+    {
+      "label": "stairs in (III)",
+      "region": "(III) Skladiště",
+      "polygon": [
+        [
+          0.126,
+          0.362
+        ],
+        [
+          0.193,
+          0.362
+        ],
+        [
+          0.193,
+          0.47
+        ],
+        [
+          0.126,
+          0.47
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "stairs in (V)",
+      "region": "(V) Skladiště",
+      "polygon": [
+        [
+          0.395,
+          0.114
+        ],
+        [
+          0.442,
+          0.114
+        ],
+        [
+          0.442,
+          0.209
+        ],
+        [
+          0.395,
+          0.209
+        ]
+      ],
+      "status": "observed"
+    }
+  ],
+  "unresolved": [
+    "absolute metric dimensions - no scale, no figured dimensions",
+    "wall heights - plan is 2D, no section",
+    "wall thickness",
+    "exact meaning of dashed lines in (III) south/east and (V) south/east - possibly demolished walls or open sides",
+    "exact extents of (II) L-shape notch and whether small rectangle at SW corner is column or step",
+    "whether openings are doors, gates or free passages - drawing shows gaps without door symbols",
+    "connectivity between (III) top gap and (IV)/(V) area - ambiguous if outdoor or passage",
+    "traversability of dashed segments",
+    "exact polygon of (IV) when partially overlapped by (V) west wall - shared wall inferred"
+  ]
+}

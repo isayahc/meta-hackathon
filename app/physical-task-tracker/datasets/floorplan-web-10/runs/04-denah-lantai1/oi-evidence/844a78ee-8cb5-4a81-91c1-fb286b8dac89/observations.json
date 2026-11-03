@@ -1,0 +1,546 @@
+{
+  "site": {
+    "width_m": 18,
+    "depth_m": 14,
+    "height_m": null
+  },
+  "siteEvidence": "User-assumed footprint 18x14 m (explicit --assume-size; not observed). Drawing titled DENAH LANTAI MEZANINE 1:100 and DENAH LANTAI 1 1:100 shows scale ratios but no figured overall dimensions, no scale bar with metric values, and no dimension lines for building width/depth/height.",
+  "rooms": [
+    {
+      "label": "MEZANINE_ROOM",
+      "kind": "room",
+      "polygon": [
+        [
+          0.033,
+          0.688
+        ],
+        [
+          0.15,
+          0.688
+        ],
+        [
+          0.15,
+          0.784
+        ],
+        [
+          0.033,
+          0.784
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "CELL_BLOCK",
+      "kind": "room",
+      "polygon": [
+        [
+          0.242,
+          0.263
+        ],
+        [
+          0.431,
+          0.263
+        ],
+        [
+          0.431,
+          0.484
+        ],
+        [
+          0.242,
+          0.484
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "ADMIN_CENTRAL",
+      "kind": "room",
+      "polygon": [
+        [
+          0.433,
+          0.287
+        ],
+        [
+          0.566,
+          0.287
+        ],
+        [
+          0.566,
+          0.485
+        ],
+        [
+          0.433,
+          0.485
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "CORRIDOR_MAIN",
+      "kind": "zone",
+      "polygon": [
+        [
+          0.225,
+          0.242
+        ],
+        [
+          0.776,
+          0.242
+        ],
+        [
+          0.776,
+          0.291
+        ],
+        [
+          0.225,
+          0.291
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "COURTYARD_HATCHED",
+      "kind": "outdoor",
+      "polygon": [
+        [
+          0.255,
+          0.559
+        ],
+        [
+          0.536,
+          0.559
+        ],
+        [
+          0.536,
+          0.73
+        ],
+        [
+          0.255,
+          0.73
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "RIGHT_WING_UPPER",
+      "kind": "room",
+      "polygon": [
+        [
+          0.693,
+          0.135
+        ],
+        [
+          0.791,
+          0.135
+        ],
+        [
+          0.791,
+          0.261
+        ],
+        [
+          0.693,
+          0.261
+        ]
+      ],
+      "status": "inferred"
+    },
+    {
+      "label": "RIGHT_WING_MIDDLE",
+      "kind": "room",
+      "polygon": [
+        [
+          0.681,
+          0.291
+        ],
+        [
+          0.763,
+          0.291
+        ],
+        [
+          0.763,
+          0.792
+        ],
+        [
+          0.681,
+          0.792
+        ]
+      ],
+      "status": "inferred"
+    },
+    {
+      "label": "RIGHT_WING_EAST",
+      "kind": "room",
+      "polygon": [
+        [
+          0.773,
+          0.301
+        ],
+        [
+          0.881,
+          0.301
+        ],
+        [
+          0.881,
+          0.945
+        ],
+        [
+          0.773,
+          0.945
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "LEFT_TOP_ROOM",
+      "kind": "room",
+      "polygon": [
+        [
+          0.113,
+          0.139
+        ],
+        [
+          0.209,
+          0.139
+        ],
+        [
+          0.209,
+          0.304
+        ],
+        [
+          0.113,
+          0.304
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "BOTTOM_L1_AREA",
+      "kind": "room",
+      "polygon": [
+        [
+          0.42,
+          0.776
+        ],
+        [
+          0.649,
+          0.776
+        ],
+        [
+          0.649,
+          0.933
+        ],
+        [
+          0.42,
+          0.933
+        ]
+      ],
+      "status": "inferred"
+    }
+  ],
+  "walls": [
+    {
+      "label": "W_CELL_WEST",
+      "kind": "wall",
+      "regions": [
+        "CELL_BLOCK"
+      ],
+      "path": [
+        [
+          0.242,
+          0.263
+        ],
+        [
+          0.242,
+          0.484
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "W_CELL_SOUTH",
+      "kind": "wall",
+      "regions": [
+        "CELL_BLOCK"
+      ],
+      "path": [
+        [
+          0.242,
+          0.484
+        ],
+        [
+          0.431,
+          0.484
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "W_CELL_NORTH",
+      "kind": "wall",
+      "regions": [
+        "CELL_BLOCK",
+        "CORRIDOR_MAIN"
+      ],
+      "path": [
+        [
+          0.242,
+          0.263
+        ],
+        [
+          0.431,
+          0.263
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "W_CELL_EAST",
+      "kind": "wall",
+      "regions": [
+        "CELL_BLOCK",
+        "ADMIN_CENTRAL"
+      ],
+      "path": [
+        [
+          0.431,
+          0.263
+        ],
+        [
+          0.431,
+          0.484
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "W_ADMIN_SOUTH",
+      "kind": "wall",
+      "regions": [
+        "ADMIN_CENTRAL"
+      ],
+      "path": [
+        [
+          0.433,
+          0.485
+        ],
+        [
+          0.566,
+          0.485
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "W_CORRIDOR_NORTH",
+      "kind": "wall",
+      "regions": [
+        "CORRIDOR_MAIN"
+      ],
+      "path": [
+        [
+          0.225,
+          0.242
+        ],
+        [
+          0.776,
+          0.242
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "W_EAST_WING_WEST",
+      "kind": "wall",
+      "regions": [
+        "RIGHT_WING_MIDDLE",
+        "RIGHT_WING_EAST"
+      ],
+      "path": [
+        [
+          0.773,
+          0.301
+        ],
+        [
+          0.773,
+          0.945
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "W_EAST_WING_EAST",
+      "kind": "wall",
+      "regions": [
+        "RIGHT_WING_EAST"
+      ],
+      "path": [
+        [
+          0.881,
+          0.301
+        ],
+        [
+          0.881,
+          0.945
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "W_MZ_WEST",
+      "kind": "wall",
+      "regions": [
+        "MEZANINE_ROOM"
+      ],
+      "path": [
+        [
+          0.033,
+          0.688
+        ],
+        [
+          0.033,
+          0.784
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "W_MZ_NORTH",
+      "kind": "wall",
+      "regions": [
+        "MEZANINE_ROOM"
+      ],
+      "path": [
+        [
+          0.033,
+          0.688
+        ],
+        [
+          0.15,
+          0.688
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    }
+  ],
+  "openings": [
+    {
+      "wall": 2,
+      "kind": "door",
+      "span": [
+        0.35,
+        0.42
+      ],
+      "traversable": true,
+      "status": "inferred"
+    },
+    {
+      "wall": 0,
+      "kind": "door",
+      "span": [
+        0.6,
+        0.7
+      ],
+      "traversable": true,
+      "status": "inferred"
+    },
+    {
+      "wall": 5,
+      "kind": "door",
+      "span": [
+        0.48,
+        0.52
+      ],
+      "traversable": true,
+      "status": "inferred"
+    },
+    {
+      "wall": 6,
+      "kind": "passage",
+      "span": [
+        0.45,
+        0.55
+      ],
+      "traversable": true,
+      "status": "inferred"
+    }
+  ],
+  "equipment": [
+    {
+      "label": "HOLDING_CELLS_5",
+      "region": "CELL_BLOCK",
+      "polygon": [
+        [
+          0.256,
+          0.348
+        ],
+        [
+          0.416,
+          0.348
+        ],
+        [
+          0.416,
+          0.401
+        ],
+        [
+          0.256,
+          0.401
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "FURNITURE_MAGENTA",
+      "region": "ADMIN_CENTRAL",
+      "polygon": [
+        [
+          0.436,
+          0.386
+        ],
+        [
+          0.502,
+          0.386
+        ],
+        [
+          0.502,
+          0.432
+        ],
+        [
+          0.436,
+          0.432
+        ]
+      ],
+      "status": "observed"
+    }
+  ],
+  "unresolved": [
+    "Overall building width/depth/height not dimensioned; 1:100 scale noted but no scale bar",
+    "All room labels (TL.01 etc) red/magenta text unreadable at this resolution - functional names inferred",
+    "Exact wall thickness, height, and construction type not shown",
+    "Door/window positions ambiguous due to low resolution and crowded annotation",
+    "Mezzanine small inset connectivity to main Level 1 not clear",
+    "Outdoor dotted hatch areas vs interior ambiguous - assumed outdoor courtyard",
+    "Right wing subdivisions (multiple small labs/toilets) labels unreadable, grouped into zones",
+    "Polygon coordinates are approximate normalized estimates",
+    "Equipment footprints (pink rectangles) are schematic, not exact"
+  ]
+}

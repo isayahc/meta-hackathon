@@ -1,0 +1,353 @@
+{
+  "schema_id": "mapped-assembly.space-ir",
+  "schema_version": "0.1.0",
+  "id": "fieldops-05-affordable-palace-1-500.jpg",
+  "revision": "r1",
+  "site": {
+    "frame_id": "world",
+    "width_m": 18,
+    "depth_m": 14,
+    "height_m": 2.7
+  },
+  "frames": [
+    {
+      "id": "world",
+      "units": "m",
+      "axes": "XZ"
+    }
+  ],
+  "regions": [
+    {
+      "id": "room-courtyard",
+      "kind": "outdoor",
+      "label": "courtyard",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -5.832,
+          -3.528
+        ],
+        [
+          5.5440000000000005,
+          -3.528
+        ],
+        [
+          5.5440000000000005,
+          3.724
+        ],
+        [
+          -5.832,
+          3.724
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-courtyard"
+      ]
+    },
+    {
+      "id": "room-building-ring",
+      "kind": "zone",
+      "label": "building_ring",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -8.118,
+          -5.334
+        ],
+        [
+          7.758000000000001,
+          -5.334
+        ],
+        [
+          7.758000000000001,
+          5.306
+        ],
+        [
+          -8.118,
+          5.306
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-building-ring"
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "id": "wall-outer-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-building-ring"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -8.118,
+          -5.334
+        ],
+        [
+          7.758000000000001,
+          -5.334
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-outer-north"
+      ]
+    },
+    {
+      "id": "wall-outer-east",
+      "kind": "wall",
+      "region_ids": [
+        "room-building-ring"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          7.758000000000001,
+          -5.334
+        ],
+        [
+          7.758000000000001,
+          5.306
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-outer-east"
+      ]
+    },
+    {
+      "id": "wall-outer-south",
+      "kind": "wall",
+      "region_ids": [
+        "room-building-ring"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          7.758000000000001,
+          5.306
+        ],
+        [
+          -8.118,
+          5.306
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-outer-south"
+      ]
+    },
+    {
+      "id": "wall-outer-west",
+      "kind": "wall",
+      "region_ids": [
+        "room-building-ring"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -8.118,
+          5.306
+        ],
+        [
+          -8.118,
+          -5.334
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-outer-west"
+      ]
+    },
+    {
+      "id": "wall-inner-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-building-ring",
+        "room-courtyard"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -5.832,
+          -3.528
+        ],
+        [
+          5.5440000000000005,
+          -3.528
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-inner-north"
+      ]
+    },
+    {
+      "id": "wall-inner-east",
+      "kind": "wall",
+      "region_ids": [
+        "room-building-ring",
+        "room-courtyard"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          5.5440000000000005,
+          -3.528
+        ],
+        [
+          5.5440000000000005,
+          3.724
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-inner-east"
+      ]
+    },
+    {
+      "id": "wall-inner-south",
+      "kind": "wall",
+      "region_ids": [
+        "room-building-ring",
+        "room-courtyard"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          5.5440000000000005,
+          3.724
+        ],
+        [
+          -5.832,
+          3.724
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-inner-south"
+      ]
+    },
+    {
+      "id": "wall-inner-west",
+      "kind": "wall",
+      "region_ids": [
+        "room-building-ring",
+        "room-courtyard"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -5.832,
+          3.724
+        ],
+        [
+          -5.832,
+          -3.528
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-inner-west"
+      ]
+    }
+  ],
+  "portals": [],
+  "spatial_relations": [],
+  "occupancies": [],
+  "constraints": [],
+  "evidence": [
+    {
+      "id": "ev-room-courtyard",
+      "source_id": "05-affordable-palace-1-500.jpg",
+      "digest_sha256": "b48fc79ece720ffa334aa65a96131240871e4f2bb375b355355e8e92b156312b",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:52.447Z"
+    },
+    {
+      "id": "ev-room-building-ring",
+      "source_id": "05-affordable-palace-1-500.jpg",
+      "digest_sha256": "b48fc79ece720ffa334aa65a96131240871e4f2bb375b355355e8e92b156312b",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:11:52.447Z"
+    },
+    {
+      "id": "ev-wall-outer-north",
+      "source_id": "05-affordable-palace-1-500.jpg",
+      "digest_sha256": "b48fc79ece720ffa334aa65a96131240871e4f2bb375b355355e8e92b156312b",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:11:52.447Z"
+    },
+    {
+      "id": "ev-wall-outer-east",
+      "source_id": "05-affordable-palace-1-500.jpg",
+      "digest_sha256": "b48fc79ece720ffa334aa65a96131240871e4f2bb375b355355e8e92b156312b",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:52.447Z"
+    },
+    {
+      "id": "ev-wall-outer-south",
+      "source_id": "05-affordable-palace-1-500.jpg",
+      "digest_sha256": "b48fc79ece720ffa334aa65a96131240871e4f2bb375b355355e8e92b156312b",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:11:52.447Z"
+    },
+    {
+      "id": "ev-wall-outer-west",
+      "source_id": "05-affordable-palace-1-500.jpg",
+      "digest_sha256": "b48fc79ece720ffa334aa65a96131240871e4f2bb375b355355e8e92b156312b",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:52.447Z"
+    },
+    {
+      "id": "ev-wall-inner-north",
+      "source_id": "05-affordable-palace-1-500.jpg",
+      "digest_sha256": "b48fc79ece720ffa334aa65a96131240871e4f2bb375b355355e8e92b156312b",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:52.447Z"
+    },
+    {
+      "id": "ev-wall-inner-east",
+      "source_id": "05-affordable-palace-1-500.jpg",
+      "digest_sha256": "b48fc79ece720ffa334aa65a96131240871e4f2bb375b355355e8e92b156312b",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:52.447Z"
+    },
+    {
+      "id": "ev-wall-inner-south",
+      "source_id": "05-affordable-palace-1-500.jpg",
+      "digest_sha256": "b48fc79ece720ffa334aa65a96131240871e4f2bb375b355355e8e92b156312b",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:52.447Z"
+    },
+    {
+      "id": "ev-wall-inner-west",
+      "source_id": "05-affordable-palace-1-500.jpg",
+      "digest_sha256": "b48fc79ece720ffa334aa65a96131240871e4f2bb375b355355e8e92b156312b",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:52.447Z"
+    }
+  ],
+  "unresolved": [
+    "No scale bar or figured dimensions, so site width/depth/height_m cannot be determined",
+    "Height_m null for all walls - plan shows only 2D layout",
+    "Individual dwelling unit labels and room functions unreadable due to small furniture symbols",
+    "Internal partition walls and door swings not legibly measurable - too many small rooms (~100+ units)",
+    "Exact geometry of notched facade along north edge and protruding bays cannot be measured precisely",
+    "Stair cores with triangular, square, circular geometries - traversability and level connectivity ambiguous",
+    "Boundary between building_ring and courtyard is simplified as rectangle; actual inner edge has indentations",
+    "Equipment/furniture footprints visible but not individually identifiable or georeferenceable",
+    "Site height assumed: 2.7 m via explicit user assumption (not observed).",
+    "Scale provenance: User-assumed footprint 18x14 m (explicit --assume-size; not observed). No scale bar, north arrow, or figured dimensions visible in image; drawing is schematic floor-plan with furniture graphics only, so absolute meters cannot be determined. Height information not present."
+  ]
+}

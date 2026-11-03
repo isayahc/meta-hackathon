@@ -1,0 +1,152 @@
+{
+  "ok": true,
+  "mock": false,
+  "scene_id": "844a78ee-8cb5-4a81-91c1-fb286b8dac89",
+  "revision": 1,
+  "name": "ds10-04-denah-lantai1",
+  "head_url": "http://127.0.0.1:5173/?sceneId=844a78ee-8cb5-4a81-91c1-fb286b8dac89",
+  "revision_url": "http://127.0.0.1:5173/?sceneId=844a78ee-8cb5-4a81-91c1-fb286b8dac89&revision=1",
+  "bindings": [],
+  "diagnostics": [
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-w-cell-west",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-w-cell-south",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-w-cell-north",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-w-cell-east",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-w-admin-south",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-w-corridor-north",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-w-east-wing-west",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-w-east-wing-east",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-w-mz-west",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-w-mz-north",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNCOMPILED_OCCUPANCY",
+      "entity_id": "equip-holding-cells-5",
+      "message": "External equipment placements require explicit asset resolution."
+    },
+    {
+      "code": "UNCOMPILED_OCCUPANCY",
+      "entity_id": "equip-furniture-magenta",
+      "message": "External equipment placements require explicit asset resolution."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Overall building width/depth/height not dimensioned; 1:100 scale noted but no scale bar",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "All room labels (TL.01 etc) red/magenta text unreadable at this resolution - functional names inferred",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Exact wall thickness, height, and construction type not shown",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Door/window positions ambiguous due to low resolution and crowded annotation",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Mezzanine small inset connectivity to main Level 1 not clear",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Outdoor dotted hatch areas vs interior ambiguous - assumed outdoor courtyard",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Right wing subdivisions (multiple small labs/toilets) labels unreadable, grouped into zones",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Polygon coordinates are approximate normalized estimates",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Equipment footprints (pink rectangles) are schematic, not exact",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Site height assumed: 2.7 m via explicit user assumption (not observed).",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Scale provenance: User-assumed footprint 18x14 m (explicit --assume-size; not observed). Drawing titled DENAH LANTAI MEZANINE 1:100 and DENAH LANTAI 1 1:100 shows scale ratios but no figured overall dimensions, no scale bar with metric values, and no dimension lines for building width/depth/height.",
+      "message": "Unresolved source assertion retained as diagnostic."
+    }
+  ],
+  "findings": [],
+  "oiIdentity": {
+    "repo": "Mapped-Assembly/OpenIndustries",
+    "pinnedSha": "50f78e0bef23c5a6958d80c50e9232066ecc11d2",
+    "actualSha": "50f78e0bef23c5a6958d80c50e9232066ecc11d2",
+    "version": "0.1.1",
+    "pinned": true,
+    "markers": {
+      "spaceIr": true,
+      "compiler": true,
+      "planViewport": true,
+      "localBackend": true
+    }
+  },
+  "understanding": {
+    "rooms": 10,
+    "walls": 10,
+    "openings": 4,
+    "equipment": 2,
+    "unresolved": 9,
+    "nullGeometry": 0,
+    "scaled": true
+  },
+  "linked": {},
+  "evidence": "C:\\Users\\isaya\\meta-hackathon\\app\\physical-task-tracker\\datasets\\floorplan-web-10\\runs\\04-denah-lantai1\\oi-evidence\\844a78ee-8cb5-4a81-91c1-fb286b8dac89"
+}

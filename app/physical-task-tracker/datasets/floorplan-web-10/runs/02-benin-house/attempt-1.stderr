@@ -1,0 +1,5 @@
+(node:52828) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+model usage: {"completion_tokens":5826,"prompt_tokens":4553,"total_tokens":10379,"completion_tokens_details":{"reasoning_tokens":1333},"prompt_tokens_details":{"cached_tokens":0}}
+Assuming site footprint 18x14 m via explicit --assume-size (recorded in evidence).
+ERROR [OBS_BAD_SHAPE]: Wall 0 must reference one or two regions. (model output shape; evidence: C:\Users\isaya\meta-hackathon\app\physical-task-tracker\datasets\floorplan-web-10\runs\02-benin-house\oi-evidence\failed-2026-11-03T17-10-45-124Z)

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="687" viewBox="0 0 760 687">
+<rect x="0" y="0" width="760" height="687" fill="#ffffff"/>
+<text x="12" y="24" font-family="sans-serif" font-size="16" font-weight="bold" fill="#111827">09-areas-room-for-rent</text>
+<text x="12" y="44" font-family="sans-serif" font-size="11" fill="#4b5563">site 18x14x2.7 m · 5 regions · 12 walls · 3 portals · 1 equipment · top-down, x=+X east, y=−Z north</text>
+<g transform="translate(716,100)"><circle r="16" fill="#f3f4f6" stroke="#9ca3af"/><path d="M0,10 L0,-10 M-6,-3 L0,-10 L6,-3" stroke="#111827" stroke-width="2" fill="none"/><text y="-20" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">N</text></g>
+<rect x="52.41" y="106.77" width="655.17" height="509.58" fill="none" stroke="#9ca3af" stroke-dasharray="6,4"><title>site 18x14x2.7 m</title></rect>
+<polygon points="264.03,616.34 568.69,616.34 568.69,345.76 328.9,345.76 328.9,402.83 264.03,402.83" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-room-for-rent (room)</title></polygon>
+<text x="387.21" y="454.98" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">ROOM FOR RENT.</text>
+<polygon points="239.79,354.42 366.9,354.42 366.9,257.09 239.79,257.09" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-closet (room)</title></polygon>
+<text x="303.34" y="305.76" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">CLOSET.</text>
+<polygon points="366.9,345.76 568.69,345.76 568.69,186.26 256.83,186.26 256.83,257.09 366.9,257.09" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-bath (room)</title></polygon>
+<text x="397.47" y="263.04" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">BATH.</text>
+<polygon points="507.76,232.12 568.69,232.12 568.69,186.26 507.76,186.26" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-cl (room)</title></polygon>
+<text x="538.22" y="209.19" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">CL.</text>
+<polygon points="225.38,178.11 568.69,178.11 568.69,106.77 225.38,106.77" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-room (room)</title></polygon>
+<text x="397.03" y="142.44" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">ROOM</text>
+<polygon points="373.45,343.72 563.45,343.72 563.45,287.67 373.45,287.67" fill="#fb923c" fill-opacity="0.55" stroke="#c2410c" stroke-dasharray="4,2"><title>equip-shower</title></polygon>
+<polyline data-layer="boundary" points="263.38,616.34 263.38,402.83" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-west-wall-room-for-rent (wall)</title></polyline>
+<polyline data-layer="boundary" points="566.07,616.34 566.07,346.27" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-east-wall-room-for-rent (wall)</title></polyline>
+<polyline data-layer="boundary" points="338.72,346.78 566.07,346.78" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-south-wall-room-for-rent (wall)</title></polyline>
+<polyline data-layer="boundary" points="239.79,354.42 239.79,257.09" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-west-wall-closet (wall)</title></polyline>
+<polyline data-layer="boundary" points="239.79,257.09 365.59,257.09" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-south-wall-closet (wall)</title></polyline>
+<polyline data-layer="boundary" points="365.59,354.42 365.59,257.09" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-east-wall-closet (wall)</title></polyline>
+<polyline data-layer="boundary" points="239.79,330.98 318.41,330.98" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-north-partition-closet (partition)</title></polyline>
+<polyline data-layer="boundary" points="566.07,346.27 566.07,231.1" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-east-wall-bath-upper (wall)</title></polyline>
+<polyline data-layer="boundary" points="566.07,231.1 566.07,186.26" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-east-wall-cl (wall)</title></polyline>
+<polyline data-layer="boundary" points="239.14,187.28 507.76,187.28" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-south-wall-bath-west (wall)</title></polyline>
+<polyline data-layer="boundary" points="507.76,187.28 566.07,187.28" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-south-wall-cl (wall)</title></polyline>
+<polyline data-layer="boundary" points="507.76,231.1 566.07,231.1" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-north-wall-cl (partition)</title></polyline>
+<polyline data-layer="portal" points="372.83,346.78 418.29,346.78" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-1 (door) on wall-south-wall-room-for-rent</title></polyline>
+<polyline data-layer="portal" points="239.79,281.42 239.79,261.96" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-2 (door) on wall-west-wall-closet</title></polyline>
+<polyline data-layer="portal" points="519.42,187.28 531.08,187.28" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-3 (door) on wall-south-wall-cl</title></polyline>
+<g><rect x="564.01" y="640" width="181.99" height="5" fill="#111827"/><text x="655.005" y="636" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#111827">5 m</text></g>
+<text x="12" y="677" font-family="sans-serif" font-size="10" fill="#6b7280">9 unresolved notes · 3 without geometry (not drawn): room-room-m, equip-toilet, equip-sink</text>
+</svg>

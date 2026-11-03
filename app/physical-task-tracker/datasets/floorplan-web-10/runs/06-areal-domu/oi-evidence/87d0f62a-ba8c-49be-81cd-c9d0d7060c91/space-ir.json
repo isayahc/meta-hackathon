@@ -1,0 +1,1399 @@
+{
+  "schema_id": "mapped-assembly.space-ir",
+  "schema_version": "0.1.0",
+  "id": "fieldops-06-areal-domu.png",
+  "revision": "r1",
+  "site": {
+    "frame_id": "world",
+    "width_m": 18,
+    "depth_m": 14,
+    "height_m": 2.7
+  },
+  "frames": [
+    {
+      "id": "world",
+      "units": "m",
+      "axes": "XZ"
+    }
+  ],
+  "regions": [
+    {
+      "id": "room-i-hlavn-budova",
+      "kind": "room",
+      "label": "(I) Hlavní budova",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -7.758,
+          2.7159999999999993
+        ],
+        [
+          3.150000000000001,
+          2.7159999999999993
+        ],
+        [
+          3.150000000000001,
+          6.523999999999999
+        ],
+        [
+          -7.758,
+          6.523999999999999
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-i-hlavn-budova"
+      ]
+    },
+    {
+      "id": "room-ii-d-ev-n-chodba",
+      "kind": "room",
+      "label": "(II) Dřevěná chodba",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -7.794,
+          1.5959999999999999
+        ],
+        [
+          -4.788,
+          1.5959999999999999
+        ],
+        [
+          -4.788,
+          0.39200000000000035
+        ],
+        [
+          -3.078,
+          0.39200000000000035
+        ],
+        [
+          -3.078,
+          2.7439999999999993
+        ],
+        [
+          -7.794,
+          2.7439999999999993
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-ii-d-ev-n-chodba"
+      ]
+    },
+    {
+      "id": "room-iii-skladi-t",
+      "kind": "room",
+      "label": "(III) Skladiště",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -6.714,
+          -3.0380000000000003
+        ],
+        [
+          2.07,
+          -3.0380000000000003
+        ],
+        [
+          2.484,
+          -2.576
+        ],
+        [
+          2.484,
+          0.2240000000000002
+        ],
+        [
+          -5.3999999999999995,
+          0.2240000000000002
+        ],
+        [
+          -6.714,
+          0.2240000000000002
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-iii-skladi-t"
+      ]
+    },
+    {
+      "id": "room-iv-d-ev-n-chodba",
+      "kind": "room",
+      "label": "(IV) Dřevěná chodba",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -3.5460000000000003,
+          -4.816
+        ],
+        [
+          -1.8899999999999997,
+          -4.816
+        ],
+        [
+          -1.8899999999999997,
+          -3.0939999999999994
+        ],
+        [
+          -3.5460000000000003,
+          -3.0939999999999994
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-iv-d-ev-n-chodba"
+      ]
+    },
+    {
+      "id": "room-v-skladi-t",
+      "kind": "room",
+      "label": "(V) Skladiště",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -1.8719999999999997,
+          -6.622
+        ],
+        [
+          8.046,
+          -6.622
+        ],
+        [
+          8.046,
+          -3.458
+        ],
+        [
+          -1.8719999999999997,
+          -3.458
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-v-skladi-t"
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "id": "wall-i-south",
+      "kind": "wall",
+      "region_ids": [
+        "room-i-hlavn-budova"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -7.758,
+          6.523999999999999
+        ],
+        [
+          3.150000000000001,
+          6.523999999999999
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-i-south"
+      ]
+    },
+    {
+      "id": "wall-i-west",
+      "kind": "wall",
+      "region_ids": [
+        "room-i-hlavn-budova"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -7.758,
+          2.7159999999999993
+        ],
+        [
+          -7.758,
+          6.523999999999999
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-i-west"
+      ]
+    },
+    {
+      "id": "wall-i-east",
+      "kind": "wall",
+      "region_ids": [
+        "room-i-hlavn-budova"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          3.150000000000001,
+          2.7159999999999993
+        ],
+        [
+          3.150000000000001,
+          6.523999999999999
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-i-east"
+      ]
+    },
+    {
+      "id": "wall-i-north-shared-with-ii",
+      "kind": "wall",
+      "region_ids": [
+        "room-i-hlavn-budova",
+        "room-ii-d-ev-n-chodba"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -7.758,
+          2.7159999999999993
+        ],
+        [
+          -3.0599999999999996,
+          2.7159999999999993
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-i-north-shared-with-ii"
+      ]
+    },
+    {
+      "id": "wall-i-north-exterior",
+      "kind": "wall",
+      "region_ids": [
+        "room-i-hlavn-budova"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -3.0599999999999996,
+          2.7159999999999993
+        ],
+        [
+          3.150000000000001,
+          2.7159999999999993
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-i-north-exterior"
+      ]
+    },
+    {
+      "id": "wall-ii-west-lower",
+      "kind": "wall",
+      "region_ids": [
+        "room-ii-d-ev-n-chodba"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -7.794,
+          1.5959999999999999
+        ],
+        [
+          -7.794,
+          2.7439999999999993
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-ii-west-lower"
+      ]
+    },
+    {
+      "id": "wall-ii-west-north-step",
+      "kind": "wall",
+      "region_ids": [
+        "room-ii-d-ev-n-chodba"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -7.794,
+          1.5959999999999999
+        ],
+        [
+          -4.788,
+          1.5959999999999999
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-ii-west-north-step"
+      ]
+    },
+    {
+      "id": "wall-ii-east-lower",
+      "kind": "wall",
+      "region_ids": [
+        "room-ii-d-ev-n-chodba"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -4.788,
+          0.39200000000000035
+        ],
+        [
+          -4.788,
+          1.5959999999999999
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-ii-east-lower"
+      ]
+    },
+    {
+      "id": "wall-ii-east-upper",
+      "kind": "wall",
+      "region_ids": [
+        "room-ii-d-ev-n-chodba"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -3.348,
+          0.39200000000000035
+        ],
+        [
+          -3.348,
+          2.6879999999999993
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-ii-east-upper"
+      ]
+    },
+    {
+      "id": "wall-ii-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-ii-d-ev-n-chodba"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -4.788,
+          0.39200000000000035
+        ],
+        [
+          -3.348,
+          0.39200000000000035
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-ii-north"
+      ]
+    },
+    {
+      "id": "wall-iii-west",
+      "kind": "wall",
+      "region_ids": [
+        "room-iii-skladi-t"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -6.714,
+          -3.0380000000000003
+        ],
+        [
+          -6.714,
+          0.2520000000000002
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-iii-west"
+      ]
+    },
+    {
+      "id": "wall-iii-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-iii-skladi-t"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -6.714,
+          -3.0380000000000003
+        ],
+        [
+          2.1239999999999997,
+          -3.0380000000000003
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-iii-north"
+      ]
+    },
+    {
+      "id": "wall-iii-south-west",
+      "kind": "wall",
+      "region_ids": [
+        "room-iii-skladi-t"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -5.3999999999999995,
+          0.2240000000000002
+        ],
+        [
+          -2.484,
+          0.2240000000000002
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-iii-south-west"
+      ]
+    },
+    {
+      "id": "wall-iii-south-middle-dashed",
+      "kind": "wall",
+      "region_ids": [
+        "room-iii-skladi-t"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.6200000000000006,
+          0.2240000000000002
+        ],
+        [
+          0.19800000000000018,
+          0.2240000000000002
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-iii-south-middle-dashed"
+      ]
+    },
+    {
+      "id": "wall-iii-south-east",
+      "kind": "wall",
+      "region_ids": [
+        "room-iii-skladi-t"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          0.9000000000000008,
+          0.2240000000000002
+        ],
+        [
+          2.484,
+          0.2240000000000002
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-iii-south-east"
+      ]
+    },
+    {
+      "id": "wall-iii-east-lower",
+      "kind": "wall",
+      "region_ids": [
+        "room-iii-skladi-t"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          2.16,
+          -0.5599999999999997
+        ],
+        [
+          2.484,
+          0.2240000000000002
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-iii-east-lower"
+      ]
+    },
+    {
+      "id": "wall-iii-east-mid-dashed",
+      "kind": "wall",
+      "region_ids": [
+        "room-iii-skladi-t"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          1.9619999999999997,
+          -1.9740000000000002
+        ],
+        [
+          1.9619999999999997,
+          -1.12
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-iii-east-mid-dashed"
+      ]
+    },
+    {
+      "id": "wall-iv-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-iv-d-ev-n-chodba"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -3.5460000000000003,
+          -4.787999999999999
+        ],
+        [
+          -1.8539999999999996,
+          -4.787999999999999
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-iv-north"
+      ]
+    },
+    {
+      "id": "wall-iv-west-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-iv-d-ev-n-chodba"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -3.5460000000000003,
+          -4.787999999999999
+        ],
+        [
+          -3.5460000000000003,
+          -3.9060000000000006
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-iv-west-north"
+      ]
+    },
+    {
+      "id": "wall-iv-west-south",
+      "kind": "wall",
+      "region_ids": [
+        "room-iv-d-ev-n-chodba"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -3.5460000000000003,
+          -3.556
+        ],
+        [
+          -3.5460000000000003,
+          -3.0939999999999994
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-iv-west-south"
+      ]
+    },
+    {
+      "id": "wall-iv-east-shared-with-v-west",
+      "kind": "wall",
+      "region_ids": [
+        "room-iv-d-ev-n-chodba",
+        "room-v-skladi-t"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.8899999999999997,
+          -6.552
+        ],
+        [
+          -1.8899999999999997,
+          -3.36
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-iv-east-shared-with-v-west"
+      ]
+    },
+    {
+      "id": "wall-v-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-v-skladi-t"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.8899999999999997,
+          -6.622
+        ],
+        [
+          8.064,
+          -6.622
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-v-north"
+      ]
+    },
+    {
+      "id": "wall-v-north-east-partial",
+      "kind": "wall",
+      "region_ids": [
+        "room-v-skladi-t"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          8.064,
+          -6.622
+        ],
+        [
+          7.991999999999999,
+          -5.88
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-v-north-east-partial"
+      ]
+    },
+    {
+      "id": "wall-v-east-north-dashed",
+      "kind": "wall",
+      "region_ids": [
+        "room-v-skladi-t"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          7.9559999999999995,
+          -5.5440000000000005
+        ],
+        [
+          7.919999999999999,
+          -4.718
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-v-east-north-dashed"
+      ]
+    },
+    {
+      "id": "wall-v-east-south-dashed",
+      "kind": "wall",
+      "region_ids": [
+        "room-v-skladi-t"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          7.883999999999999,
+          -4.312
+        ],
+        [
+          7.830000000000001,
+          -3.444
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-v-east-south-dashed"
+      ]
+    },
+    {
+      "id": "wall-v-south-east-dashed",
+      "kind": "wall",
+      "region_ids": [
+        "room-v-skladi-t"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          6.39,
+          -3.4859999999999998
+        ],
+        [
+          7.830000000000001,
+          -3.444
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-v-south-east-dashed"
+      ]
+    },
+    {
+      "id": "wall-v-south-middle-dashed",
+      "kind": "wall",
+      "region_ids": [
+        "room-v-skladi-t"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          4.32,
+          -3.5140000000000002
+        ],
+        [
+          5.759999999999999,
+          -3.5140000000000002
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-v-south-middle-dashed"
+      ]
+    },
+    {
+      "id": "wall-v-south-west",
+      "kind": "wall",
+      "region_ids": [
+        "room-v-skladi-t"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.116,
+          -3.598
+        ],
+        [
+          3.527999999999999,
+          -3.598
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-v-south-west"
+      ]
+    },
+    {
+      "id": "wall-wall-between-iii-and-v-vertical",
+      "kind": "wall",
+      "region_ids": [
+        "room-iii-skladi-t"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          2.07,
+          -3.0380000000000003
+        ],
+        [
+          2.07,
+          -2.38
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-wall-between-iii-and-v-vertical"
+      ]
+    }
+  ],
+  "portals": [
+    {
+      "id": "portal-1",
+      "kind": "passage",
+      "boundary_id": "wall-i-north-shared-with-ii",
+      "connects": [
+        "room-i-hlavn-budova",
+        "room-ii-d-ev-n-chodba"
+      ],
+      "span": [
+        0.75,
+        0.9
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-1"
+      ]
+    },
+    {
+      "id": "portal-2",
+      "kind": "passage",
+      "boundary_id": "wall-iii-west",
+      "connects": [
+        "room-iii-skladi-t"
+      ],
+      "span": [
+        0.3,
+        0.6
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-2"
+      ]
+    },
+    {
+      "id": "portal-3",
+      "kind": "passage",
+      "boundary_id": "wall-iii-south-west",
+      "connects": [
+        "room-iii-skladi-t"
+      ],
+      "span": [
+        0.9,
+        1
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-3"
+      ]
+    },
+    {
+      "id": "portal-4",
+      "kind": "passage",
+      "boundary_id": "wall-iii-north",
+      "connects": [
+        "room-iii-skladi-t"
+      ],
+      "span": [
+        0.2,
+        0.8
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-4"
+      ]
+    },
+    {
+      "id": "portal-5",
+      "kind": "passage",
+      "boundary_id": "wall-iii-east-mid-dashed",
+      "connects": [
+        "room-iii-skladi-t"
+      ],
+      "span": [
+        0.35,
+        0.75
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-5"
+      ]
+    },
+    {
+      "id": "portal-6",
+      "kind": "passage",
+      "boundary_id": "wall-iv-west-north",
+      "connects": [
+        "room-iv-d-ev-n-chodba"
+      ],
+      "span": [
+        0.3,
+        0.7
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-6"
+      ]
+    },
+    {
+      "id": "portal-7",
+      "kind": "passage",
+      "boundary_id": "wall-iv-west-south",
+      "connects": [
+        "room-iv-d-ev-n-chodba"
+      ],
+      "span": [
+        0.4,
+        0.7
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-7"
+      ]
+    },
+    {
+      "id": "portal-8",
+      "kind": "passage",
+      "boundary_id": "wall-v-north-east-partial",
+      "connects": [
+        "room-v-skladi-t"
+      ],
+      "span": [
+        0.15,
+        0.85
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-8"
+      ]
+    },
+    {
+      "id": "portal-9",
+      "kind": "passage",
+      "boundary_id": "wall-v-south-middle-dashed",
+      "connects": [
+        "room-v-skladi-t"
+      ],
+      "span": [
+        0.2,
+        0.85
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-9"
+      ]
+    },
+    {
+      "id": "portal-10",
+      "kind": "passage",
+      "boundary_id": "wall-v-south-west",
+      "connects": [
+        "room-v-skladi-t"
+      ],
+      "span": [
+        0.25,
+        0.75
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-10"
+      ]
+    }
+  ],
+  "spatial_relations": [],
+  "occupancies": [
+    {
+      "id": "equip-stairs-in-iii",
+      "region_id": "room-iii-skladi-t",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -6.732,
+          -1.9320000000000002
+        ],
+        [
+          -5.526,
+          -1.9320000000000002
+        ],
+        [
+          -5.526,
+          -0.4200000000000004
+        ],
+        [
+          -6.732,
+          -0.4200000000000004
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-stairs-in-iii"
+      ]
+    },
+    {
+      "id": "equip-stairs-in-v",
+      "region_id": "room-v-skladi-t",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -1.8899999999999997,
+          -5.404
+        ],
+        [
+          -1.044,
+          -5.404
+        ],
+        [
+          -1.044,
+          -4.074000000000001
+        ],
+        [
+          -1.8899999999999997,
+          -4.074000000000001
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-stairs-in-v"
+      ]
+    }
+  ],
+  "constraints": [],
+  "evidence": [
+    {
+      "id": "ev-room-i-hlavn-budova",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-room-ii-d-ev-n-chodba",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-room-iii-skladi-t",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-room-iv-d-ev-n-chodba",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-room-v-skladi-t",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-i-south",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-i-west",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-i-east",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-i-north-shared-with-ii",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-i-north-exterior",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-ii-west-lower",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-ii-west-north-step",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-ii-east-lower",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-ii-east-upper",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-ii-north",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-iii-west",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-iii-north",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-iii-south-west",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-iii-south-middle-dashed",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-iii-south-east",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-iii-east-lower",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-iii-east-mid-dashed",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-iv-north",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-iv-west-north",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-iv-west-south",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-iv-east-shared-with-v-west",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-v-north",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-v-north-east-partial",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-v-east-north-dashed",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-v-east-south-dashed",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-v-south-east-dashed",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-v-south-middle-dashed",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-v-south-west",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-wall-wall-between-iii-and-v-vertical",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-portal-1",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-portal-2",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-portal-3",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-portal-4",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-portal-5",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-portal-6",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-portal-7",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-portal-8",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-portal-9",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-portal-10",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-equip-stairs-in-iii",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    },
+    {
+      "id": "ev-equip-stairs-in-v",
+      "source_id": "06-areal-domu.png",
+      "digest_sha256": "7b8bc1d4fd9bc872c9fe4e601d6caad2d1e063574f2a89400c4ce0a3169072c3",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:15.010Z"
+    }
+  ],
+  "unresolved": [
+    "absolute metric dimensions - no scale, no figured dimensions",
+    "wall heights - plan is 2D, no section",
+    "wall thickness",
+    "exact meaning of dashed lines in (III) south/east and (V) south/east - possibly demolished walls or open sides",
+    "exact extents of (II) L-shape notch and whether small rectangle at SW corner is column or step",
+    "whether openings are doors, gates or free passages - drawing shows gaps without door symbols",
+    "connectivity between (III) top gap and (IV)/(V) area - ambiguous if outdoor or passage",
+    "traversability of dashed segments",
+    "exact polygon of (IV) when partially overlapped by (V) west wall - shared wall inferred",
+    "Site height assumed: 2.7 m via explicit user assumption (not observed).",
+    "Scale provenance: User-assumed footprint 18x14 m (explicit --assume-size; not observed). No scale bar, no figured dimensions, no grid; plan is schematic with text label describing location but no metric values; therefore absolute size unknown"
+  ]
+}
