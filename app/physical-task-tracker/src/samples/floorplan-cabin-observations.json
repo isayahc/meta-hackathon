@@ -1,0 +1,23 @@
+{
+  "_provenance": "Hand-authored benchmark fixture (not model output): an 8x6m cabin with two rooms, five walls, one door, one stove. Polygons are normalized [0,1] plan coordinates. Understanding labels: 2 rooms, 5 walls, 1 opening, 1 equipment, scaled, 1 unresolved.",
+  "site": { "width_m": 8, "depth_m": 6, "height_m": 2.7 },
+  "siteEvidence": "Fixture-declared dimensions (8m x 6m x 2.7m).",
+  "rooms": [
+    { "label": "living", "kind": "room", "polygon": [[0, 0], [1, 0], [1, 0.66], [0, 0.66]], "status": "observed" },
+    { "label": "bunk", "kind": "room", "polygon": [[0, 0.66], [1, 0.66], [1, 1], [0, 1]], "status": "observed" }
+  ],
+  "walls": [
+    { "label": "north", "kind": "wall", "regions": ["living"], "path": [[0, 0], [1, 0]], "thickness_m": 0.2, "height_m": 2.7, "status": "observed" },
+    { "label": "south", "kind": "wall", "regions": ["bunk"], "path": [[0, 1], [1, 1]], "thickness_m": 0.2, "height_m": 2.7, "status": "observed" },
+    { "label": "west", "kind": "wall", "regions": ["living", "bunk"], "path": [[0, 0], [0, 1]], "thickness_m": 0.2, "height_m": 2.7, "status": "observed" },
+    { "label": "east", "kind": "wall", "regions": ["living", "bunk"], "path": [[1, 0], [1, 1]], "thickness_m": 0.2, "height_m": 2.7, "status": "observed" },
+    { "label": "partition", "kind": "partition", "regions": ["living", "bunk"], "path": [[0, 0.66], [1, 0.66]], "thickness_m": 0.12, "height_m": 2.7, "status": "observed" }
+  ],
+  "openings": [
+    { "wall": 4, "kind": "door", "span": [0.42, 0.58], "traversable": true, "status": "observed" }
+  ],
+  "equipment": [
+    { "label": "wood stove", "region": "bunk", "polygon": [[0.08, 0.72], [0.2, 0.72], [0.2, 0.86], [0.08, 0.86]], "status": "observed" }
+  ],
+  "unresolved": ["Window positions unreadable in scan."]
+}

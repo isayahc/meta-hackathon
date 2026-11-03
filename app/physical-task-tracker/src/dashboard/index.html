@@ -155,6 +155,7 @@
   <nav class="tabs" role="tablist" aria-label="Views">
     <button role="tab" data-view="spots" aria-selected="true">Spots</button>
     <button role="tab" data-view="run" aria-selected="false">Run</button>
+    <button role="tab" data-view="space" aria-selected="false">Space</button>
     <button role="tab" data-view="plan" aria-selected="false">Plan</button>
     <button role="tab" data-view="activity" aria-selected="false">Activity</button>
     <button role="tab" data-view="cal" aria-selected="false">Calendar</button>
@@ -217,6 +218,26 @@
         <div><button class="btn" type="submit">Run compare</button></div>
       </form>
       <div id="compareresult"></div>
+    </section>
+  </div>
+  <div class="view" id="view-space">
+    <section aria-label="Build a space from a floor plan">
+      <h2>Floor plan to OpenIndustries space</h2>
+      <form class="run" id="spaceform">
+        <label>Floor-plan image (PNG/JPEG)
+          <input type="file" name="file" accept="image/png,image/jpeg,image/webp">
+          <span class="hint">�or paste an image URL below. File wins when both are set.</span>
+        </label>
+        <label>Image URL <input type="text" name="url" placeholder="https://�"></label>
+        <label>Spot id (optional) <input type="text" name="spot" placeholder="barn-loft"></label>
+        <label>Scene name (optional) <input type="text" name="scene" placeholder="barn-loft-plan"></label>
+        <div><button class="btn" type="submit">Build space</button></div>
+      </form>
+      <div id="spaceresult"></div>
+    </section>
+    <section aria-label="About spaces">
+      <h2>How it works</h2>
+      <p class="hint">The model reads visible rooms, walls, openings, and equipment; the connector submits grounded observations to OpenIndustries, which validates and builds the space. The preview link opens the OI workbench (2D plan included). Linked spots keep OI references, not geometry.</p>
     </section>
   </div>
   <div class="view" id="view-plan">
@@ -347,10 +368,12 @@ function renderDetail(ov) {
   if (!s) { el.innerHTML = '<h2>Spot detail</h2><p>Select a spot.</p>'; return; }
   const issues = (s.open_issues ?? []).map((i) => `<li>${esc(i)}</li>`).join('') || '<li>none recorded</li>';
   const sessions = (s.recent_sessions ?? []).map((x) => `<li>${esc(x)}</li>`).join('') || '<li>no sessions yet</li>';
+  const oiLinks = (s.oi_links ?? []).map((l) => `<li>${esc(l.role)} ${esc(l.oi_entity_id)} � scene rev ${esc(l.revision)}</li>`).join('');
   el.innerHTML = `<h2>Spot detail</h2><h3 style="margin:.2em 0">${esc(s.name)} <span class="chip">${esc(s.stage ?? 'unknown')}</span></h3>` +
     `<p>${esc(s.summary ?? '(no standing state)')}</p>` +
     `<h2>Open issues</h2><ul>${issues}</ul>` +
     `<h2>Recent sessions</h2><ul class="sess" style="font-size:13px;color:var(--muted)">${sessions}</ul>` +
+    (oiLinks ? `<h2>OI spaces</h2><ul>${oiLinks}</ul>` : '') +
     `<p style="font-size:13px;color:var(--muted)">${s.session_count ?? 0} sessions · updated ${esc(s.updated_at ?? 'never')}</p>`;
 }
 
@@ -743,6 +766,38 @@ $('compareform').addEventListener('submit', (e) => {
     tick(false);
     return out;
   }, 'compare complete — see result below');
+});
+
+function renderSpaceResult(el, r) {
+  if (!r || r.ok !== true) { el.innerHTML = '<p>Space build failed.</p>'; return; }
+  const diags = (r.diagnostics ?? []).map((d) => `<li><span class="chip">${esc(d.code)}</span> ${esc(d.entity_id)} � ${esc(d.message)}</li>`).join('') || '<li>none</li>';
+  const findings = (r.findings ?? []).filter((f) => f.severity === 'unresolved').map((f) => `<li>${esc(f.message)} <span class="hint">(${esc(f.code)})</span></li>`).join('');
+  el.innerHTML =
+    `<h3 style="margin:.4em 0">${esc(r.name ?? 'space')} <span class="chip">rev ${esc(r.revision)}</span>` +
+    (r.mock ? ' <span class="chip risk">mock OI</span>' : '') + '</h3>' +
+    `<p><a href="${esc(r.revision_url)}" target="_blank" rel="noopener">Open in OI workbench</a> <span class="hint">2D plan + 3D stay in OpenIndustries</span></p>` +
+    `<p class="hint">${(r.bindings ?? []).length} compiled instances � scene ${esc(r.scene_id)}</p>` +
+    `<h2>OI diagnostics</h2><ul>${diags}</ul>` +
+    (findings ? `<h2>Open uncertainty</h2><ul>${findings}</ul>` : '');
+}
+
+$('spaceform').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const f = e.target;
+  busy(f.querySelector('button'), async () => {
+    const payload = {
+      imageData: await fileData(f.file) ?? undefined,
+      imageUrl: f.url.value.trim() || undefined,
+    };
+    if (f.spot.value.trim()) payload.spot = f.spot.value.trim();
+    if (f.scene.value.trim()) payload.sceneName = f.scene.value.trim();
+    const out = await api('/api/floorplan', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+    });
+    renderSpaceResult($('spaceresult'), out.result);
+    tick(false);
+    return out;
+  }, 'space built � preview link below');
 });
 
 $('goalform').addEventListener('submit', (e) => {

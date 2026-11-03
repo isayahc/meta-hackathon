@@ -1,0 +1,22 @@
+{
+  "_provenance": "Hand-authored benchmark fixture (not model output): an unscaled, ambiguous plan. No site dimensions, no geometry; topology and uncertainty only. Understanding labels: 1 room, 1 wall, 1 opening, 1 equipment, unscaled, 3 unresolved.",
+  "site": null,
+  "siteEvidence": "No scale bar or dimensions visible.",
+  "rooms": [
+    { "label": "workshop", "kind": "room", "polygon": null, "status": "inferred" }
+  ],
+  "walls": [
+    { "label": "north edge", "kind": "wall", "regions": ["workshop"], "path": null, "thickness_m": null, "height_m": null, "status": "inferred" }
+  ],
+  "openings": [
+    { "wall": 0, "kind": "window", "span": [0.3, 0.5], "traversable": false, "status": "inferred" }
+  ],
+  "equipment": [
+    { "label": "workbench", "region": "workshop", "polygon": null, "status": "inferred" }
+  ],
+  "unresolved": [
+    "No scale: all geometry omitted.",
+    "Door vs window ambiguous on north edge.",
+    "Room label unreadable; assumed workshop."
+  ]
+}

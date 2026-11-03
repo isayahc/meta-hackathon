@@ -49,6 +49,13 @@ CREATE TABLE IF NOT EXISTS actions(
   created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
   UNIQUE(event_id, idx)
 );
+CREATE TABLE IF NOT EXISTS oi_links(
+  entity_kind TEXT NOT NULL, entity_id TEXT NOT NULL,
+  scene_id TEXT NOT NULL, revision INTEGER NOT NULL,
+  oi_entity_id TEXT NOT NULL, oi_revision TEXT NOT NULL DEFAULT '',
+  role TEXT NOT NULL DEFAULT 'space', updated_at TEXT NOT NULL,
+  PRIMARY KEY(entity_kind, entity_id, oi_entity_id)
+);
 `;
 
 function readJsonFile(path: string): unknown {
