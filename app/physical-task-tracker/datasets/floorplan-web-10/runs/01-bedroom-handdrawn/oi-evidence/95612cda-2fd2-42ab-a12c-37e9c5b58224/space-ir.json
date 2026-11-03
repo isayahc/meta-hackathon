@@ -1,0 +1,552 @@
+{
+  "schema_id": "mapped-assembly.space-ir",
+  "schema_version": "0.1.0",
+  "id": "fieldops-01-bedroom-handdrawn.jpg",
+  "revision": "r1",
+  "site": {
+    "frame_id": "world",
+    "width_m": 3.5,
+    "depth_m": 3.8,
+    "height_m": 2.7
+  },
+  "frames": [
+    {
+      "id": "world",
+      "units": "m",
+      "axes": "XZ"
+    }
+  ],
+  "regions": [
+    {
+      "id": "room-bedroom",
+      "kind": "room",
+      "label": "Bedroom",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -1.666,
+          -1.5504
+        ],
+        [
+          0.6789999999999998,
+          -1.5504
+        ],
+        [
+          0.6789999999999998,
+          0.19760000000000016
+        ],
+        [
+          1.0570000000000002,
+          0.19760000000000016
+        ],
+        [
+          1.0570000000000002,
+          0.9956
+        ],
+        [
+          0.4585,
+          0.9956
+        ],
+        [
+          0.4585,
+          1.2767999999999997
+        ],
+        [
+          -1.666,
+          1.2767999999999997
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-bedroom"
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "id": "wall-top",
+      "kind": "wall",
+      "region_ids": [
+        "room-bedroom"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.666,
+          -1.5504
+        ],
+        [
+          0.6789999999999998,
+          -1.5504
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-top"
+      ]
+    },
+    {
+      "id": "wall-right-upper",
+      "kind": "wall",
+      "region_ids": [
+        "room-bedroom"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          0.6789999999999998,
+          -1.5504
+        ],
+        [
+          0.6789999999999998,
+          0.19760000000000016
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-right-upper"
+      ]
+    },
+    {
+      "id": "wall-mid-horizontal",
+      "kind": "wall",
+      "region_ids": [
+        "room-bedroom"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          0.6789999999999998,
+          0.19760000000000016
+        ],
+        [
+          1.0570000000000002,
+          0.19760000000000016
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-mid-horizontal"
+      ]
+    },
+    {
+      "id": "wall-door-wall",
+      "kind": "wall",
+      "region_ids": [
+        "room-bedroom"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          1.0570000000000002,
+          0.19760000000000016
+        ],
+        [
+          1.0570000000000002,
+          0.9956
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-door-wall"
+      ]
+    },
+    {
+      "id": "wall-corridor-bottom",
+      "kind": "wall",
+      "region_ids": [
+        "room-bedroom"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          1.0570000000000002,
+          0.9956
+        ],
+        [
+          0.4585,
+          0.9956
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-corridor-bottom"
+      ]
+    },
+    {
+      "id": "wall-little-vertical",
+      "kind": "wall",
+      "region_ids": [
+        "room-bedroom"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          0.4585,
+          0.9956
+        ],
+        [
+          0.4585,
+          1.2767999999999997
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-little-vertical"
+      ]
+    },
+    {
+      "id": "wall-bottom",
+      "kind": "wall",
+      "region_ids": [
+        "room-bedroom"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          0.4585,
+          1.2767999999999997
+        ],
+        [
+          -1.666,
+          1.2767999999999997
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-bottom"
+      ]
+    },
+    {
+      "id": "wall-left",
+      "kind": "wall",
+      "region_ids": [
+        "room-bedroom"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.666,
+          1.2767999999999997
+        ],
+        [
+          -1.666,
+          -1.5504
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-left"
+      ]
+    }
+  ],
+  "portals": [
+    {
+      "id": "portal-1",
+      "kind": "door",
+      "boundary_id": "wall-door-wall",
+      "connects": [
+        "room-bedroom"
+      ],
+      "span": [
+        0.05,
+        0.95
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-1"
+      ]
+    }
+  ],
+  "spatial_relations": [],
+  "occupancies": [
+    {
+      "id": "equip-wardrobe",
+      "region_id": "room-bedroom",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -1.666,
+          -1.5504
+        ],
+        [
+          -1.1340000000000001,
+          -1.5504
+        ],
+        [
+          -1.1340000000000001,
+          -0.7676000000000001
+        ],
+        [
+          -1.666,
+          -0.7676000000000001
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-wardrobe"
+      ]
+    },
+    {
+      "id": "equip-double-bunk-beds",
+      "region_id": "room-bedroom",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -1.666,
+          -0.7676000000000001
+        ],
+        [
+          -0.8995,
+          -0.7676000000000001
+        ],
+        [
+          -0.8995,
+          1.2767999999999997
+        ],
+        [
+          -1.666,
+          1.2767999999999997
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-double-bunk-beds"
+      ]
+    },
+    {
+      "id": "equip-computer-desk",
+      "region_id": "room-bedroom",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -0.602,
+          -1.5504
+        ],
+        [
+          0.3499999999999999,
+          -1.5504
+        ],
+        [
+          0.3499999999999999,
+          -0.8208000000000001
+        ],
+        [
+          -0.602,
+          -0.8208000000000001
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-computer-desk"
+      ]
+    },
+    {
+      "id": "equip-shelving-units",
+      "region_id": "room-bedroom",
+      "frame_id": "world",
+      "polygon": [
+        [
+          0.3499999999999999,
+          -1.5504
+        ],
+        [
+          0.6789999999999998,
+          -1.5504
+        ],
+        [
+          0.6789999999999998,
+          0.19760000000000016
+        ],
+        [
+          0.3499999999999999,
+          0.19760000000000016
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-shelving-units"
+      ]
+    },
+    {
+      "id": "equip-shelving-drawers",
+      "region_id": "room-bedroom",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -0.7490000000000001,
+          0.8473999999999998
+        ],
+        [
+          -0.448,
+          0.8473999999999998
+        ],
+        [
+          -0.448,
+          1.2767999999999997
+        ],
+        [
+          -0.7490000000000001,
+          1.2767999999999997
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-shelving-drawers"
+      ]
+    },
+    {
+      "id": "equip-cupboard",
+      "region_id": "room-bedroom",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -0.448,
+          1.2159999999999997
+        ],
+        [
+          0.4585,
+          1.2159999999999997
+        ],
+        [
+          0.4585,
+          1.2767999999999997
+        ],
+        [
+          -0.448,
+          1.2767999999999997
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-cupboard"
+      ]
+    }
+  ],
+  "constraints": [],
+  "evidence": [
+    {
+      "id": "ev-room-bedroom",
+      "source_id": "01-bedroom-handdrawn.jpg",
+      "digest_sha256": "442aa0f13d7450516d34845ecae97704512da1d73043122771f4513cc39d89ff",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:10:27.788Z"
+    },
+    {
+      "id": "ev-wall-top",
+      "source_id": "01-bedroom-handdrawn.jpg",
+      "digest_sha256": "442aa0f13d7450516d34845ecae97704512da1d73043122771f4513cc39d89ff",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:10:27.788Z"
+    },
+    {
+      "id": "ev-wall-right-upper",
+      "source_id": "01-bedroom-handdrawn.jpg",
+      "digest_sha256": "442aa0f13d7450516d34845ecae97704512da1d73043122771f4513cc39d89ff",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:10:27.788Z"
+    },
+    {
+      "id": "ev-wall-mid-horizontal",
+      "source_id": "01-bedroom-handdrawn.jpg",
+      "digest_sha256": "442aa0f13d7450516d34845ecae97704512da1d73043122771f4513cc39d89ff",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:10:27.788Z"
+    },
+    {
+      "id": "ev-wall-door-wall",
+      "source_id": "01-bedroom-handdrawn.jpg",
+      "digest_sha256": "442aa0f13d7450516d34845ecae97704512da1d73043122771f4513cc39d89ff",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:10:27.788Z"
+    },
+    {
+      "id": "ev-wall-corridor-bottom",
+      "source_id": "01-bedroom-handdrawn.jpg",
+      "digest_sha256": "442aa0f13d7450516d34845ecae97704512da1d73043122771f4513cc39d89ff",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:10:27.788Z"
+    },
+    {
+      "id": "ev-wall-little-vertical",
+      "source_id": "01-bedroom-handdrawn.jpg",
+      "digest_sha256": "442aa0f13d7450516d34845ecae97704512da1d73043122771f4513cc39d89ff",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:10:27.788Z"
+    },
+    {
+      "id": "ev-wall-bottom",
+      "source_id": "01-bedroom-handdrawn.jpg",
+      "digest_sha256": "442aa0f13d7450516d34845ecae97704512da1d73043122771f4513cc39d89ff",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:10:27.788Z"
+    },
+    {
+      "id": "ev-wall-left",
+      "source_id": "01-bedroom-handdrawn.jpg",
+      "digest_sha256": "442aa0f13d7450516d34845ecae97704512da1d73043122771f4513cc39d89ff",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:10:27.788Z"
+    },
+    {
+      "id": "ev-portal-1",
+      "source_id": "01-bedroom-handdrawn.jpg",
+      "digest_sha256": "442aa0f13d7450516d34845ecae97704512da1d73043122771f4513cc39d89ff",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:10:27.788Z"
+    },
+    {
+      "id": "ev-equip-wardrobe",
+      "source_id": "01-bedroom-handdrawn.jpg",
+      "digest_sha256": "442aa0f13d7450516d34845ecae97704512da1d73043122771f4513cc39d89ff",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:10:27.788Z"
+    },
+    {
+      "id": "ev-equip-double-bunk-beds",
+      "source_id": "01-bedroom-handdrawn.jpg",
+      "digest_sha256": "442aa0f13d7450516d34845ecae97704512da1d73043122771f4513cc39d89ff",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:10:27.788Z"
+    },
+    {
+      "id": "ev-equip-computer-desk",
+      "source_id": "01-bedroom-handdrawn.jpg",
+      "digest_sha256": "442aa0f13d7450516d34845ecae97704512da1d73043122771f4513cc39d89ff",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:10:27.788Z"
+    },
+    {
+      "id": "ev-equip-shelving-units",
+      "source_id": "01-bedroom-handdrawn.jpg",
+      "digest_sha256": "442aa0f13d7450516d34845ecae97704512da1d73043122771f4513cc39d89ff",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:10:27.788Z"
+    },
+    {
+      "id": "ev-equip-shelving-drawers",
+      "source_id": "01-bedroom-handdrawn.jpg",
+      "digest_sha256": "442aa0f13d7450516d34845ecae97704512da1d73043122771f4513cc39d89ff",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:10:27.788Z"
+    },
+    {
+      "id": "ev-equip-cupboard",
+      "source_id": "01-bedroom-handdrawn.jpg",
+      "digest_sha256": "442aa0f13d7450516d34845ecae97704512da1d73043122771f4513cc39d89ff",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:10:27.788Z"
+    }
+  ],
+  "unresolved": [
+    "Overall site width/depth are estimated from scale bar 5cm=1m and figured dims; exact outer dimensions not labeled",
+    "Height not shown anywhere, set to null",
+    "Wardrobe door swing symbol on inner edge 0.8m - is it furniture door vs room door ambiguous",
+    "Computer desk and shelving units boundaries overlap slightly in hand sketch - exact partition unclear",
+    "Cupboard extent along bottom wall not dimensioned, inferred from angled line label",
+    "Thickness of walls not shown",
+    "Site height assumed: 2.7 m via explicit user assumption (not observed).",
+    "Scale provenance: scale bar bottom right shows 0m to 1m with note 5cm=1m; figured dimensions visible: wardrobe 0.7m, wardrobe door 0.8m, computer desk 1.2m x 0.7m, shelving units 1.9m x 0.5m, double bunk beds 0.9m width x 2.1m length, shelving/drawers 0.4m, door 0.8m. Overall width/depth estimated from these dims and scale bar count; height not shown."
+  ]
+}

@@ -1,0 +1,955 @@
+{
+  "schema_id": "mapped-assembly.space-ir",
+  "schema_version": "0.1.0",
+  "id": "fieldops-08-barnimstrasse-prison-cell.png",
+  "revision": "r1",
+  "site": {
+    "frame_id": "world",
+    "width_m": 18,
+    "depth_m": 14,
+    "height_m": 2.7
+  },
+  "frames": [
+    {
+      "id": "world",
+      "units": "m",
+      "axes": "XZ"
+    }
+  ],
+  "regions": [
+    {
+      "id": "room-administration",
+      "kind": "zone",
+      "label": "Administration",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -7.3260000000000005,
+          -4.984
+        ],
+        [
+          -3.7800000000000002,
+          -4.984
+        ],
+        [
+          -3.7800000000000002,
+          0.9799999999999993
+        ],
+        [
+          -7.3260000000000005,
+          0.9799999999999993
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-administration"
+      ]
+    },
+    {
+      "id": "room-porter-s-residence",
+      "kind": "zone",
+      "label": "Porter's residence",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -7.3260000000000005,
+          3.01
+        ],
+        [
+          -6.047999999999999,
+          3.01
+        ],
+        [
+          -6.047999999999999,
+          6.062000000000001
+        ],
+        [
+          -7.3260000000000005,
+          6.062000000000001
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-porter-s-residence"
+      ]
+    },
+    {
+      "id": "room-housekeeping-building",
+      "kind": "zone",
+      "label": "Housekeeping building",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -3.744,
+          4.0040000000000004
+        ],
+        [
+          1.6019999999999994,
+          4.0040000000000004
+        ],
+        [
+          1.6019999999999994,
+          6.0760000000000005
+        ],
+        [
+          -3.744,
+          6.0760000000000005
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-housekeeping-building"
+      ]
+    },
+    {
+      "id": "room-cell-wing",
+      "kind": "zone",
+      "label": "Cell wing",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -3.5100000000000002,
+          -4.928
+        ],
+        [
+          4.374,
+          -4.928
+        ],
+        [
+          4.374,
+          3.7520000000000002
+        ],
+        [
+          -3.5100000000000002,
+          3.7520000000000002
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-cell-wing"
+      ]
+    },
+    {
+      "id": "room-hospital",
+      "kind": "zone",
+      "label": "Hospital",
+      "frame_id": "world",
+      "polygon": [
+        [
+          4.3919999999999995,
+          -4.942
+        ],
+        [
+          8.28,
+          -4.942
+        ],
+        [
+          8.28,
+          -0.6999999999999998
+        ],
+        [
+          4.3919999999999995,
+          -0.6999999999999998
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-hospital"
+      ]
+    },
+    {
+      "id": "room-atrium",
+      "kind": "outdoor",
+      "label": "Atrium",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -6.047999999999999,
+          2.3240000000000007
+        ],
+        [
+          -3.744,
+          2.3240000000000007
+        ],
+        [
+          -3.744,
+          6.062000000000001
+        ],
+        [
+          -6.047999999999999,
+          6.062000000000001
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-atrium"
+      ]
+    },
+    {
+      "id": "room-staff-courtyard",
+      "kind": "outdoor",
+      "label": "Staff courtyard",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -5.652,
+          -2.786
+        ],
+        [
+          -4.446,
+          -2.786
+        ],
+        [
+          -4.446,
+          0.3640000000000003
+        ],
+        [
+          -5.652,
+          0.3640000000000003
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-staff-courtyard"
+      ]
+    },
+    {
+      "id": "room-walking-yard-north",
+      "kind": "outdoor",
+      "label": "Walking yard north",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -3.276,
+          -3.1919999999999997
+        ],
+        [
+          2.3760000000000003,
+          -3.1919999999999997
+        ],
+        [
+          2.3760000000000003,
+          -0.7279999999999999
+        ],
+        [
+          -3.276,
+          -0.7279999999999999
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-walking-yard-north"
+      ]
+    },
+    {
+      "id": "room-walking-yard-south",
+      "kind": "outdoor",
+      "label": "Walking yard south",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -3.312,
+          2.5760000000000005
+        ],
+        [
+          1.5479999999999994,
+          2.5760000000000005
+        ],
+        [
+          1.5479999999999994,
+          3.934
+        ],
+        [
+          -3.312,
+          3.934
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-walking-yard-south"
+      ]
+    },
+    {
+      "id": "room-walking-yard-hospital",
+      "kind": "outdoor",
+      "label": "Walking yard hospital",
+      "frame_id": "world",
+      "polygon": [
+        [
+          3.0060000000000007,
+          -3.066
+        ],
+        [
+          7.074,
+          -3.066
+        ],
+        [
+          7.074,
+          2.7719999999999994
+        ],
+        [
+          3.0060000000000007,
+          2.7719999999999994
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-walking-yard-hospital"
+      ]
+    },
+    {
+      "id": "room-extension",
+      "kind": "outdoor",
+      "label": "Extension",
+      "frame_id": "world",
+      "polygon": [
+        [
+          1.6199999999999994,
+          -0.6999999999999998
+        ],
+        [
+          8.28,
+          -0.6999999999999998
+        ],
+        [
+          8.28,
+          5.768000000000001
+        ],
+        [
+          1.6199999999999994,
+          5.768000000000001
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-extension"
+      ]
+    },
+    {
+      "id": "room-matron",
+      "kind": "room",
+      "label": "Matron",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -7.146000000000001,
+          -4.83
+        ],
+        [
+          -6.624,
+          -4.83
+        ],
+        [
+          -6.624,
+          -3.5140000000000002
+        ],
+        [
+          -7.146000000000001,
+          -3.5140000000000002
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-matron"
+      ]
+    },
+    {
+      "id": "room-accounting",
+      "kind": "room",
+      "label": "Accounting",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -6.462,
+          -4.83
+        ],
+        [
+          -5.382,
+          -4.83
+        ],
+        [
+          -5.382,
+          -3.99
+        ],
+        [
+          -6.462,
+          -3.99
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-accounting"
+      ]
+    },
+    {
+      "id": "room-intake-cells-lower",
+      "kind": "zone",
+      "label": "Intake cells lower",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -4.247999999999999,
+          2.016
+        ],
+        [
+          -3.33,
+          2.016
+        ],
+        [
+          -3.33,
+          3.388
+        ],
+        [
+          -4.247999999999999,
+          3.388
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-intake-cells-lower"
+      ]
+    },
+    {
+      "id": "room-kitchen",
+      "kind": "room",
+      "label": "Kitchen",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -1.7639999999999996,
+          4.242000000000001
+        ],
+        [
+          -0.3600000000000003,
+          4.242000000000001
+        ],
+        [
+          -0.3600000000000003,
+          5.502000000000001
+        ],
+        [
+          -1.7639999999999996,
+          5.502000000000001
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-kitchen"
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "id": "wall-north-wall-administration",
+      "kind": "wall",
+      "region_ids": [
+        "room-administration"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -7.3260000000000005,
+          -4.984
+        ],
+        [
+          -3.7800000000000002,
+          -4.984
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-north-wall-administration"
+      ]
+    },
+    {
+      "id": "wall-north-wall-cell-wing",
+      "kind": "wall",
+      "region_ids": [
+        "room-cell-wing"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -3.7800000000000002,
+          -4.97
+        ],
+        [
+          4.374,
+          -4.97
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-north-wall-cell-wing"
+      ]
+    },
+    {
+      "id": "wall-north-wall-hospital",
+      "kind": "wall",
+      "region_ids": [
+        "room-hospital"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          4.374,
+          -4.9559999999999995
+        ],
+        [
+          8.28,
+          -4.9559999999999995
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-north-wall-hospital"
+      ]
+    },
+    {
+      "id": "wall-south-wall-housekeeping",
+      "kind": "wall",
+      "region_ids": [
+        "room-housekeeping-building"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -7.308000000000001,
+          6.062000000000001
+        ],
+        [
+          1.6019999999999994,
+          6.062000000000001
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-south-wall-housekeeping"
+      ]
+    },
+    {
+      "id": "wall-east-wall-hospital",
+      "kind": "wall",
+      "region_ids": [
+        "room-hospital"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          8.261999999999999,
+          -4.942
+        ],
+        [
+          8.261999999999999,
+          -0.7419999999999999
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-east-wall-hospital"
+      ]
+    },
+    {
+      "id": "wall-west-wall-administration",
+      "kind": "wall",
+      "region_ids": [
+        "room-administration"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -7.3260000000000005,
+          -4.984
+        ],
+        [
+          -7.3260000000000005,
+          0.9659999999999993
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-west-wall-administration"
+      ]
+    },
+    {
+      "id": "wall-west-wall-porters",
+      "kind": "wall",
+      "region_ids": [
+        "room-porter-s-residence"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -7.3260000000000005,
+          3.01
+        ],
+        [
+          -7.3260000000000005,
+          6.062000000000001
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-west-wall-porters"
+      ]
+    },
+    {
+      "id": "wall-division-between-administration-and-cell-wing",
+      "kind": "partition",
+      "region_ids": [
+        "room-administration",
+        "room-cell-wing"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -3.7980000000000005,
+          -4.984
+        ],
+        [
+          -3.7980000000000005,
+          0.9799999999999993
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-division-between-administration-and-cell-wing"
+      ]
+    },
+    {
+      "id": "wall-division-between-cell-wing-and-hospital",
+      "kind": "partition",
+      "region_ids": [
+        "room-cell-wing",
+        "room-hospital"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          4.374,
+          -4.942
+        ],
+        [
+          4.374,
+          -0.7419999999999999
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-division-between-cell-wing-and-hospital"
+      ]
+    },
+    {
+      "id": "wall-north-wall-of-housekeeping-building",
+      "kind": "wall",
+      "region_ids": [
+        "room-housekeeping-building"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -3.744,
+          4.0040000000000004
+        ],
+        [
+          1.6019999999999994,
+          4.0040000000000004
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-north-wall-of-housekeeping-building"
+      ]
+    },
+    {
+      "id": "wall-east-wall-extension",
+      "kind": "wall",
+      "region_ids": [
+        "room-extension"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          8.244,
+          -0.6999999999999998
+        ],
+        [
+          8.244,
+          5.768000000000001
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-east-wall-extension"
+      ]
+    }
+  ],
+  "portals": [
+    {
+      "id": "portal-1",
+      "kind": "passage",
+      "boundary_id": "wall-division-between-administration-and-cell-wing",
+      "connects": [
+        "room-administration",
+        "room-cell-wing"
+      ],
+      "span": [
+        0.45,
+        0.55
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-1"
+      ]
+    },
+    {
+      "id": "portal-2",
+      "kind": "passage",
+      "boundary_id": "wall-division-between-cell-wing-and-hospital",
+      "connects": [
+        "room-cell-wing",
+        "room-hospital"
+      ],
+      "span": [
+        0.4,
+        0.52
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-2"
+      ]
+    },
+    {
+      "id": "portal-3",
+      "kind": "door",
+      "boundary_id": "wall-north-wall-of-housekeeping-building",
+      "connects": [
+        "room-housekeeping-building"
+      ],
+      "span": [
+        0.2,
+        0.26
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-3"
+      ]
+    }
+  ],
+  "spatial_relations": [],
+  "occupancies": [],
+  "constraints": [],
+  "evidence": [
+    {
+      "id": "ev-room-administration",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-room-porter-s-residence",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-room-housekeeping-building",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-room-cell-wing",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-room-hospital",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-room-atrium",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-room-staff-courtyard",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-room-walking-yard-north",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-room-walking-yard-south",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-room-walking-yard-hospital",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-room-extension",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-room-matron",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-room-accounting",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-room-intake-cells-lower",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-room-kitchen",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-wall-north-wall-administration",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-wall-north-wall-cell-wing",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-wall-north-wall-hospital",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-wall-south-wall-housekeeping",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-wall-east-wall-hospital",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-wall-west-wall-administration",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-wall-west-wall-porters",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-wall-division-between-administration-and-cell-wing",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-wall-division-between-cell-wing-and-hospital",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-wall-north-wall-of-housekeeping-building",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-wall-east-wall-extension",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-portal-1",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-portal-2",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    },
+    {
+      "id": "ev-portal-3",
+      "source_id": "08-barnimstrasse-prison-cell.png",
+      "digest_sha256": "e224fa3736e2145cc8e325faffc1d70bd3d3782a8dfd2f85bb89540d69fae621",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:12:46.210Z"
+    }
+  ],
+  "unresolved": [
+    "Overall site width/depth not dimensioned as single figure; total computed from partial dimensions requires assumption",
+    "Heights of all walls not shown; plan is 2D only",
+    "Individual cell internal walls and doors not fully measurable; many small cells 17+11+8+3+2+27 etc labelled only by count",
+    "Exact connectivity of passages, stairs, and extension boundaries ambiguous due to dashed lines (upper/lower levels)",
+    "Unreadable small dimension figures inside cells (e.g., 3.07, 4.75, 2.16, 2.65 etc) and label 'a: Woman attendant and tea kitchen, b: Rinsing cell, c: 1 Prisoner with infant' locations",
+    "Wall thickness not dimensioned",
+    "Atrium vs Walking yards vs Extension outdoor/enclosed status uncertain",
+    "Furniture/fixtures footprints not shown except schematic Shower/Bathtub symbols in lower left grey area",
+    "Site height assumed: 2.7 m via explicit user assumption (not observed).",
+    "Scale provenance: User-assumed footprint 18x14 m (explicit --assume-size; not observed). Scale bar 0-20 m visible top-right with north arrow; many figured dimensions present (e.g., Cell wing top 131.87, Hospital depth 20.88, bottom 9.52+21.56+42.08=73.16, single cells 3.4x2.37 etc) but no single overall bounding width/depth dimensioned; heights not shown anywhere."
+  ]
+}

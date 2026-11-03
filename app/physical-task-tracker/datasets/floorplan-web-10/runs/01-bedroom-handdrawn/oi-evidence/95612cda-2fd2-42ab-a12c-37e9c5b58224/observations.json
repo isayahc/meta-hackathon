@@ -1,0 +1,371 @@
+{
+  "site": {
+    "width_m": 3.5,
+    "depth_m": 3.8,
+    "height_m": null
+  },
+  "siteEvidence": "scale bar bottom right shows 0m to 1m with note 5cm=1m; figured dimensions visible: wardrobe 0.7m, wardrobe door 0.8m, computer desk 1.2m x 0.7m, shelving units 1.9m x 0.5m, double bunk beds 0.9m width x 2.1m length, shelving/drawers 0.4m, door 0.8m. Overall width/depth estimated from these dims and scale bar count; height not shown.",
+  "rooms": [
+    {
+      "label": "Bedroom",
+      "kind": "room",
+      "polygon": [
+        [
+          0.024,
+          0.092
+        ],
+        [
+          0.694,
+          0.092
+        ],
+        [
+          0.694,
+          0.552
+        ],
+        [
+          0.802,
+          0.552
+        ],
+        [
+          0.802,
+          0.762
+        ],
+        [
+          0.631,
+          0.762
+        ],
+        [
+          0.631,
+          0.836
+        ],
+        [
+          0.024,
+          0.836
+        ]
+      ],
+      "status": "observed"
+    }
+  ],
+  "walls": [
+    {
+      "label": "top",
+      "kind": "wall",
+      "regions": [
+        "Bedroom"
+      ],
+      "path": [
+        [
+          0.024,
+          0.092
+        ],
+        [
+          0.694,
+          0.092
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "right upper",
+      "kind": "wall",
+      "regions": [
+        "Bedroom"
+      ],
+      "path": [
+        [
+          0.694,
+          0.092
+        ],
+        [
+          0.694,
+          0.552
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "mid horizontal",
+      "kind": "wall",
+      "regions": [
+        "Bedroom"
+      ],
+      "path": [
+        [
+          0.694,
+          0.552
+        ],
+        [
+          0.802,
+          0.552
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "door wall",
+      "kind": "wall",
+      "regions": [
+        "Bedroom"
+      ],
+      "path": [
+        [
+          0.802,
+          0.552
+        ],
+        [
+          0.802,
+          0.762
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "corridor bottom",
+      "kind": "wall",
+      "regions": [
+        "Bedroom"
+      ],
+      "path": [
+        [
+          0.802,
+          0.762
+        ],
+        [
+          0.631,
+          0.762
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "little vertical",
+      "kind": "wall",
+      "regions": [
+        "Bedroom"
+      ],
+      "path": [
+        [
+          0.631,
+          0.762
+        ],
+        [
+          0.631,
+          0.836
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "bottom",
+      "kind": "wall",
+      "regions": [
+        "Bedroom"
+      ],
+      "path": [
+        [
+          0.631,
+          0.836
+        ],
+        [
+          0.024,
+          0.836
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "left",
+      "kind": "wall",
+      "regions": [
+        "Bedroom"
+      ],
+      "path": [
+        [
+          0.024,
+          0.836
+        ],
+        [
+          0.024,
+          0.092
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    }
+  ],
+  "openings": [
+    {
+      "wall": 3,
+      "kind": "door",
+      "span": [
+        0.05,
+        0.95
+      ],
+      "traversable": true,
+      "status": "observed"
+    }
+  ],
+  "equipment": [
+    {
+      "label": "Wardrobe",
+      "region": "Bedroom",
+      "polygon": [
+        [
+          0.024,
+          0.092
+        ],
+        [
+          0.176,
+          0.092
+        ],
+        [
+          0.176,
+          0.298
+        ],
+        [
+          0.024,
+          0.298
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Double Bunk Beds",
+      "region": "Bedroom",
+      "polygon": [
+        [
+          0.024,
+          0.298
+        ],
+        [
+          0.243,
+          0.298
+        ],
+        [
+          0.243,
+          0.836
+        ],
+        [
+          0.024,
+          0.836
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Computer Desk",
+      "region": "Bedroom",
+      "polygon": [
+        [
+          0.328,
+          0.092
+        ],
+        [
+          0.6,
+          0.092
+        ],
+        [
+          0.6,
+          0.284
+        ],
+        [
+          0.328,
+          0.284
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Shelving Units",
+      "region": "Bedroom",
+      "polygon": [
+        [
+          0.6,
+          0.092
+        ],
+        [
+          0.694,
+          0.092
+        ],
+        [
+          0.694,
+          0.552
+        ],
+        [
+          0.6,
+          0.552
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Shelving Drawers",
+      "region": "Bedroom",
+      "polygon": [
+        [
+          0.286,
+          0.723
+        ],
+        [
+          0.372,
+          0.723
+        ],
+        [
+          0.372,
+          0.836
+        ],
+        [
+          0.286,
+          0.836
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Cupboard",
+      "region": "Bedroom",
+      "polygon": [
+        [
+          0.372,
+          0.82
+        ],
+        [
+          0.631,
+          0.82
+        ],
+        [
+          0.631,
+          0.836
+        ],
+        [
+          0.372,
+          0.836
+        ]
+      ],
+      "status": "inferred"
+    }
+  ],
+  "unresolved": [
+    "Overall site width/depth are estimated from scale bar 5cm=1m and figured dims; exact outer dimensions not labeled",
+    "Height not shown anywhere, set to null",
+    "Wardrobe door swing symbol on inner edge 0.8m - is it furniture door vs room door ambiguous",
+    "Computer desk and shelving units boundaries overlap slightly in hand sketch - exact partition unclear",
+    "Cupboard extent along bottom wall not dimensioned, inferred from angled line label",
+    "Thickness of walls not shown"
+  ]
+}

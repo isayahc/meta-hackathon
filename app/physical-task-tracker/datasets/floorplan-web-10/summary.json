@@ -1,0 +1,344 @@
+{
+  "generated_at": "2026-11-03T17:13:24.369Z",
+  "assume_size": "18x14",
+  "assume_height_m": 2.7,
+  "totals": {
+    "ok": 10,
+    "failed": 0,
+    "prompt_tokens": 31090,
+    "completion_tokens": 48764,
+    "total_tokens": 79854
+  },
+  "results": [
+    {
+      "id": "01-bedroom-handdrawn",
+      "ok": true,
+      "attempts": 2,
+      "ms": 21485,
+      "scene_id": "95612cda-2fd2-42ab-a12c-37e9c5b58224",
+      "revision": 1,
+      "understanding": {
+        "rooms": 1,
+        "walls": 8,
+        "openings": 1,
+        "equipment": 6,
+        "unresolved": 6,
+        "nullGeometry": 0,
+        "scaled": true
+      },
+      "findings": 0,
+      "diagnostics": 22,
+      "usage": {
+        "completion_tokens": 5057,
+        "prompt_tokens": 4535,
+        "total_tokens": 9592,
+        "completion_tokens_details": {
+          "reasoning_tokens": 3564
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 4451
+        }
+      },
+      "model": "muse-spark-1.1",
+      "promptVersion": "floorplan-v5",
+      "observations": "oi-evidence/95612cda-2fd2-42ab-a12c-37e9c5b58224/observations.json"
+    },
+    {
+      "id": "02-benin-house",
+      "ok": true,
+      "attempts": 2,
+      "ms": 28831,
+      "scene_id": "2d2dbd1c-e938-4c76-871e-c2f7dbad733c",
+      "revision": 1,
+      "understanding": {
+        "rooms": 13,
+        "walls": 47,
+        "openings": 7,
+        "equipment": 0,
+        "unresolved": 8,
+        "nullGeometry": 0,
+        "scaled": true
+      },
+      "findings": 0,
+      "diagnostics": 57,
+      "usage": {
+        "completion_tokens": 10252,
+        "prompt_tokens": 4553,
+        "total_tokens": 14805,
+        "completion_tokens_details": {
+          "reasoning_tokens": 3573
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 483
+        }
+      },
+      "model": "muse-spark-1.1",
+      "promptVersion": "floorplan-v5",
+      "observations": "oi-evidence/2d2dbd1c-e938-4c76-871e-c2f7dbad733c/observations.json"
+    },
+    {
+      "id": "03-bilik-biru",
+      "ok": true,
+      "attempts": 1,
+      "ms": 14641,
+      "scene_id": "330f4dda-29a2-47bb-9593-d50f72b88fd8",
+      "revision": 1,
+      "understanding": {
+        "rooms": 1,
+        "walls": 4,
+        "openings": 0,
+        "equipment": 9,
+        "unresolved": 8,
+        "nullGeometry": 0,
+        "scaled": true
+      },
+      "findings": 0,
+      "diagnostics": 23,
+      "usage": {
+        "completion_tokens": 3122,
+        "prompt_tokens": 1443,
+        "total_tokens": 4565,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1399
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 483
+        }
+      },
+      "model": "muse-spark-1.1",
+      "promptVersion": "floorplan-v5",
+      "observations": "oi-evidence/330f4dda-29a2-47bb-9593-d50f72b88fd8/observations.json"
+    },
+    {
+      "id": "04-denah-lantai1",
+      "ok": true,
+      "attempts": 1,
+      "ms": 15161,
+      "scene_id": "844a78ee-8cb5-4a81-91c1-fb286b8dac89",
+      "revision": 1,
+      "understanding": {
+        "rooms": 10,
+        "walls": 10,
+        "openings": 4,
+        "equipment": 2,
+        "unresolved": 9,
+        "nullGeometry": 0,
+        "scaled": true
+      },
+      "findings": 0,
+      "diagnostics": 23,
+      "usage": {
+        "completion_tokens": 3509,
+        "prompt_tokens": 4190,
+        "total_tokens": 7699,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1197
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 483
+        }
+      },
+      "model": "muse-spark-1.1",
+      "promptVersion": "floorplan-v5",
+      "observations": "oi-evidence/844a78ee-8cb5-4a81-91c1-fb286b8dac89/observations.json"
+    },
+    {
+      "id": "05-affordable-palace-1-500",
+      "ok": true,
+      "attempts": 1,
+      "ms": 12802,
+      "scene_id": "7e7b82c7-d91b-4d99-8897-0e314159f7cf",
+      "revision": 1,
+      "understanding": {
+        "rooms": 2,
+        "walls": 8,
+        "openings": 0,
+        "equipment": 0,
+        "unresolved": 8,
+        "nullGeometry": 0,
+        "scaled": true
+      },
+      "findings": 0,
+      "diagnostics": 18,
+      "usage": {
+        "completion_tokens": 2150,
+        "prompt_tokens": 4565,
+        "total_tokens": 6715,
+        "completion_tokens_details": {
+          "reasoning_tokens": 948
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 355
+        }
+      },
+      "model": "muse-spark-1.1",
+      "promptVersion": "floorplan-v5",
+      "observations": "oi-evidence/7e7b82c7-d91b-4d99-8897-0e314159f7cf/observations.json"
+    },
+    {
+      "id": "06-areal-domu",
+      "ok": true,
+      "attempts": 1,
+      "ms": 22574,
+      "scene_id": "87d0f62a-ba8c-49be-81cd-c9d0d7060c91",
+      "revision": 1,
+      "understanding": {
+        "rooms": 5,
+        "walls": 29,
+        "openings": 10,
+        "equipment": 2,
+        "unresolved": 9,
+        "nullGeometry": 0,
+        "scaled": true
+      },
+      "findings": 0,
+      "diagnostics": 42,
+      "usage": {
+        "completion_tokens": 7301,
+        "prompt_tokens": 4561,
+        "total_tokens": 11862,
+        "completion_tokens_details": {
+          "reasoning_tokens": 3120
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 483
+        }
+      },
+      "model": "muse-spark-1.1",
+      "promptVersion": "floorplan-v5",
+      "observations": "oi-evidence/87d0f62a-ba8c-49be-81cd-c9d0d7060c91/observations.json"
+    },
+    {
+      "id": "07-bently-reserve-office",
+      "ok": true,
+      "attempts": 1,
+      "ms": 14979,
+      "scene_id": "b071fb55-f901-46c3-ab8b-f766703d1010",
+      "revision": 1,
+      "understanding": {
+        "rooms": 14,
+        "walls": 16,
+        "openings": 10,
+        "equipment": 0,
+        "unresolved": 7,
+        "nullGeometry": 0,
+        "scaled": true
+      },
+      "findings": 0,
+      "diagnostics": 25,
+      "usage": {
+        "completion_tokens": 4327,
+        "prompt_tokens": 1179,
+        "total_tokens": 5506,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1080
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 483
+        }
+      },
+      "model": "muse-spark-1.1",
+      "promptVersion": "floorplan-v5",
+      "observations": "oi-evidence/b071fb55-f901-46c3-ab8b-f766703d1010/observations.json"
+    },
+    {
+      "id": "08-barnimstrasse-prison-cell",
+      "ok": true,
+      "attempts": 1,
+      "ms": 16221,
+      "scene_id": "fd280ed4-6466-46aa-a7a8-7b29979566c1",
+      "revision": 1,
+      "understanding": {
+        "rooms": 15,
+        "walls": 11,
+        "openings": 3,
+        "equipment": 0,
+        "unresolved": 8,
+        "nullGeometry": 0,
+        "scaled": true
+      },
+      "findings": 0,
+      "diagnostics": 21,
+      "usage": {
+        "completion_tokens": 3811,
+        "prompt_tokens": 2777,
+        "total_tokens": 6588,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1829
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 483
+        }
+      },
+      "model": "muse-spark-1.1",
+      "promptVersion": "floorplan-v5",
+      "observations": "oi-evidence/fd280ed4-6466-46aa-a7a8-7b29979566c1/observations.json"
+    },
+    {
+      "id": "09-areas-room-for-rent",
+      "ok": true,
+      "attempts": 1,
+      "ms": 17746,
+      "scene_id": "a5f7c14d-51af-49d5-8106-e00341baba8c",
+      "revision": 1,
+      "understanding": {
+        "rooms": 6,
+        "walls": 12,
+        "openings": 3,
+        "equipment": 3,
+        "unresolved": 7,
+        "nullGeometry": 3,
+        "scaled": true
+      },
+      "findings": 3,
+      "diagnostics": 25,
+      "usage": {
+        "completion_tokens": 4578,
+        "prompt_tokens": 2054,
+        "total_tokens": 6632,
+        "completion_tokens_details": {
+          "reasoning_tokens": 2234
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 483
+        }
+      },
+      "model": "muse-spark-1.1",
+      "promptVersion": "floorplan-v5",
+      "observations": "oi-evidence/a5f7c14d-51af-49d5-8106-e00341baba8c/observations.json"
+    },
+    {
+      "id": "10-aquileia-superposed",
+      "ok": true,
+      "attempts": 1,
+      "ms": 16181,
+      "scene_id": "dc61af58-17ea-404c-838b-21ddbd9a0522",
+      "revision": 1,
+      "understanding": {
+        "rooms": 6,
+        "walls": 19,
+        "openings": 0,
+        "equipment": 0,
+        "unresolved": 8,
+        "nullGeometry": 0,
+        "scaled": true
+      },
+      "findings": 0,
+      "diagnostics": 29,
+      "usage": {
+        "completion_tokens": 4657,
+        "prompt_tokens": 1233,
+        "total_tokens": 5890,
+        "completion_tokens_details": {
+          "reasoning_tokens": 2022
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 483
+        }
+      },
+      "model": "muse-spark-1.1",
+      "promptVersion": "floorplan-v5",
+      "observations": "oi-evidence/dc61af58-17ea-404c-838b-21ddbd9a0522/observations.json"
+    }
+  ]
+}

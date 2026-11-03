@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="687" viewBox="0 0 760 687">
+<rect x="0" y="0" width="760" height="687" fill="#ffffff"/>
+<text x="12" y="24" font-family="sans-serif" font-size="16" font-weight="bold" fill="#111827">05-affordable-palace-1-500</text>
+<text x="12" y="44" font-family="sans-serif" font-size="11" fill="#4b5563">site 18x14x2.7 m · 2 regions · 8 walls · 0 portals · 0 equipment · top-down, x=+X east, y=−Z north</text>
+<g transform="translate(716,100)"><circle r="16" fill="#f3f4f6" stroke="#9ca3af"/><path d="M0,10 L0,-10 M-6,-3 L0,-10 L6,-3" stroke="#111827" stroke-width="2" fill="none"/><text y="-20" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">N</text></g>
+<rect x="52.41" y="106.77" width="655.17" height="509.58" fill="none" stroke="#9ca3af" stroke-dasharray="6,4"><title>site 18x14x2.7 m</title></rect>
+<polygon points="167.72,489.97 581.79,489.97 581.79,226.01 167.72,226.01" fill="#dcfce7" stroke="#16a34a" stroke-width="1"><title>room-courtyard (outdoor)</title></polygon>
+<text x="374.76" y="357.99" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">courtyard</text>
+<polygon points="84.52,555.7 662.38,555.7 662.38,168.43 84.52,168.43" fill="#fef3c7" stroke="#d97706" stroke-width="1"><title>room-building-ring (zone)</title></polygon>
+<text x="373.45" y="362.07" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">building_ring</text>
+<polyline data-layer="boundary" points="84.52,555.7 662.38,555.7" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-outer-north (wall)</title></polyline>
+<polyline data-layer="boundary" points="662.38,555.7 662.38,168.43" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-outer-east (wall)</title></polyline>
+<polyline data-layer="boundary" points="662.38,168.43 84.52,168.43" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-outer-south (wall)</title></polyline>
+<polyline data-layer="boundary" points="84.52,168.43 84.52,555.7" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-outer-west (wall)</title></polyline>
+<polyline data-layer="boundary" points="167.72,489.97 581.79,489.97" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-inner-north (wall)</title></polyline>
+<polyline data-layer="boundary" points="581.79,489.97 581.79,226.01" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-inner-east (wall)</title></polyline>
+<polyline data-layer="boundary" points="581.79,226.01 167.72,226.01" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-inner-south (wall)</title></polyline>
+<polyline data-layer="boundary" points="167.72,226.01 167.72,489.97" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-inner-west (wall)</title></polyline>
+<g><rect x="564.01" y="640" width="181.99" height="5" fill="#111827"/><text x="655.005" y="636" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#111827">5 m</text></g>
+<text x="12" y="677" font-family="sans-serif" font-size="10" fill="#6b7280">10 unresolved notes</text>
+</svg>

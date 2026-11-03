@@ -1,0 +1,335 @@
+{
+  "site": {
+    "width_m": 18,
+    "depth_m": 14,
+    "height_m": null
+  },
+  "siteEvidence": "User-assumed footprint 18x14 m (explicit --assume-size; not observed). No scale bar, north arrow with dimensions, or figured measurements visible; image is a schematic furniture layout titled LAYOUT BANGUNAN ISTANA ARAU BILIK BIRU with only normalized positions.",
+  "rooms": [
+    {
+      "label": "BILIK BIRU",
+      "kind": "room",
+      "polygon": [
+        [
+          0.051,
+          0.246
+        ],
+        [
+          0.957,
+          0.246
+        ],
+        [
+          0.957,
+          0.922
+        ],
+        [
+          0.051,
+          0.922
+        ]
+      ],
+      "status": "observed"
+    }
+  ],
+  "walls": [
+    {
+      "label": "north wall",
+      "kind": "wall",
+      "regions": [
+        "BILIK BIRU"
+      ],
+      "path": [
+        [
+          0.051,
+          0.246
+        ],
+        [
+          0.957,
+          0.246
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "east wall",
+      "kind": "wall",
+      "regions": [
+        "BILIK BIRU"
+      ],
+      "path": [
+        [
+          0.957,
+          0.246
+        ],
+        [
+          0.957,
+          0.922
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "south wall",
+      "kind": "wall",
+      "regions": [
+        "BILIK BIRU"
+      ],
+      "path": [
+        [
+          0.957,
+          0.922
+        ],
+        [
+          0.051,
+          0.922
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "west wall",
+      "kind": "wall",
+      "regions": [
+        "BILIK BIRU"
+      ],
+      "path": [
+        [
+          0.051,
+          0.922
+        ],
+        [
+          0.051,
+          0.246
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    }
+  ],
+  "openings": [],
+  "equipment": [
+    {
+      "label": "table or cabinet small top-left 1",
+      "region": "BILIK BIRU",
+      "polygon": [
+        [
+          0.144,
+          0.319
+        ],
+        [
+          0.19,
+          0.319
+        ],
+        [
+          0.19,
+          0.352
+        ],
+        [
+          0.144,
+          0.352
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "table or cabinet small top-left 2",
+      "region": "BILIK BIRU",
+      "polygon": [
+        [
+          0.144,
+          0.358
+        ],
+        [
+          0.19,
+          0.358
+        ],
+        [
+          0.19,
+          0.392
+        ],
+        [
+          0.144,
+          0.392
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "table or cabinet mid-left",
+      "region": "BILIK BIRU",
+      "polygon": [
+        [
+          0.132,
+          0.42
+        ],
+        [
+          0.201,
+          0.42
+        ],
+        [
+          0.201,
+          0.495
+        ],
+        [
+          0.132,
+          0.495
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "table central north",
+      "region": "BILIK BIRU",
+      "polygon": [
+        [
+          0.392,
+          0.311
+        ],
+        [
+          0.583,
+          0.311
+        ],
+        [
+          0.583,
+          0.361
+        ],
+        [
+          0.392,
+          0.361
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "display or opening north-east red outline",
+      "region": "BILIK BIRU",
+      "polygon": [
+        [
+          0.744,
+          0.286
+        ],
+        [
+          0.91,
+          0.286
+        ],
+        [
+          0.91,
+          0.299
+        ],
+        [
+          0.744,
+          0.299
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "stage or front table south full width",
+      "region": "BILIK BIRU",
+      "polygon": [
+        [
+          0.05,
+          0.9
+        ],
+        [
+          0.961,
+          0.9
+        ],
+        [
+          0.961,
+          0.921
+        ],
+        [
+          0.05,
+          0.921
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "display or opening south-central red outline",
+      "region": "BILIK BIRU",
+      "polygon": [
+        [
+          0.352,
+          0.892
+        ],
+        [
+          0.594,
+          0.892
+        ],
+        [
+          0.594,
+          0.905
+        ],
+        [
+          0.352,
+          0.905
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "chairs left block 30 units",
+      "region": "BILIK BIRU",
+      "polygon": [
+        [
+          0.111,
+          0.575
+        ],
+        [
+          0.368,
+          0.575
+        ],
+        [
+          0.368,
+          0.84
+        ],
+        [
+          0.111,
+          0.84
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "chairs right block 30 units",
+      "region": "BILIK BIRU",
+      "polygon": [
+        [
+          0.518,
+          0.575
+        ],
+        [
+          0.774,
+          0.575
+        ],
+        [
+          0.774,
+          0.84
+        ],
+        [
+          0.518,
+          0.84
+        ]
+      ],
+      "status": "observed"
+    }
+  ],
+  "unresolved": [
+    "Scale and absolute dimensions unknown: no scale bar or figured dimensions.",
+    "Height unknown: plan only.",
+    "Thin horizontal line inside north wall at y~0.288 spanning full width: function unclear, may be inner wall or projection screen line.",
+    "Red-outlined rectangles at north-east and south-center: ambiguous whether they are doors, windows, projection screens, or equipment; treated as equipment but could be openings.",
+    "Long blue bar at extreme south overlapping south wall: ambiguous whether it is wall thickening, stage, or front table; treated as equipment.",
+    "Individual chair footprints visible but grouped into block polygons to avoid excessive enumeration; exact chair counts 5x6 per block = 30 each observed but precise per-chair coordinates not measured.",
+    "No traversable openings can be confirmed; entry/exit location unknown.",
+    "Wall thickness and material not readable."
+  ]
+}

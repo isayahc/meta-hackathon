@@ -3,7 +3,7 @@
 //
 //   node dist/task-floorplan.js <image> --root <dir> [--spot <id>] [--goal <id>]
 //     [--scene-name <n>] [--observations <file>] [--print-prompt] [--mock-oi]
-//     [--benchmark] [--out <file>]
+//     [--assume-height <m>] [--assume-size <WxD>] [--benchmark] [--out <file>]
 //
 // stdout is pure JSON (the server parses it); notes go to stderr.
 // Env: META_API_KEY/BASE/MODEL (model calls), OI_ROOT (live OI runs),
@@ -15,16 +15,19 @@ import { fileURLToPath } from 'node:url';
 import { flagValue } from './lib/args.js';
 import { loadEnvSync } from './lib/env.js';
 import {
+  buildFloorplanPrompt,
   buildRequestBody,
   extractAnalysis,
   resolveApiKey,
   postApi,
   DEFAULT_MAX_TOKENS,
+  FLOORPLAN_PROMPT_VERSION,
 } from './lib/analyze-response.js';
 import {
   OiError,
   OiMockTransport,
   OiRunnerTransport,
+  applySizeAssumption,
   buildSpaceIr,
   readOiIdentity,
   resolveOiRoot,
@@ -48,28 +51,11 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const API_BASE = process.env.META_API_BASE ?? 'https://api.meta.ai/v1';
 const MODEL = process.env.MUSE_MODEL ?? 'muse-spark-1.1';
 
-export const FLOORPLAN_PROMPT_VERSION = 'floorplan-v1';
-
-export function buildFloorplanPrompt(): string {
-  return `You are the vision layer of a Field Ops task tracker reading a floor-plan image.
-Report ONLY what the drawing shows. Reply with strict JSON, no markdown fences:
-{
-  "site": {"width_m": 0, "depth_m": 0, "height_m": 0} or null,
-  "siteEvidence": "where any dimensions came from, or why scale is unknown",
-  "rooms": [{"label": "name", "kind": "room|zone|outdoor|volume", "polygon": [[0,0]] or null, "status": "observed|inferred"}],
-  "walls": [{"label": "name", "kind": "wall|partition", "regions": ["room label", "optional second"], "path": [[[0,0],[1,1]]] or null, "thickness_m": 0 or null, "height_m": 0 or null, "status": "observed|inferred"}],
-  "openings": [{"wall": 0, "kind": "door|passage|window|gate", "span": [0.4, 0.6], "traversable": true, "status": "observed|inferred"}],
-  "equipment": [{"label": "name", "region": "room label", "polygon": [[0,0]] or null, "status": "observed|inferred"}],
-  "unresolved": ["what you cannot tell: missing scale, unreadable labels, ambiguous connectivity"]
-}
-Rules: polygons/paths are normalized [0,1] plan coordinates with origin top-left. "wall" is a wall-array index. Spans are fractions along the wall within [0,1]. NEVER invent dimensions: site null when no scale bar or figured dimensions are visible; geometry null when unmeasurable; put every ambiguity in unresolved. Equipment is furniture/fixtures with visible footprints. Walls reference room labels exactly.`;
-}
-
 const args = process.argv.slice(2);
 
 if (args.includes('--help') || args.includes('-h')) {
   console.log(
-    'Usage: node task-floorplan.js <image> --root <dir> [--spot <id>] [--goal <id>] [--scene-name <n>] [--observations <file>] [--print-prompt] [--mock-oi] [--benchmark] [--out <file>]'
+    'Usage: node task-floorplan.js <image> --root <dir> [--spot <id>] [--goal <id>] [--scene-name <n>] [--observations <file>] [--print-prompt] [--mock-oi] [--assume-height <m>] [--assume-size <WxD>] [--benchmark] [--out <file>]'
   );
   process.exit(0);
 }
@@ -137,6 +123,24 @@ function understandingOf(obs: FloorPlanObservations): Record<string, unknown> {
     nullGeometry: nullGeo,
     scaled: obs.site !== null,
   };
+}
+
+// Failed-observation evidence: the exact model output plus the validation
+// verdict, so a shape failure can be diagnosed from values, not messages.
+async function writeFailureEvidence(
+  projectRoot: string,
+  observations: FloorPlanObservations,
+  source: { sourceId: string; digestSha256: string },
+  model: string,
+  promptVersion: string,
+  err: OiError
+): Promise<string> {
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const dir = join(projectRoot, 'oi-evidence', `failed-${stamp}`);
+  await mkdir(dir, { recursive: true });
+  await writeFile(join(dir, 'observations.json'), JSON.stringify(observations, null, 2));
+  await writeFile(join(dir, 'error.json'), JSON.stringify({ code: err.code, message: err.message, source, model, promptVersion }, null, 2));
+  return dir;
 }
 
 async function writeEvidence(flow: FloorPlanFlowResult, extra: Record<string, unknown>): Promise<string> {
@@ -252,7 +256,7 @@ async function runBenchmark(): Promise<void> {
 }
 
 async function runFlow(): Promise<void> {
-  const valueFlags = new Set(['--root', '--spot', '--goal', '--scene-name', '--observations', '--out']);
+  const valueFlags = new Set(['--root', '--spot', '--goal', '--scene-name', '--observations', '--out', '--assume-height', '--assume-size']);
   let image: string | null = null;
   for (let i = 0; i < args.length; i++) {
     const a = args[i] as string;
@@ -266,6 +270,22 @@ async function runFlow(): Promise<void> {
   const spot = flagValue(args, '--spot', null);
   const goal = flagValue(args, '--goal', null);
   const sceneName = flagValue(args, '--scene-name', null) ?? undefined;
+  const assumeHeightRaw = flagValue(args, '--assume-height', null);
+  const assumedHeightM = assumeHeightRaw === null ? null : Number(assumeHeightRaw);
+  if (assumedHeightM !== null && (!Number.isFinite(assumedHeightM) || assumedHeightM <= 0)) {
+    fail(`--assume-height must be a positive number of meters (got "${assumeHeightRaw}").`, 'ARGS');
+  }
+  const assumeSizeRaw = flagValue(args, '--assume-size', null);
+  let assumedSize: { width_m: number; depth_m: number } | null = null;
+  if (assumeSizeRaw !== null) {
+    const m = assumeSizeRaw.trim().match(/^(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)$/i);
+    const w = m ? Number(m[1]) : NaN;
+    const d = m ? Number(m[2]) : NaN;
+    if (!m || !Number.isFinite(w) || !Number.isFinite(d) || w <= 0 || d <= 0) {
+      fail(`--assume-size must look like WIDTHxDEPTH in meters, e.g. 12x9 (got "${assumeSizeRaw}").`, 'ARGS');
+    }
+    assumedSize = { width_m: w, depth_m: d };
+  }
 
   const { transport } = await makeTransport();
 
@@ -302,22 +322,40 @@ async function runFlow(): Promise<void> {
     const result = extractAnalysis(await res.json());
     if (!result.ok) {
       console.error(`Model analysis failed [${result.code}]: ${result.error}`);
+      if (result.usage) console.error(`usage: ${JSON.stringify(result.usage)}`);
       if (result.raw) console.error(`--- raw model output ---\n${result.raw}`);
       process.exit(1);
     }
+    if (result.usage) console.error(`model usage: ${JSON.stringify(result.usage)}`);
     const analysis = result.analysis as unknown;
     observations = (typeof analysis === 'string' ? JSON.parse(analysis) : analysis) as FloorPlanObservations;
   }
 
   // Builder errors are actionable (bad model JSON shape); OI verdicts pass through.
+  // Explicit footprint assumption: observed sites always win over the flag.
+  const hadNoSite = observations.site === null;
+  if (hadNoSite && assumedSize === null) {
+    fail('Site scale is unknown: pass --assume-size <WIDTHxDEPTH> (meters) to record an explicit assumption, or supply site dimensions.', 'OBS_MISSING_SIZE');
+  }
+  const sizeAssumptionM = hadNoSite && assumedSize !== null ? { width_m: assumedSize.width_m, depth_m: assumedSize.depth_m } : null;
+  if (sizeAssumptionM !== null) {
+    observations = applySizeAssumption(observations, sizeAssumptionM.width_m, sizeAssumptionM.depth_m);
+    console.error(`Assuming site footprint ${sizeAssumptionM.width_m}x${sizeAssumptionM.depth_m} m via explicit --assume-size (recorded in evidence).`);
+  }
+  // Effective height assumption: observed heights always win over the flag.
+  const heightAssumptionM = observations.site !== null && observations.site.height_m == null ? assumedHeightM : null;
   let spaceCheck;
   try {
-    spaceCheck = buildSpaceIr(observations, { sourceId, digestSha256: digest });
+    spaceCheck = buildSpaceIr(observations, { sourceId, digestSha256: digest }, { assumedHeightM: heightAssumptionM ?? undefined });
     void spaceCheck;
   } catch (e) {
-    if (e instanceof OiError) fail(`${e.message} (model output shape)`, e.code);
+    if (e instanceof OiError) {
+      const failedDir = await writeFailureEvidence(projectRoot, observations, { sourceId, digestSha256: digest }, model, FLOORPLAN_PROMPT_VERSION, e);
+      fail(`${e.message} (model output shape; evidence: ${failedDir})`, e.code);
+    }
     throw e;
   }
+  if (heightAssumptionM !== null) console.error(`Assuming site height ${heightAssumptionM} m via explicit --assume-height (recorded in evidence).`);
 
   const flow = await runFloorPlanFlow({
     observations,
@@ -329,10 +367,12 @@ async function runFlow(): Promise<void> {
       workbenchOrigin: workbenchOrigin(),
       sceneName: sceneName ?? `fieldops-${sourceId}-${new Date().toISOString().slice(0, 10)}`,
       requestId: randomUUID(),
+      assumedHeightM: assumedHeightM ?? undefined,
     },
     transport,
   });
-  const evidenceDir = await writeEvidence(flow, { source: { sourceId, digestSha256: digest }, model, promptVersion: FLOORPLAN_PROMPT_VERSION });
+  const evidenceDir = await writeEvidence(flow, { source: { sourceId, digestSha256: digest }, model, promptVersion: FLOORPLAN_PROMPT_VERSION, heightAssumptionM, sizeAssumptionM });
+  await writeFile(join(evidenceDir, 'observations.json'), JSON.stringify(observations, null, 2));
   const linked = await linkResult(flow, spot, goal);
   await emit({
     ok: true,

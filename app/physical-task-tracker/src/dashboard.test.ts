@@ -8,7 +8,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { mkdtemp, mkdir, readdir, rm, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createServer, loadSpots, buildFeed, waitForOk, fetchRemote } from './serve-dashboard.js';
+import { createServer, loadSpots, buildFeed, waitForOk, fetchRemote, primaryError } from './serve-dashboard.js';
 import { addGoal, listGoals } from './lib/goals.js';
 import { initSpot, appendSession } from './lib/spot-state.js';
 import { setDoc } from './lib/db.js';
@@ -288,6 +288,8 @@ test('dashboard page carries the Space tab', async () => {
   assert.match(html, /data-view="space"/);
   assert.match(html, /id="spaceform"/);
   assert.match(html, /\/api\/floorplan/);
+  assert.match(html, /name="assumeheight"/);
+  assert.match(html, /name="assumesize"/);
 });
 
 test('floorplan: observations + mock OI build a space and link the spot', async (t: TestContext) => {
@@ -316,4 +318,107 @@ test('floorplan: missing image and bad spot are 400, never shelled', async (t: T
   const noImage = await call(root, 'POST', '/api/floorplan', {});
   assert.equal(noImage.status, 400);
   assert.match(noImage.json.error, /data URL/);
+});
+
+test('primaryError strips runtime warnings so the failure leads', () => {
+  const stderr = [
+    '(node:10928) ExperimentalWarning: SQLite is an experimental feature and might change at any time',
+    '(Use `node --trace-warnings ...` to show where the warning was created)',
+    "Model analysis failed [truncated]: Response truncated (finish_reason='length').",
+    'usage: {"completion_tokens":16384}',
+  ].join('\n');
+  const msg = primaryError(stderr, 'fallback');
+  assert.ok(!msg.includes('ExperimentalWarning'));
+  assert.ok(!msg.includes('(node:'));
+  assert.ok(msg.startsWith('Model analysis failed'));
+  assert.match(msg, /usage:/);
+  assert.equal(primaryError('', 'fallback'), 'fallback');
+  assert.equal(primaryError('(node:1) ExperimentalWarning: x\n', 'fallback'), 'fallback');
+});
+
+test('floorplan: CLI failure surfaces the actual error, not runtime warnings', async (t: TestContext) => {
+  const root = await scratch(t);
+  const r = await call(root, 'POST', '/api/floorplan', {
+    observations: { site: { width_m: 8, depth_m: 6, height_m: 2.7 }, rooms: [], walls: [{ regions: ['ghost'], path: null }], openings: [], equipment: [], unresolved: [] },
+    mockOi: true,
+  });
+  assert.equal(r.status, 502);
+  assert.match(r.json.error, /^task-floorplan\.js: /);
+  assert.match(r.json.error, /ERROR \[OBS_UNRESOLVED_REFERENCE\]/);
+  const leading = r.json.error.slice(0, r.json.error.indexOf('ERROR [OBS_UNRESOLVED_REFERENCE]'));
+  assert.doesNotMatch(leading, /ExperimentalWarning|\(node:\d+\)/);
+  assert.doesNotMatch(r.json.error, /ExperimentalWarning|\(node:\d+\)/);
+});
+
+test('floorplan: bad assumeHeight is 400, never shelled', async (t: TestContext) => {
+  const root = await scratch(t);
+  const bad = await call(root, 'POST', '/api/floorplan', {
+    observations: { site: null, rooms: [], walls: [], openings: [], equipment: [], unresolved: [] },
+    assumeHeight: 'high',
+    mockOi: true,
+  });
+  assert.equal(bad.status, 400);
+  assert.match(bad.json.error, /assumeHeight/);
+  assert.equal((await readdir(root)).includes('oi-evidence'), false);
+});
+
+test('floorplan: missing height reads as unknown, bad height as malformed', async (t: TestContext) => {
+  const root = await scratch(t);
+  const base = { site: null, rooms: [], walls: [], openings: [], equipment: [], unresolved: [] };
+  const missing = await call(root, 'POST', '/api/floorplan', {
+    observations: { ...base, site: { width_m: 8, depth_m: 6, height_m: null } },
+    mockOi: true,
+  });
+  assert.equal(missing.status, 502);
+  assert.match(missing.json.error, /OBS_MISSING_HEIGHT/);
+  assert.match(missing.json.error, /unknown/);
+  const malformed = await call(root, 'POST', '/api/floorplan', {
+    observations: { ...base, site: { width_m: 8, depth_m: 6, height_m: 'tall' } },
+    mockOi: true,
+  });
+  assert.equal(malformed.status, 502);
+  assert.match(malformed.json.error, /OBS_BAD_SHAPE/);
+  assert.match(malformed.json.error, /string "tall"/);
+});
+
+test('floorplan: posted observations reach evidence byte-identical', async (t: TestContext) => {
+  const root = await scratch(t);
+  const sent = {
+    site: { width_m: 8, depth_m: 6, height_m: 2.7 },
+    rooms: [{ label: 'solo', polygon: null }],
+    walls: [{ label: 'w', regions: ['solo'], path: [[[0, 0], [1, 1]]] }],
+    openings: [],
+    equipment: [],
+    unresolved: [],
+  };
+  const r = await call(root, 'POST', '/api/floorplan', { observations: sent, mockOi: true });
+  assert.equal(r.status, 502);
+  assert.match(r.json.error, /OBS_BAD_SHAPE/);
+  const failed = (await readdir(join(root, 'oi-evidence'))).find((d) => d.startsWith('failed-'));
+  assert.ok(failed, 'expected a failed-* evidence dir');
+  const saved = JSON.parse(await readFile(join(root, 'oi-evidence', failed, 'observations.json'), 'utf8'));
+  assert.deepEqual(saved, sent);
+});
+
+test('floorplan: bad assumeSize is 400, never shelled', async (t: TestContext) => {
+  const root = await scratch(t);
+  const bad = await call(root, 'POST', '/api/floorplan', {
+    observations: { site: null, rooms: [], walls: [], openings: [], equipment: [], unresolved: [] },
+    assumeSize: 'big',
+    mockOi: true,
+  });
+  assert.equal(bad.status, 400);
+  assert.match(bad.json.error, /assumeSize/);
+  assert.equal((await readdir(root)).includes('oi-evidence'), false);
+});
+
+test('floorplan: unknown scale fails fast with guidance', async (t: TestContext) => {
+  const root = await scratch(t);
+  const r = await call(root, 'POST', '/api/floorplan', {
+    observations: { site: null, rooms: [], walls: [], openings: [], equipment: [], unresolved: [] },
+    mockOi: true,
+  });
+  assert.equal(r.status, 502);
+  assert.match(r.json.error, /OBS_MISSING_SIZE/);
+  assert.match(r.json.error, /assume-size/);
 });

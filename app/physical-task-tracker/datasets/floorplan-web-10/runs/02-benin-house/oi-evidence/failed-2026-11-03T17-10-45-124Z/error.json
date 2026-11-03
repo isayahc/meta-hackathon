@@ -1,0 +1,10 @@
+{
+  "code": "OBS_BAD_SHAPE",
+  "message": "Wall 0 must reference one or two regions.",
+  "source": {
+    "sourceId": "02-benin-house.jpg",
+    "digestSha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976"
+  },
+  "model": "muse-spark-1.1",
+  "promptVersion": "floorplan-v5"
+}

@@ -1,0 +1,847 @@
+{
+  "schema_id": "mapped-assembly.space-ir",
+  "schema_version": "0.1.0",
+  "id": "fieldops-04-denah-lantai1.png",
+  "revision": "r1",
+  "site": {
+    "frame_id": "world",
+    "width_m": 18,
+    "depth_m": 14,
+    "height_m": 2.7
+  },
+  "frames": [
+    {
+      "id": "world",
+      "units": "m",
+      "axes": "XZ"
+    }
+  ],
+  "regions": [
+    {
+      "id": "room-mezanine-room",
+      "kind": "room",
+      "label": "MEZANINE_ROOM",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -8.405999999999999,
+          2.6319999999999992
+        ],
+        [
+          -6.3,
+          2.6319999999999992
+        ],
+        [
+          -6.3,
+          3.9760000000000004
+        ],
+        [
+          -8.405999999999999,
+          3.9760000000000004
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-mezanine-room"
+      ]
+    },
+    {
+      "id": "room-cell-block",
+      "kind": "room",
+      "label": "CELL_BLOCK",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -4.644,
+          -3.3179999999999996
+        ],
+        [
+          -1.242,
+          -3.3179999999999996
+        ],
+        [
+          -1.242,
+          -0.2240000000000002
+        ],
+        [
+          -4.644,
+          -0.2240000000000002
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-cell-block"
+      ]
+    },
+    {
+      "id": "room-admin-central",
+      "kind": "room",
+      "label": "ADMIN_CENTRAL",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -1.206,
+          -2.982
+        ],
+        [
+          1.187999999999999,
+          -2.982
+        ],
+        [
+          1.187999999999999,
+          -0.2100000000000002
+        ],
+        [
+          -1.206,
+          -0.2100000000000002
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-admin-central"
+      ]
+    },
+    {
+      "id": "room-corridor-main",
+      "kind": "zone",
+      "label": "CORRIDOR_MAIN",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -4.95,
+          -3.612
+        ],
+        [
+          4.968,
+          -3.612
+        ],
+        [
+          4.968,
+          -2.926
+        ],
+        [
+          -4.95,
+          -2.926
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-corridor-main"
+      ]
+    },
+    {
+      "id": "room-courtyard-hatched",
+      "kind": "outdoor",
+      "label": "COURTYARD_HATCHED",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -4.41,
+          0.8260000000000007
+        ],
+        [
+          0.6480000000000006,
+          0.8260000000000007
+        ],
+        [
+          0.6480000000000006,
+          3.2199999999999998
+        ],
+        [
+          -4.41,
+          3.2199999999999998
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-courtyard-hatched"
+      ]
+    },
+    {
+      "id": "room-right-wing-upper",
+      "kind": "room",
+      "label": "RIGHT_WING_UPPER",
+      "frame_id": "world",
+      "polygon": [
+        [
+          3.4739999999999993,
+          -5.109999999999999
+        ],
+        [
+          5.238,
+          -5.109999999999999
+        ],
+        [
+          5.238,
+          -3.346
+        ],
+        [
+          3.4739999999999993,
+          -3.346
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-right-wing-upper"
+      ]
+    },
+    {
+      "id": "room-right-wing-middle",
+      "kind": "room",
+      "label": "RIGHT_WING_MIDDLE",
+      "frame_id": "world",
+      "polygon": [
+        [
+          3.258000000000001,
+          -2.926
+        ],
+        [
+          4.734,
+          -2.926
+        ],
+        [
+          4.734,
+          4.088000000000001
+        ],
+        [
+          3.258000000000001,
+          4.088000000000001
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-right-wing-middle"
+      ]
+    },
+    {
+      "id": "room-right-wing-east",
+      "kind": "room",
+      "label": "RIGHT_WING_EAST",
+      "frame_id": "world",
+      "polygon": [
+        [
+          4.914000000000001,
+          -2.786
+        ],
+        [
+          6.8580000000000005,
+          -2.786
+        ],
+        [
+          6.8580000000000005,
+          6.2299999999999995
+        ],
+        [
+          4.914000000000001,
+          6.2299999999999995
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-right-wing-east"
+      ]
+    },
+    {
+      "id": "room-left-top-room",
+      "kind": "room",
+      "label": "LEFT_TOP_ROOM",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -6.966,
+          -5.054
+        ],
+        [
+          -5.238,
+          -5.054
+        ],
+        [
+          -5.238,
+          -2.744
+        ],
+        [
+          -6.966,
+          -2.744
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-left-top-room"
+      ]
+    },
+    {
+      "id": "room-bottom-l1-area",
+      "kind": "room",
+      "label": "BOTTOM_L1_AREA",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -1.4400000000000004,
+          3.8640000000000003
+        ],
+        [
+          2.6820000000000004,
+          3.8640000000000003
+        ],
+        [
+          2.6820000000000004,
+          6.062000000000001
+        ],
+        [
+          -1.4400000000000004,
+          6.062000000000001
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-bottom-l1-area"
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "id": "wall-w-cell-west",
+      "kind": "wall",
+      "region_ids": [
+        "room-cell-block"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -4.644,
+          -3.3179999999999996
+        ],
+        [
+          -4.644,
+          -0.2240000000000002
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-w-cell-west"
+      ]
+    },
+    {
+      "id": "wall-w-cell-south",
+      "kind": "wall",
+      "region_ids": [
+        "room-cell-block"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -4.644,
+          -0.2240000000000002
+        ],
+        [
+          -1.242,
+          -0.2240000000000002
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-w-cell-south"
+      ]
+    },
+    {
+      "id": "wall-w-cell-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-cell-block",
+        "room-corridor-main"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -4.644,
+          -3.3179999999999996
+        ],
+        [
+          -1.242,
+          -3.3179999999999996
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-w-cell-north"
+      ]
+    },
+    {
+      "id": "wall-w-cell-east",
+      "kind": "wall",
+      "region_ids": [
+        "room-cell-block",
+        "room-admin-central"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.242,
+          -3.3179999999999996
+        ],
+        [
+          -1.242,
+          -0.2240000000000002
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-w-cell-east"
+      ]
+    },
+    {
+      "id": "wall-w-admin-south",
+      "kind": "wall",
+      "region_ids": [
+        "room-admin-central"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.206,
+          -0.2100000000000002
+        ],
+        [
+          1.187999999999999,
+          -0.2100000000000002
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-w-admin-south"
+      ]
+    },
+    {
+      "id": "wall-w-corridor-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-corridor-main"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -4.95,
+          -3.612
+        ],
+        [
+          4.968,
+          -3.612
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-w-corridor-north"
+      ]
+    },
+    {
+      "id": "wall-w-east-wing-west",
+      "kind": "wall",
+      "region_ids": [
+        "room-right-wing-middle",
+        "room-right-wing-east"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          4.914000000000001,
+          -2.786
+        ],
+        [
+          4.914000000000001,
+          6.2299999999999995
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-w-east-wing-west"
+      ]
+    },
+    {
+      "id": "wall-w-east-wing-east",
+      "kind": "wall",
+      "region_ids": [
+        "room-right-wing-east"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          6.8580000000000005,
+          -2.786
+        ],
+        [
+          6.8580000000000005,
+          6.2299999999999995
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-w-east-wing-east"
+      ]
+    },
+    {
+      "id": "wall-w-mz-west",
+      "kind": "wall",
+      "region_ids": [
+        "room-mezanine-room"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -8.405999999999999,
+          2.6319999999999992
+        ],
+        [
+          -8.405999999999999,
+          3.9760000000000004
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-w-mz-west"
+      ]
+    },
+    {
+      "id": "wall-w-mz-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-mezanine-room"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -8.405999999999999,
+          2.6319999999999992
+        ],
+        [
+          -6.3,
+          2.6319999999999992
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-w-mz-north"
+      ]
+    }
+  ],
+  "portals": [
+    {
+      "id": "portal-1",
+      "kind": "door",
+      "boundary_id": "wall-w-cell-north",
+      "connects": [
+        "room-cell-block",
+        "room-corridor-main"
+      ],
+      "span": [
+        0.35,
+        0.42
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-1"
+      ]
+    },
+    {
+      "id": "portal-2",
+      "kind": "door",
+      "boundary_id": "wall-w-cell-west",
+      "connects": [
+        "room-cell-block"
+      ],
+      "span": [
+        0.6,
+        0.7
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-2"
+      ]
+    },
+    {
+      "id": "portal-3",
+      "kind": "door",
+      "boundary_id": "wall-w-corridor-north",
+      "connects": [
+        "room-corridor-main"
+      ],
+      "span": [
+        0.48,
+        0.52
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-3"
+      ]
+    },
+    {
+      "id": "portal-4",
+      "kind": "passage",
+      "boundary_id": "wall-w-east-wing-west",
+      "connects": [
+        "room-right-wing-middle",
+        "room-right-wing-east"
+      ],
+      "span": [
+        0.45,
+        0.55
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-4"
+      ]
+    }
+  ],
+  "spatial_relations": [],
+  "occupancies": [
+    {
+      "id": "equip-holding-cells-5",
+      "region_id": "room-cell-block",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -4.3919999999999995,
+          -2.128
+        ],
+        [
+          -1.5120000000000005,
+          -2.128
+        ],
+        [
+          -1.5120000000000005,
+          -1.3859999999999997
+        ],
+        [
+          -4.3919999999999995,
+          -1.3859999999999997
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-holding-cells-5"
+      ]
+    },
+    {
+      "id": "equip-furniture-magenta",
+      "region_id": "room-admin-central",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -1.1520000000000001,
+          -1.5959999999999999
+        ],
+        [
+          0.03600000000000003,
+          -1.5959999999999999
+        ],
+        [
+          0.03600000000000003,
+          -0.9520000000000001
+        ],
+        [
+          -1.1520000000000001,
+          -0.9520000000000001
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-furniture-magenta"
+      ]
+    }
+  ],
+  "constraints": [],
+  "evidence": [
+    {
+      "id": "ev-room-mezanine-room",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-room-cell-block",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-room-admin-central",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-room-corridor-main",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-room-courtyard-hatched",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-room-right-wing-upper",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-room-right-wing-middle",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-room-right-wing-east",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-room-left-top-room",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-room-bottom-l1-area",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-wall-w-cell-west",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-wall-w-cell-south",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-wall-w-cell-north",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-wall-w-cell-east",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-wall-w-admin-south",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-wall-w-corridor-north",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-wall-w-east-wing-west",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-wall-w-east-wing-east",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-wall-w-mz-west",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-wall-w-mz-north",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-portal-1",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-portal-2",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-portal-3",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-portal-4",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-equip-holding-cells-5",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    },
+    {
+      "id": "ev-equip-furniture-magenta",
+      "source_id": "04-denah-lantai1.png",
+      "digest_sha256": "7bce766e99ef1722f61d05d1157bc023861793d5e7ec7626a1ed66466492534e",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:39.763Z"
+    }
+  ],
+  "unresolved": [
+    "Overall building width/depth/height not dimensioned; 1:100 scale noted but no scale bar",
+    "All room labels (TL.01 etc) red/magenta text unreadable at this resolution - functional names inferred",
+    "Exact wall thickness, height, and construction type not shown",
+    "Door/window positions ambiguous due to low resolution and crowded annotation",
+    "Mezzanine small inset connectivity to main Level 1 not clear",
+    "Outdoor dotted hatch areas vs interior ambiguous - assumed outdoor courtyard",
+    "Right wing subdivisions (multiple small labs/toilets) labels unreadable, grouped into zones",
+    "Polygon coordinates are approximate normalized estimates",
+    "Equipment footprints (pink rectangles) are schematic, not exact",
+    "Site height assumed: 2.7 m via explicit user assumption (not observed).",
+    "Scale provenance: User-assumed footprint 18x14 m (explicit --assume-size; not observed). Drawing titled DENAH LANTAI MEZANINE 1:100 and DENAH LANTAI 1 1:100 shows scale ratios but no figured overall dimensions, no scale bar with metric values, and no dimension lines for building width/depth/height."
+  ]
+}

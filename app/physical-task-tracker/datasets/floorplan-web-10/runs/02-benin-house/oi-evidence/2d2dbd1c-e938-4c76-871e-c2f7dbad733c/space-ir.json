@@ -1,0 +1,2128 @@
+{
+  "schema_id": "mapped-assembly.space-ir",
+  "schema_version": "0.1.0",
+  "id": "fieldops-02-benin-house.jpg",
+  "revision": "r1",
+  "site": {
+    "frame_id": "world",
+    "width_m": 18,
+    "depth_m": 14,
+    "height_m": 2.7
+  },
+  "frames": [
+    {
+      "id": "world",
+      "units": "m",
+      "axes": "XZ"
+    }
+  ],
+  "regions": [
+    {
+      "id": "room-1-entrance-court",
+      "kind": "zone",
+      "label": "1. entrance court",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -1.7459999999999996,
+          6.678
+        ],
+        [
+          -1.7459999999999996,
+          3.416
+        ],
+        [
+          0.30600000000000027,
+          3.416
+        ],
+        [
+          0.30600000000000027,
+          4.704
+        ],
+        [
+          5.975999999999999,
+          4.704
+        ],
+        [
+          5.975999999999999,
+          3.36
+        ],
+        [
+          8.352,
+          3.36
+        ],
+        [
+          8.352,
+          6.678
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-1-entrance-court"
+      ]
+    },
+    {
+      "id": "room-2-porch",
+      "kind": "room",
+      "label": "2. porch",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -1.6740000000000004,
+          3.3179999999999996
+        ],
+        [
+          0.27000000000000024,
+          3.3179999999999996
+        ],
+        [
+          0.27000000000000024,
+          4.6339999999999995
+        ],
+        [
+          -1.6740000000000004,
+          4.6339999999999995
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-2-porch"
+      ]
+    },
+    {
+      "id": "room-3-altar",
+      "kind": "room",
+      "label": "3. altar",
+      "frame_id": "world",
+      "polygon": [
+        [
+          6.029999999999999,
+          3.2619999999999996
+        ],
+        [
+          8.334,
+          3.2619999999999996
+        ],
+        [
+          8.334,
+          6.51
+        ],
+        [
+          6.029999999999999,
+          6.51
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-3-altar"
+      ]
+    },
+    {
+      "id": "room-4-reception-court",
+      "kind": "zone",
+      "label": "4. reception court",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -1.7099999999999995,
+          -1.6239999999999999
+        ],
+        [
+          8.334,
+          -1.6239999999999999
+        ],
+        [
+          8.334,
+          3.1919999999999997
+        ],
+        [
+          5.975999999999999,
+          3.1919999999999997
+        ],
+        [
+          5.975999999999999,
+          4.6339999999999995
+        ],
+        [
+          0.30600000000000027,
+          4.6339999999999995
+        ],
+        [
+          0.30600000000000027,
+          3.276
+        ],
+        [
+          -1.7099999999999995,
+          3.276
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-4-reception-court"
+      ]
+    },
+    {
+      "id": "room-5-impluvium-north",
+      "kind": "zone",
+      "label": "5. impluvium north",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -0.2160000000000002,
+          -3.9200000000000004
+        ],
+        [
+          6.678,
+          -3.9200000000000004
+        ],
+        [
+          6.678,
+          -2.464
+        ],
+        [
+          -0.2160000000000002,
+          -2.464
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-5-impluvium-north"
+      ]
+    },
+    {
+      "id": "room-5-impluvium-south",
+      "kind": "zone",
+      "label": "5. impluvium south",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -0.14400000000000013,
+          0.7140000000000006
+        ],
+        [
+          6.534,
+          0.7140000000000006
+        ],
+        [
+          6.534,
+          2.1420000000000003
+        ],
+        [
+          -0.14400000000000013,
+          2.1420000000000003
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-5-impluvium-south"
+      ]
+    },
+    {
+      "id": "room-6-storage-nw",
+      "kind": "room",
+      "label": "6. storage NW",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -1.7459999999999996,
+          -5.698
+        ],
+        [
+          -0.16200000000000014,
+          -5.698
+        ],
+        [
+          -0.16200000000000014,
+          -4.494
+        ],
+        [
+          -1.7459999999999996,
+          -4.494
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-6-storage-nw"
+      ]
+    },
+    {
+      "id": "room-6-storage-n2",
+      "kind": "room",
+      "label": "6. storage N2",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -0.03600000000000003,
+          -5.684
+        ],
+        [
+          2.16,
+          -5.684
+        ],
+        [
+          2.16,
+          -4.494
+        ],
+        [
+          -0.03600000000000003,
+          -4.494
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-6-storage-n2"
+      ]
+    },
+    {
+      "id": "room-6-storage-n3",
+      "kind": "room",
+      "label": "6. storage N3",
+      "frame_id": "world",
+      "polygon": [
+        [
+          2.322,
+          -5.698
+        ],
+        [
+          4.536,
+          -5.698
+        ],
+        [
+          4.536,
+          -4.494
+        ],
+        [
+          2.322,
+          -4.494
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-6-storage-n3"
+      ]
+    },
+    {
+      "id": "room-6-storage-ne",
+      "kind": "room",
+      "label": "6. storage NE",
+      "frame_id": "world",
+      "polygon": [
+        [
+          4.68,
+          -5.698
+        ],
+        [
+          6.696,
+          -5.698
+        ],
+        [
+          6.696,
+          -4.494
+        ],
+        [
+          4.68,
+          -4.494
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-6-storage-ne"
+      ]
+    },
+    {
+      "id": "room-6-storage-central",
+      "kind": "room",
+      "label": "6. storage central",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -0.07200000000000006,
+          -1.6099999999999999
+        ],
+        [
+          2.8440000000000003,
+          -1.6099999999999999
+        ],
+        [
+          2.8440000000000003,
+          -0.5459999999999997
+        ],
+        [
+          -0.07200000000000006,
+          -0.5459999999999997
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-6-storage-central"
+      ]
+    },
+    {
+      "id": "room-6-storage-east",
+      "kind": "room",
+      "label": "6. storage east",
+      "frame_id": "world",
+      "polygon": [
+        [
+          5.867999999999999,
+          -1.666
+        ],
+        [
+          8.315999999999999,
+          -1.666
+        ],
+        [
+          8.315999999999999,
+          -0.6159999999999998
+        ],
+        [
+          5.867999999999999,
+          -0.6159999999999998
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-6-storage-east"
+      ]
+    },
+    {
+      "id": "room-7",
+      "kind": "zone",
+      "label": "7.",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -1.7279999999999995,
+          -6.72
+        ],
+        [
+          8.334,
+          -6.72
+        ],
+        [
+          8.334,
+          -1.722
+        ],
+        [
+          -1.7279999999999995,
+          -1.722
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-7"
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "id": "wall-west-outer-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-7"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.9079999999999997,
+          -6.846
+        ],
+        [
+          -1.9079999999999997,
+          -1.82
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-west-outer-north"
+      ]
+    },
+    {
+      "id": "wall-west-outer-middle",
+      "kind": "wall",
+      "region_ids": [
+        "room-4-reception-court"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.9079999999999997,
+          -1.5959999999999999
+        ],
+        [
+          -1.9079999999999997,
+          3.178
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-west-outer-middle"
+      ]
+    },
+    {
+      "id": "wall-west-outer-south",
+      "kind": "wall",
+      "region_ids": [
+        "room-1-entrance-court"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.9079999999999997,
+          3.416
+        ],
+        [
+          -1.9079999999999997,
+          6.678
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-west-outer-south"
+      ]
+    },
+    {
+      "id": "wall-north-outer",
+      "kind": "wall",
+      "region_ids": [
+        "room-7"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.9079999999999997,
+          -6.846
+        ],
+        [
+          8.514,
+          -6.846
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-north-outer"
+      ]
+    },
+    {
+      "id": "wall-east-outer-north-7",
+      "kind": "wall",
+      "region_ids": [
+        "room-7"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          8.514,
+          -6.846
+        ],
+        [
+          8.514,
+          -1.75
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-east-outer-north-7"
+      ]
+    },
+    {
+      "id": "wall-east-outer-storage-east",
+      "kind": "wall",
+      "region_ids": [
+        "room-6-storage-east"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          8.514,
+          -1.666
+        ],
+        [
+          8.514,
+          -0.6159999999999998
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-east-outer-storage-east"
+      ]
+    },
+    {
+      "id": "wall-east-outer-reception",
+      "kind": "wall",
+      "region_ids": [
+        "room-4-reception-court"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          8.514,
+          -0.6159999999999998
+        ],
+        [
+          8.514,
+          3.1919999999999997
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-east-outer-reception"
+      ]
+    },
+    {
+      "id": "wall-east-outer-altar",
+      "kind": "wall",
+      "region_ids": [
+        "room-3-altar"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          8.514,
+          3.2619999999999996
+        ],
+        [
+          8.514,
+          6.678
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-east-outer-altar"
+      ]
+    },
+    {
+      "id": "wall-south-outer-west",
+      "kind": "wall",
+      "region_ids": [
+        "room-1-entrance-court"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.9079999999999997,
+          6.678
+        ],
+        [
+          2.6100000000000003,
+          6.678
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-south-outer-west"
+      ]
+    },
+    {
+      "id": "wall-south-outer-east",
+      "kind": "wall",
+      "region_ids": [
+        "room-1-entrance-court"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          4.14,
+          6.678
+        ],
+        [
+          8.514,
+          6.678
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-south-outer-east"
+      ]
+    },
+    {
+      "id": "wall-top-storage-north-1",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-6-storage-nw"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.7459999999999996,
+          -5.796
+        ],
+        [
+          -0.16200000000000014,
+          -5.796
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-top-storage-north-1"
+      ]
+    },
+    {
+      "id": "wall-top-storage-north-2",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-6-storage-n2"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -0.03600000000000003,
+          -5.796
+        ],
+        [
+          2.16,
+          -5.796
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-top-storage-north-2"
+      ]
+    },
+    {
+      "id": "wall-top-storage-north-3",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-6-storage-n3"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          2.322,
+          -5.796
+        ],
+        [
+          4.536,
+          -5.796
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-top-storage-north-3"
+      ]
+    },
+    {
+      "id": "wall-top-storage-north-4",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-6-storage-ne"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          4.68,
+          -5.796
+        ],
+        [
+          6.696,
+          -5.796
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-top-storage-north-4"
+      ]
+    },
+    {
+      "id": "wall-top-storage-south-1",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-6-storage-nw"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.7459999999999996,
+          -4.396
+        ],
+        [
+          -0.16200000000000014,
+          -4.396
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-top-storage-south-1"
+      ]
+    },
+    {
+      "id": "wall-top-storage-south-2",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-6-storage-n2"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -0.03600000000000003,
+          -4.396
+        ],
+        [
+          2.16,
+          -4.396
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-top-storage-south-2"
+      ]
+    },
+    {
+      "id": "wall-top-storage-south-3",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-6-storage-n3"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          2.322,
+          -4.396
+        ],
+        [
+          4.536,
+          -4.396
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-top-storage-south-3"
+      ]
+    },
+    {
+      "id": "wall-top-storage-south-4",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-6-storage-ne"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          4.68,
+          -4.396
+        ],
+        [
+          6.696,
+          -4.396
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-top-storage-south-4"
+      ]
+    },
+    {
+      "id": "wall-top-storage-div-1-2",
+      "kind": "partition",
+      "region_ids": [
+        "room-6-storage-nw",
+        "room-6-storage-n2"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -0.16200000000000014,
+          -5.796
+        ],
+        [
+          -0.16200000000000014,
+          -4.396
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-top-storage-div-1-2"
+      ]
+    },
+    {
+      "id": "wall-top-storage-div-2-3",
+      "kind": "partition",
+      "region_ids": [
+        "room-6-storage-n2",
+        "room-6-storage-n3"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          2.16,
+          -5.796
+        ],
+        [
+          2.16,
+          -4.396
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-top-storage-div-2-3"
+      ]
+    },
+    {
+      "id": "wall-top-storage-div-3-4",
+      "kind": "partition",
+      "region_ids": [
+        "room-6-storage-n3",
+        "room-6-storage-ne"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          4.536,
+          -5.796
+        ],
+        [
+          4.536,
+          -4.396
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-top-storage-div-3-4"
+      ]
+    },
+    {
+      "id": "wall-top-storage-east-end",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-6-storage-ne"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          6.696,
+          -5.796
+        ],
+        [
+          6.696,
+          -4.396
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-top-storage-east-end"
+      ]
+    },
+    {
+      "id": "wall-top-storage-west-end",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-6-storage-nw"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.7459999999999996,
+          -5.796
+        ],
+        [
+          -1.7459999999999996,
+          -4.396
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-top-storage-west-end"
+      ]
+    },
+    {
+      "id": "wall-upper-impluvium-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-5-impluvium-north"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -0.2160000000000002,
+          -3.9200000000000004
+        ],
+        [
+          6.678,
+          -3.9200000000000004
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-upper-impluvium-north"
+      ]
+    },
+    {
+      "id": "wall-upper-impluvium-south",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-5-impluvium-north"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -0.2160000000000002,
+          -2.464
+        ],
+        [
+          6.678,
+          -2.464
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-upper-impluvium-south"
+      ]
+    },
+    {
+      "id": "wall-upper-impluvium-east",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-5-impluvium-north"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          6.678,
+          -3.9200000000000004
+        ],
+        [
+          6.678,
+          -2.464
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-upper-impluvium-east"
+      ]
+    },
+    {
+      "id": "wall-upper-impluvium-west",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-5-impluvium-north"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -0.2160000000000002,
+          -3.9200000000000004
+        ],
+        [
+          -0.2160000000000002,
+          -2.464
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-upper-impluvium-west"
+      ]
+    },
+    {
+      "id": "wall-lower-impluvium-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-4-reception-court",
+        "room-5-impluvium-south"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -0.14400000000000013,
+          0.7140000000000006
+        ],
+        [
+          6.534,
+          0.7140000000000006
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-lower-impluvium-north"
+      ]
+    },
+    {
+      "id": "wall-lower-impluvium-south",
+      "kind": "wall",
+      "region_ids": [
+        "room-4-reception-court",
+        "room-5-impluvium-south"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -0.14400000000000013,
+          2.1420000000000003
+        ],
+        [
+          6.534,
+          2.1420000000000003
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-lower-impluvium-south"
+      ]
+    },
+    {
+      "id": "wall-lower-impluvium-east",
+      "kind": "wall",
+      "region_ids": [
+        "room-4-reception-court",
+        "room-5-impluvium-south"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          6.534,
+          0.7140000000000006
+        ],
+        [
+          6.534,
+          2.1420000000000003
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-lower-impluvium-east"
+      ]
+    },
+    {
+      "id": "wall-lower-impluvium-west",
+      "kind": "wall",
+      "region_ids": [
+        "room-4-reception-court",
+        "room-5-impluvium-south"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -0.14400000000000013,
+          0.7140000000000006
+        ],
+        [
+          -0.14400000000000013,
+          2.1420000000000003
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-lower-impluvium-west"
+      ]
+    },
+    {
+      "id": "wall-horizontal-partition-west-left",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-4-reception-court"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -1.0259999999999998,
+          -1.722
+        ],
+        [
+          1.187999999999999,
+          -1.722
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-horizontal-partition-west-left"
+      ]
+    },
+    {
+      "id": "wall-horizontal-partition-west-mid",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-6-storage-central"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          1.4939999999999993,
+          -1.722
+        ],
+        [
+          2.8440000000000003,
+          -1.722
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-horizontal-partition-west-mid"
+      ]
+    },
+    {
+      "id": "wall-horizontal-partition-mid",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-4-reception-court"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          2.8440000000000003,
+          -1.722
+        ],
+        [
+          6.75,
+          -1.722
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-horizontal-partition-mid"
+      ]
+    },
+    {
+      "id": "wall-horizontal-partition-east",
+      "kind": "wall",
+      "region_ids": [
+        "room-7",
+        "room-4-reception-court"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          7.074,
+          -1.722
+        ],
+        [
+          8.334,
+          -1.722
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-horizontal-partition-east"
+      ]
+    },
+    {
+      "id": "wall-storage-central-north-door-wall",
+      "kind": "wall",
+      "region_ids": [
+        "room-6-storage-central"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -0.07200000000000006,
+          -1.6099999999999999
+        ],
+        [
+          2.8440000000000003,
+          -1.6099999999999999
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-storage-central-north-door-wall"
+      ]
+    },
+    {
+      "id": "wall-storage-central-west",
+      "kind": "wall",
+      "region_ids": [
+        "room-4-reception-court",
+        "room-6-storage-central"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -0.07200000000000006,
+          -1.6099999999999999
+        ],
+        [
+          -0.07200000000000006,
+          -0.5459999999999997
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-storage-central-west"
+      ]
+    },
+    {
+      "id": "wall-storage-central-east",
+      "kind": "wall",
+      "region_ids": [
+        "room-4-reception-court",
+        "room-6-storage-central"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          2.8440000000000003,
+          -1.6099999999999999
+        ],
+        [
+          2.8440000000000003,
+          -0.5459999999999997
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-storage-central-east"
+      ]
+    },
+    {
+      "id": "wall-storage-central-south",
+      "kind": "wall",
+      "region_ids": [
+        "room-4-reception-court",
+        "room-6-storage-central"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -0.07200000000000006,
+          -0.5459999999999997
+        ],
+        [
+          2.8440000000000003,
+          -0.5459999999999997
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-storage-central-south"
+      ]
+    },
+    {
+      "id": "wall-storage-east-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-4-reception-court",
+        "room-6-storage-east"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          5.867999999999999,
+          -1.666
+        ],
+        [
+          8.315999999999999,
+          -1.666
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-storage-east-north"
+      ]
+    },
+    {
+      "id": "wall-storage-east-west",
+      "kind": "wall",
+      "region_ids": [
+        "room-4-reception-court",
+        "room-6-storage-east"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          5.867999999999999,
+          -1.666
+        ],
+        [
+          5.867999999999999,
+          -0.6159999999999998
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-storage-east-west"
+      ]
+    },
+    {
+      "id": "wall-storage-east-south",
+      "kind": "wall",
+      "region_ids": [
+        "room-4-reception-court",
+        "room-6-storage-east"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          5.867999999999999,
+          -0.6159999999999998
+        ],
+        [
+          8.315999999999999,
+          -0.6159999999999998
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-storage-east-south"
+      ]
+    },
+    {
+      "id": "wall-porch-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-1-entrance-court",
+        "room-2-porch"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -0.6839999999999996,
+          3.3179999999999996
+        ],
+        [
+          0.30600000000000027,
+          3.3179999999999996
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-porch-north"
+      ]
+    },
+    {
+      "id": "wall-porch-east",
+      "kind": "wall",
+      "region_ids": [
+        "room-1-entrance-court",
+        "room-2-porch"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          0.30600000000000027,
+          3.3179999999999996
+        ],
+        [
+          0.30600000000000027,
+          4.704
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-porch-east"
+      ]
+    },
+    {
+      "id": "wall-porch-south-inner",
+      "kind": "wall",
+      "region_ids": [
+        "room-1-entrance-court",
+        "room-4-reception-court"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          0.30600000000000027,
+          4.6339999999999995
+        ],
+        [
+          5.975999999999999,
+          4.6339999999999995
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-porch-south-inner"
+      ]
+    },
+    {
+      "id": "wall-altar-west",
+      "kind": "wall",
+      "region_ids": [
+        "room-1-entrance-court",
+        "room-3-altar"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          5.975999999999999,
+          3.2619999999999996
+        ],
+        [
+          5.975999999999999,
+          4.6339999999999995
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-altar-west"
+      ]
+    },
+    {
+      "id": "wall-altar-north",
+      "kind": "wall",
+      "region_ids": [
+        "room-4-reception-court",
+        "room-3-altar"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          5.975999999999999,
+          3.2619999999999996
+        ],
+        [
+          8.334,
+          3.2619999999999996
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-altar-north"
+      ]
+    }
+  ],
+  "portals": [
+    {
+      "id": "portal-1",
+      "kind": "gate",
+      "boundary_id": "wall-south-outer-west",
+      "connects": [
+        "room-1-entrance-court"
+      ],
+      "span": [
+        0.38,
+        0.6
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-1"
+      ]
+    },
+    {
+      "id": "portal-2",
+      "kind": "passage",
+      "boundary_id": "wall-horizontal-partition-west-left",
+      "connects": [
+        "room-7",
+        "room-4-reception-court"
+      ],
+      "span": [
+        0,
+        0.25
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-2"
+      ]
+    },
+    {
+      "id": "portal-3",
+      "kind": "passage",
+      "boundary_id": "wall-horizontal-partition-east",
+      "connects": [
+        "room-7",
+        "room-4-reception-court"
+      ],
+      "span": [
+        0.25,
+        0.4
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-3"
+      ]
+    },
+    {
+      "id": "portal-4",
+      "kind": "passage",
+      "boundary_id": "wall-horizontal-partition-mid",
+      "connects": [
+        "room-7",
+        "room-4-reception-court"
+      ],
+      "span": [
+        0.75,
+        0.9
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-4"
+      ]
+    },
+    {
+      "id": "portal-5",
+      "kind": "door",
+      "boundary_id": "wall-storage-central-west",
+      "connects": [
+        "room-4-reception-court",
+        "room-6-storage-central"
+      ],
+      "span": [
+        0.35,
+        0.65
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-5"
+      ]
+    },
+    {
+      "id": "portal-6",
+      "kind": "door",
+      "boundary_id": "wall-storage-east-west",
+      "connects": [
+        "room-4-reception-court",
+        "room-6-storage-east"
+      ],
+      "span": [
+        0.35,
+        0.55
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-6"
+      ]
+    },
+    {
+      "id": "portal-7",
+      "kind": "door",
+      "boundary_id": "wall-west-outer-middle",
+      "connects": [
+        "room-4-reception-court"
+      ],
+      "span": [
+        0.88,
+        0.98
+      ],
+      "traversable": true,
+      "evidence_ids": [
+        "ev-portal-7"
+      ]
+    }
+  ],
+  "spatial_relations": [],
+  "occupancies": [],
+  "constraints": [],
+  "evidence": [
+    {
+      "id": "ev-room-1-entrance-court",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-room-2-porch",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-room-3-altar",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-room-4-reception-court",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-room-5-impluvium-north",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-room-5-impluvium-south",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-room-6-storage-nw",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-room-6-storage-n2",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-room-6-storage-n3",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-room-6-storage-ne",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-room-6-storage-central",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-room-6-storage-east",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-room-7",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-west-outer-north",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-west-outer-middle",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-west-outer-south",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-north-outer",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-east-outer-north-7",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-east-outer-storage-east",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-east-outer-reception",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-east-outer-altar",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-south-outer-west",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-south-outer-east",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-top-storage-north-1",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-top-storage-north-2",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-top-storage-north-3",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-top-storage-north-4",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-top-storage-south-1",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-top-storage-south-2",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-top-storage-south-3",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-top-storage-south-4",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-top-storage-div-1-2",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-top-storage-div-2-3",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-top-storage-div-3-4",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-top-storage-east-end",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-top-storage-west-end",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-upper-impluvium-north",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-upper-impluvium-south",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-upper-impluvium-east",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-upper-impluvium-west",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-lower-impluvium-north",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-lower-impluvium-south",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-lower-impluvium-east",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-lower-impluvium-west",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-horizontal-partition-west-left",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-horizontal-partition-west-mid",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-horizontal-partition-mid",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-horizontal-partition-east",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-storage-central-north-door-wall",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-storage-central-west",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-storage-central-east",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-storage-central-south",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-storage-east-north",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-storage-east-west",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-storage-east-south",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-porch-north",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-porch-east",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-porch-south-inner",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-altar-west",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-wall-altar-north",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-portal-1",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-portal-2",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-portal-3",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-portal-4",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-portal-5",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-portal-6",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    },
+    {
+      "id": "ev-portal-7",
+      "source_id": "02-benin-house.jpg",
+      "digest_sha256": "9bf7b48f9f97b5865a63c77ec91dd21adeda3416a223385d53b9ad35debad976",
+      "status": "inferred",
+      "captured_at": "2026-11-03T17:11:09.825Z"
+    }
+  ],
+  "unresolved": [
+    "overall scale unknown: no dimension text",
+    "height_m always null: top view only",
+    "label 7. not in legend: inferred as intermediate court/corridor between entrance and reception",
+    "topmost narrow strip between north outer wall and top storage row is treated as part of 7.",
+    "exact normalized coordinates approximate due to schematic thick lines",
+    "two blue rectangles both labeled 5. impluvium: treated as two separate zones north and south",
+    "west outer wall gaps: ambiguous whether exterior access or internal passage between 7. and 4.",
+    "door spans estimated: narrow gaps in walls are <=0.15 of wall length",
+    "Site height assumed: 2.7 m via explicit user assumption (not observed).",
+    "Scale provenance: User-assumed footprint 18x14 m (explicit --assume-size; not observed). no scale bar or figured dimensions visible; only schematic block plan with numbered zones"
+  ]
+}

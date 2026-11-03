@@ -1,0 +1,622 @@
+{
+  "site": {
+    "width_m": 18,
+    "depth_m": 14,
+    "height_m": null
+  },
+  "siteEvidence": "User-assumed footprint 18x14 m (explicit --assume-size; not observed). Scale bar 0-20 m visible top-right with north arrow; many figured dimensions present (e.g., Cell wing top 131.87, Hospital depth 20.88, bottom 9.52+21.56+42.08=73.16, single cells 3.4x2.37 etc) but no single overall bounding width/depth dimensioned; heights not shown anywhere.",
+  "rooms": [
+    {
+      "label": "Administration",
+      "kind": "zone",
+      "polygon": [
+        [
+          0.093,
+          0.144
+        ],
+        [
+          0.29,
+          0.144
+        ],
+        [
+          0.29,
+          0.57
+        ],
+        [
+          0.093,
+          0.57
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Porter's residence",
+      "kind": "zone",
+      "polygon": [
+        [
+          0.093,
+          0.715
+        ],
+        [
+          0.164,
+          0.715
+        ],
+        [
+          0.164,
+          0.933
+        ],
+        [
+          0.093,
+          0.933
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Housekeeping building",
+      "kind": "zone",
+      "polygon": [
+        [
+          0.292,
+          0.786
+        ],
+        [
+          0.589,
+          0.786
+        ],
+        [
+          0.589,
+          0.934
+        ],
+        [
+          0.292,
+          0.934
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Cell wing",
+      "kind": "zone",
+      "polygon": [
+        [
+          0.305,
+          0.148
+        ],
+        [
+          0.743,
+          0.148
+        ],
+        [
+          0.743,
+          0.768
+        ],
+        [
+          0.305,
+          0.768
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Hospital",
+      "kind": "zone",
+      "polygon": [
+        [
+          0.744,
+          0.147
+        ],
+        [
+          0.96,
+          0.147
+        ],
+        [
+          0.96,
+          0.45
+        ],
+        [
+          0.744,
+          0.45
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Atrium",
+      "kind": "outdoor",
+      "polygon": [
+        [
+          0.164,
+          0.666
+        ],
+        [
+          0.292,
+          0.666
+        ],
+        [
+          0.292,
+          0.933
+        ],
+        [
+          0.164,
+          0.933
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Staff courtyard",
+      "kind": "outdoor",
+      "polygon": [
+        [
+          0.186,
+          0.301
+        ],
+        [
+          0.253,
+          0.301
+        ],
+        [
+          0.253,
+          0.526
+        ],
+        [
+          0.186,
+          0.526
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Walking yard north",
+      "kind": "outdoor",
+      "polygon": [
+        [
+          0.318,
+          0.272
+        ],
+        [
+          0.632,
+          0.272
+        ],
+        [
+          0.632,
+          0.448
+        ],
+        [
+          0.318,
+          0.448
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Walking yard south",
+      "kind": "outdoor",
+      "polygon": [
+        [
+          0.316,
+          0.684
+        ],
+        [
+          0.586,
+          0.684
+        ],
+        [
+          0.586,
+          0.781
+        ],
+        [
+          0.316,
+          0.781
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Walking yard hospital",
+      "kind": "outdoor",
+      "polygon": [
+        [
+          0.667,
+          0.281
+        ],
+        [
+          0.893,
+          0.281
+        ],
+        [
+          0.893,
+          0.698
+        ],
+        [
+          0.667,
+          0.698
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Extension",
+      "kind": "outdoor",
+      "polygon": [
+        [
+          0.59,
+          0.45
+        ],
+        [
+          0.96,
+          0.45
+        ],
+        [
+          0.96,
+          0.912
+        ],
+        [
+          0.59,
+          0.912
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Matron",
+      "kind": "room",
+      "polygon": [
+        [
+          0.103,
+          0.155
+        ],
+        [
+          0.132,
+          0.155
+        ],
+        [
+          0.132,
+          0.249
+        ],
+        [
+          0.103,
+          0.249
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Accounting",
+      "kind": "room",
+      "polygon": [
+        [
+          0.141,
+          0.155
+        ],
+        [
+          0.201,
+          0.155
+        ],
+        [
+          0.201,
+          0.215
+        ],
+        [
+          0.141,
+          0.215
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Intake cells lower",
+      "kind": "zone",
+      "polygon": [
+        [
+          0.264,
+          0.644
+        ],
+        [
+          0.315,
+          0.644
+        ],
+        [
+          0.315,
+          0.742
+        ],
+        [
+          0.264,
+          0.742
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "Kitchen",
+      "kind": "room",
+      "polygon": [
+        [
+          0.402,
+          0.803
+        ],
+        [
+          0.48,
+          0.803
+        ],
+        [
+          0.48,
+          0.893
+        ],
+        [
+          0.402,
+          0.893
+        ]
+      ],
+      "status": "observed"
+    }
+  ],
+  "walls": [
+    {
+      "label": "North wall Administration",
+      "kind": "wall",
+      "regions": [
+        "Administration"
+      ],
+      "path": [
+        [
+          0.093,
+          0.144
+        ],
+        [
+          0.29,
+          0.144
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "North wall Cell wing",
+      "kind": "wall",
+      "regions": [
+        "Cell wing"
+      ],
+      "path": [
+        [
+          0.29,
+          0.145
+        ],
+        [
+          0.743,
+          0.145
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "North wall Hospital",
+      "kind": "wall",
+      "regions": [
+        "Hospital"
+      ],
+      "path": [
+        [
+          0.743,
+          0.146
+        ],
+        [
+          0.96,
+          0.146
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "South wall Housekeeping",
+      "kind": "wall",
+      "regions": [
+        "Housekeeping building"
+      ],
+      "path": [
+        [
+          0.094,
+          0.933
+        ],
+        [
+          0.589,
+          0.933
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "East wall Hospital",
+      "kind": "wall",
+      "regions": [
+        "Hospital"
+      ],
+      "path": [
+        [
+          0.959,
+          0.147
+        ],
+        [
+          0.959,
+          0.447
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "West wall Administration",
+      "kind": "wall",
+      "regions": [
+        "Administration"
+      ],
+      "path": [
+        [
+          0.093,
+          0.144
+        ],
+        [
+          0.093,
+          0.569
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "West wall Porters",
+      "kind": "wall",
+      "regions": [
+        "Porter's residence"
+      ],
+      "path": [
+        [
+          0.093,
+          0.715
+        ],
+        [
+          0.093,
+          0.933
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "Division between Administration and Cell wing",
+      "kind": "partition",
+      "regions": [
+        "Administration",
+        "Cell wing"
+      ],
+      "path": [
+        [
+          0.289,
+          0.144
+        ],
+        [
+          0.289,
+          0.57
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "inferred"
+    },
+    {
+      "label": "Division between Cell wing and Hospital",
+      "kind": "partition",
+      "regions": [
+        "Cell wing",
+        "Hospital"
+      ],
+      "path": [
+        [
+          0.743,
+          0.147
+        ],
+        [
+          0.743,
+          0.447
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "inferred"
+    },
+    {
+      "label": "North wall of Housekeeping building",
+      "kind": "wall",
+      "regions": [
+        "Housekeeping building"
+      ],
+      "path": [
+        [
+          0.292,
+          0.786
+        ],
+        [
+          0.589,
+          0.786
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "East wall Extension",
+      "kind": "wall",
+      "regions": [
+        "Extension"
+      ],
+      "path": [
+        [
+          0.958,
+          0.45
+        ],
+        [
+          0.958,
+          0.912
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    }
+  ],
+  "openings": [
+    {
+      "wall": 7,
+      "kind": "passage",
+      "span": [
+        0.45,
+        0.55
+      ],
+      "traversable": true,
+      "status": "inferred"
+    },
+    {
+      "wall": 8,
+      "kind": "passage",
+      "span": [
+        0.4,
+        0.52
+      ],
+      "traversable": true,
+      "status": "inferred"
+    },
+    {
+      "wall": 9,
+      "kind": "door",
+      "span": [
+        0.2,
+        0.26
+      ],
+      "traversable": true,
+      "status": "inferred"
+    }
+  ],
+  "equipment": [],
+  "unresolved": [
+    "Overall site width/depth not dimensioned as single figure; total computed from partial dimensions requires assumption",
+    "Heights of all walls not shown; plan is 2D only",
+    "Individual cell internal walls and doors not fully measurable; many small cells 17+11+8+3+2+27 etc labelled only by count",
+    "Exact connectivity of passages, stairs, and extension boundaries ambiguous due to dashed lines (upper/lower levels)",
+    "Unreadable small dimension figures inside cells (e.g., 3.07, 4.75, 2.16, 2.65 etc) and label 'a: Woman attendant and tea kitchen, b: Rinsing cell, c: 1 Prisoner with infant' locations",
+    "Wall thickness not dimensioned",
+    "Atrium vs Walking yards vs Extension outdoor/enclosed status uncertain",
+    "Furniture/fixtures footprints not shown except schematic Shower/Bathtub symbols in lower left grey area"
+  ]
+}

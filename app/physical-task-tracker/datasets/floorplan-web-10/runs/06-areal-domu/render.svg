@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="687" viewBox="0 0 760 687">
+<rect x="0" y="0" width="760" height="687" fill="#ffffff"/>
+<text x="12" y="24" font-family="sans-serif" font-size="16" font-weight="bold" fill="#111827">06-areal-domu</text>
+<text x="12" y="44" font-family="sans-serif" font-size="11" fill="#4b5563">site 18x14x2.7 m · 5 regions · 29 walls · 10 portals · 2 equipment · top-down, x=+X east, y=−Z north</text>
+<g transform="translate(716,100)"><circle r="16" fill="#f3f4f6" stroke="#9ca3af"/><path d="M0,10 L0,-10 M-6,-3 L0,-10 L6,-3" stroke="#111827" stroke-width="2" fill="none"/><text y="-20" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">N</text></g>
+<rect x="52.41" y="106.77" width="655.17" height="509.58" fill="none" stroke="#9ca3af" stroke-dasharray="6,4"><title>site 18x14x2.7 m</title></rect>
+<polygon points="97.62,262.7 494.66,262.7 494.66,124.09 97.62,124.09" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-i-hlavn-budova (room)</title></polygon>
+<text x="296.14" y="193.39" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">(I) Hlavní budova</text>
+<polygon points="96.31,303.46 205.72,303.46 205.72,347.29 267.97,347.29 267.97,261.68 96.31,261.68" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-ii-d-ev-n-chodba (room)</title></polygon>
+<text x="190" y="304.14" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">(II) Dřevěná chodba</text>
+<polygon points="135.62,472.13 455.34,472.13 470.41,455.32 470.41,353.4 183.45,353.4 135.62,353.4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-iii-skladi-t (room)</title></polygon>
+<text x="308.48" y="409.97" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">(III) Skladiště</text>
+<polygon points="250.93,536.85 311.21,536.85 311.21,474.17 250.93,474.17" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-iv-d-ev-n-chodba (room)</title></polygon>
+<text x="281.07" y="505.51" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">(IV) Dřevěná chodba</text>
+<polygon points="311.86,602.59 672.86,602.59 672.86,487.42 311.86,487.42" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-v-skladi-t (room)</title></polygon>
+<text x="492.36" y="545" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">(V) Skladiště</text>
+<polygon points="134.97,431.88 178.86,431.88 178.86,376.84 134.97,376.84" fill="#fb923c" fill-opacity="0.55" stroke="#c2410c" stroke-dasharray="4,2"><title>equip-stairs-in-iii</title></polygon>
+<polygon points="311.21,558.25 342,558.25 342,509.84 311.21,509.84" fill="#fb923c" fill-opacity="0.55" stroke="#c2410c" stroke-dasharray="4,2"><title>equip-stairs-in-v</title></polygon>
+<polyline data-layer="boundary" points="97.62,124.09 494.66,124.09" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-i-south (wall)</title></polyline>
+<polyline data-layer="boundary" points="97.62,262.7 97.62,124.09" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-i-west (wall)</title></polyline>
+<polyline data-layer="boundary" points="494.66,262.7 494.66,124.09" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-i-east (wall)</title></polyline>
+<polyline data-layer="boundary" points="97.62,262.7 268.62,262.7" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-i-north-shared-with-ii (wall)</title></polyline>
+<polyline data-layer="boundary" points="268.62,262.7 494.66,262.7" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-i-north-exterior (wall)</title></polyline>
+<polyline data-layer="boundary" points="96.31,303.46 96.31,261.68" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-ii-west-lower (wall)</title></polyline>
+<polyline data-layer="boundary" points="96.31,303.46 205.72,303.46" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-ii-west-north-step (wall)</title></polyline>
+<polyline data-layer="boundary" points="205.72,347.29 205.72,303.46" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-ii-east-lower (wall)</title></polyline>
+<polyline data-layer="boundary" points="258.14,347.29 258.14,263.72" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-ii-east-upper (wall)</title></polyline>
+<polyline data-layer="boundary" points="205.72,347.29 258.14,347.29" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-ii-north (wall)</title></polyline>
+<polyline data-layer="boundary" points="135.62,472.13 135.62,352.38" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-iii-west (wall)</title></polyline>
+<polyline data-layer="boundary" points="135.62,472.13 457.31,472.13" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-iii-north (wall)</title></polyline>
+<polyline data-layer="boundary" points="183.45,353.4 289.59,353.4" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-iii-south-west (wall)</title></polyline>
+<polyline data-layer="boundary" points="321.03,353.4 387.21,353.4" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-iii-south-middle-dashed (wall)</title></polyline>
+<polyline data-layer="boundary" points="412.76,353.4 470.41,353.4" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-iii-south-east (wall)</title></polyline>
+<polyline data-layer="boundary" points="458.62,381.94 470.41,353.4" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-iii-east-lower (wall)</title></polyline>
+<polyline data-layer="boundary" points="451.41,433.41 451.41,402.32" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-iii-east-mid-dashed (wall)</title></polyline>
+<polyline data-layer="boundary" points="250.93,535.83 312.52,535.83" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-iv-north (wall)</title></polyline>
+<polyline data-layer="boundary" points="250.93,535.83 250.93,503.73" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-iv-west-north (wall)</title></polyline>
+<polyline data-layer="boundary" points="250.93,490.99 250.93,474.17" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-iv-west-south (wall)</title></polyline>
+<polyline data-layer="boundary" points="311.21,600.04 311.21,483.85" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-iv-east-shared-with-v-west (wall)</title></polyline>
+<polyline data-layer="boundary" points="311.21,602.59 673.52,602.59" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-v-north (wall)</title></polyline>
+<polyline data-layer="boundary" points="673.52,602.59 670.9,575.58" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-v-north-east-partial (wall)</title></polyline>
+<polyline data-layer="boundary" points="669.59,563.35 668.28,533.28" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-v-east-north-dashed (wall)</title></polyline>
+<polyline data-layer="boundary" points="666.97,518.51 665,486.91" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-v-east-south-dashed (wall)</title></polyline>
+<polyline data-layer="boundary" points="612.59,488.44 665,486.91" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-v-south-east-dashed (wall)</title></polyline>
+<polyline data-layer="boundary" points="537.24,489.46 589.66,489.46" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-v-south-middle-dashed (wall)</title></polyline>
+<polyline data-layer="boundary" points="339.38,492.52 508.41,492.52" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-v-south-west (wall)</title></polyline>
+<polyline data-layer="boundary" points="455.34,472.13 455.34,448.18" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-wall-between-iii-and-v-vertical (wall)</title></polyline>
+<polyline data-layer="portal" points="225.87,262.7 251.52,262.7" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-1 (passage) on wall-i-north-shared-with-ii</title></polyline>
+<polyline data-layer="portal" points="135.62,436.21 135.62,400.28" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-2 (passage) on wall-iii-west</title></polyline>
+<polyline data-layer="portal" points="278.97,353.4 289.59,353.4" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-3 (passage) on wall-iii-south-west</title></polyline>
+<polyline data-layer="portal" points="199.96,472.13 392.97,472.13" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-4 (passage) on wall-iii-north</title></polyline>
+<polyline data-layer="portal" points="451.41,422.53 451.41,410.09" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-5 (passage) on wall-iii-east-mid-dashed</title></polyline>
+<polyline data-layer="portal" points="250.93,526.2 250.93,513.36" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-6 (passage) on wall-iv-west-north</title></polyline>
+<polyline data-layer="portal" points="250.93,484.26 250.93,479.22" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-7 (passage) on wall-iv-west-south</title></polyline>
+<polyline data-layer="portal" points="673.12,598.54 671.29,579.63" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-8 (passage) on wall-v-north-east-partial</title></polyline>
+<polyline data-layer="portal" points="547.72,489.46 581.79,489.46" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-9 (passage) on wall-v-south-middle-dashed</title></polyline>
+<polyline data-layer="portal" points="381.64,492.52 466.16,492.52" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-10 (passage) on wall-v-south-west</title></polyline>
+<g><rect x="564.01" y="640" width="181.99" height="5" fill="#111827"/><text x="655.005" y="636" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#111827">5 m</text></g>
+<text x="12" y="677" font-family="sans-serif" font-size="10" fill="#6b7280">11 unresolved notes</text>
+</svg>

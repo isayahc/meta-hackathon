@@ -112,4 +112,20 @@ describe('oi live integration (pinned OI)', { skip: !avail.ok ? (avail as { reas
     assert.equal(validation.valid, true);
     await assert.rejects(() => transport.request<OiCompiled>('compile', { spaceIr }), (e: unknown) => e instanceof OiError && e.code === 'UNSCALED_SITE');
   });
+
+  it('validates and compiles an explicit height assumption in OI', async () => {
+    if (!avail.ok) return;
+    const { obs, digest } = await loadFixture('floorplan-cabin-observations.json');
+    const spaceIr = buildSpaceIr(
+      { ...obs, site: { width_m: 8, depth_m: 6, height_m: null } },
+      { sourceId: 'assumed-fixture', digestSha256: digest },
+      { assumedHeightM: 2.7 }
+    );
+    const transport = new OiRunnerTransport(avail.oiRoot);
+    const validation = await transport.request<OiValidation>('validate', { spaceIr });
+    assert.equal(validation.valid, true);
+    const compiled = await transport.request<OiCompiled>('compile', { spaceIr });
+    assert.equal(compiled.bindings.length, 6);
+    assert.deepEqual((compiled.workspace as { room: unknown }).room, [8, 6, 2.7]);
+  });
 });

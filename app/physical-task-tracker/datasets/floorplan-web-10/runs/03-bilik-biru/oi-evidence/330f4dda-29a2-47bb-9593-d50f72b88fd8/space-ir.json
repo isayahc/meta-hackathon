@@ -1,0 +1,493 @@
+{
+  "schema_id": "mapped-assembly.space-ir",
+  "schema_version": "0.1.0",
+  "id": "fieldops-03-bilik-biru.jpg",
+  "revision": "r1",
+  "site": {
+    "frame_id": "world",
+    "width_m": 18,
+    "depth_m": 14,
+    "height_m": 2.7
+  },
+  "frames": [
+    {
+      "id": "world",
+      "units": "m",
+      "axes": "XZ"
+    }
+  ],
+  "regions": [
+    {
+      "id": "room-bilik-biru",
+      "kind": "room",
+      "label": "BILIK BIRU",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -8.082,
+          -3.556
+        ],
+        [
+          8.225999999999999,
+          -3.556
+        ],
+        [
+          8.225999999999999,
+          5.908
+        ],
+        [
+          -8.082,
+          5.908
+        ]
+      ],
+      "evidence_ids": [
+        "ev-room-bilik-biru"
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "id": "wall-north-wall",
+      "kind": "wall",
+      "region_ids": [
+        "room-bilik-biru"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -8.082,
+          -3.556
+        ],
+        [
+          8.225999999999999,
+          -3.556
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-north-wall"
+      ]
+    },
+    {
+      "id": "wall-east-wall",
+      "kind": "wall",
+      "region_ids": [
+        "room-bilik-biru"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          8.225999999999999,
+          -3.556
+        ],
+        [
+          8.225999999999999,
+          5.908
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-east-wall"
+      ]
+    },
+    {
+      "id": "wall-south-wall",
+      "kind": "wall",
+      "region_ids": [
+        "room-bilik-biru"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          8.225999999999999,
+          5.908
+        ],
+        [
+          -8.082,
+          5.908
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-south-wall"
+      ]
+    },
+    {
+      "id": "wall-west-wall",
+      "kind": "wall",
+      "region_ids": [
+        "room-bilik-biru"
+      ],
+      "frame_id": "world",
+      "path": [
+        [
+          -8.082,
+          5.908
+        ],
+        [
+          -8.082,
+          -3.556
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "evidence_ids": [
+        "ev-wall-west-wall"
+      ]
+    }
+  ],
+  "portals": [],
+  "spatial_relations": [],
+  "occupancies": [
+    {
+      "id": "equip-table-or-cabinet-small-top-left-1",
+      "region_id": "room-bilik-biru",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -6.4079999999999995,
+          -2.534
+        ],
+        [
+          -5.58,
+          -2.534
+        ],
+        [
+          -5.58,
+          -2.072
+        ],
+        [
+          -6.4079999999999995,
+          -2.072
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-table-or-cabinet-small-top-left-1"
+      ]
+    },
+    {
+      "id": "equip-table-or-cabinet-small-top-left-2",
+      "region_id": "room-bilik-biru",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -6.4079999999999995,
+          -1.9880000000000002
+        ],
+        [
+          -5.58,
+          -1.9880000000000002
+        ],
+        [
+          -5.58,
+          -1.5119999999999998
+        ],
+        [
+          -6.4079999999999995,
+          -1.5119999999999998
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-table-or-cabinet-small-top-left-2"
+      ]
+    },
+    {
+      "id": "equip-table-or-cabinet-mid-left",
+      "region_id": "room-bilik-biru",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -6.624,
+          -1.12
+        ],
+        [
+          -5.382,
+          -1.12
+        ],
+        [
+          -5.382,
+          -0.07000000000000006
+        ],
+        [
+          -6.624,
+          -0.07000000000000006
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-table-or-cabinet-mid-left"
+      ]
+    },
+    {
+      "id": "equip-table-central-north",
+      "region_id": "room-bilik-biru",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -1.9439999999999997,
+          -2.646
+        ],
+        [
+          1.4939999999999993,
+          -2.646
+        ],
+        [
+          1.4939999999999993,
+          -1.9460000000000002
+        ],
+        [
+          -1.9439999999999997,
+          -1.9460000000000002
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-table-central-north"
+      ]
+    },
+    {
+      "id": "equip-display-or-opening-north-east-red-outline",
+      "region_id": "room-bilik-biru",
+      "frame_id": "world",
+      "polygon": [
+        [
+          4.3919999999999995,
+          -2.9960000000000004
+        ],
+        [
+          7.380000000000001,
+          -2.9960000000000004
+        ],
+        [
+          7.380000000000001,
+          -2.814
+        ],
+        [
+          4.3919999999999995,
+          -2.814
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-display-or-opening-north-east-red-outline"
+      ]
+    },
+    {
+      "id": "equip-stage-or-front-table-south-full-width",
+      "region_id": "room-bilik-biru",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -8.1,
+          5.6000000000000005
+        ],
+        [
+          8.298,
+          5.6000000000000005
+        ],
+        [
+          8.298,
+          5.894
+        ],
+        [
+          -8.1,
+          5.894
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-stage-or-front-table-south-full-width"
+      ]
+    },
+    {
+      "id": "equip-display-or-opening-south-central-red-outline",
+      "region_id": "room-bilik-biru",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -2.6640000000000006,
+          5.488
+        ],
+        [
+          1.6919999999999995,
+          5.488
+        ],
+        [
+          1.6919999999999995,
+          5.67
+        ],
+        [
+          -2.6640000000000006,
+          5.67
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-display-or-opening-south-central-red-outline"
+      ]
+    },
+    {
+      "id": "equip-chairs-left-block-30-units",
+      "region_id": "room-bilik-biru",
+      "frame_id": "world",
+      "polygon": [
+        [
+          -7.002000000000001,
+          1.0499999999999994
+        ],
+        [
+          -2.3760000000000003,
+          1.0499999999999994
+        ],
+        [
+          -2.3760000000000003,
+          4.76
+        ],
+        [
+          -7.002000000000001,
+          4.76
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-chairs-left-block-30-units"
+      ]
+    },
+    {
+      "id": "equip-chairs-right-block-30-units",
+      "region_id": "room-bilik-biru",
+      "frame_id": "world",
+      "polygon": [
+        [
+          0.3240000000000003,
+          1.0499999999999994
+        ],
+        [
+          4.932,
+          1.0499999999999994
+        ],
+        [
+          4.932,
+          4.76
+        ],
+        [
+          0.3240000000000003,
+          4.76
+        ]
+      ],
+      "evidence_ids": [
+        "ev-equip-chairs-right-block-30-units"
+      ]
+    }
+  ],
+  "constraints": [],
+  "evidence": [
+    {
+      "id": "ev-room-bilik-biru",
+      "source_id": "03-bilik-biru.jpg",
+      "digest_sha256": "3516ac31093cc60198ab15e5cd0c65d5cf30b832e118418687b46570db2560db",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:24.500Z"
+    },
+    {
+      "id": "ev-wall-north-wall",
+      "source_id": "03-bilik-biru.jpg",
+      "digest_sha256": "3516ac31093cc60198ab15e5cd0c65d5cf30b832e118418687b46570db2560db",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:24.500Z"
+    },
+    {
+      "id": "ev-wall-east-wall",
+      "source_id": "03-bilik-biru.jpg",
+      "digest_sha256": "3516ac31093cc60198ab15e5cd0c65d5cf30b832e118418687b46570db2560db",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:24.500Z"
+    },
+    {
+      "id": "ev-wall-south-wall",
+      "source_id": "03-bilik-biru.jpg",
+      "digest_sha256": "3516ac31093cc60198ab15e5cd0c65d5cf30b832e118418687b46570db2560db",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:24.500Z"
+    },
+    {
+      "id": "ev-wall-west-wall",
+      "source_id": "03-bilik-biru.jpg",
+      "digest_sha256": "3516ac31093cc60198ab15e5cd0c65d5cf30b832e118418687b46570db2560db",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:24.500Z"
+    },
+    {
+      "id": "ev-equip-table-or-cabinet-small-top-left-1",
+      "source_id": "03-bilik-biru.jpg",
+      "digest_sha256": "3516ac31093cc60198ab15e5cd0c65d5cf30b832e118418687b46570db2560db",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:24.500Z"
+    },
+    {
+      "id": "ev-equip-table-or-cabinet-small-top-left-2",
+      "source_id": "03-bilik-biru.jpg",
+      "digest_sha256": "3516ac31093cc60198ab15e5cd0c65d5cf30b832e118418687b46570db2560db",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:24.500Z"
+    },
+    {
+      "id": "ev-equip-table-or-cabinet-mid-left",
+      "source_id": "03-bilik-biru.jpg",
+      "digest_sha256": "3516ac31093cc60198ab15e5cd0c65d5cf30b832e118418687b46570db2560db",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:24.500Z"
+    },
+    {
+      "id": "ev-equip-table-central-north",
+      "source_id": "03-bilik-biru.jpg",
+      "digest_sha256": "3516ac31093cc60198ab15e5cd0c65d5cf30b832e118418687b46570db2560db",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:24.500Z"
+    },
+    {
+      "id": "ev-equip-display-or-opening-north-east-red-outline",
+      "source_id": "03-bilik-biru.jpg",
+      "digest_sha256": "3516ac31093cc60198ab15e5cd0c65d5cf30b832e118418687b46570db2560db",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:24.500Z"
+    },
+    {
+      "id": "ev-equip-stage-or-front-table-south-full-width",
+      "source_id": "03-bilik-biru.jpg",
+      "digest_sha256": "3516ac31093cc60198ab15e5cd0c65d5cf30b832e118418687b46570db2560db",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:24.500Z"
+    },
+    {
+      "id": "ev-equip-display-or-opening-south-central-red-outline",
+      "source_id": "03-bilik-biru.jpg",
+      "digest_sha256": "3516ac31093cc60198ab15e5cd0c65d5cf30b832e118418687b46570db2560db",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:24.500Z"
+    },
+    {
+      "id": "ev-equip-chairs-left-block-30-units",
+      "source_id": "03-bilik-biru.jpg",
+      "digest_sha256": "3516ac31093cc60198ab15e5cd0c65d5cf30b832e118418687b46570db2560db",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:24.500Z"
+    },
+    {
+      "id": "ev-equip-chairs-right-block-30-units",
+      "source_id": "03-bilik-biru.jpg",
+      "digest_sha256": "3516ac31093cc60198ab15e5cd0c65d5cf30b832e118418687b46570db2560db",
+      "status": "observed",
+      "captured_at": "2026-11-03T17:11:24.500Z"
+    }
+  ],
+  "unresolved": [
+    "Scale and absolute dimensions unknown: no scale bar or figured dimensions.",
+    "Height unknown: plan only.",
+    "Thin horizontal line inside north wall at y~0.288 spanning full width: function unclear, may be inner wall or projection screen line.",
+    "Red-outlined rectangles at north-east and south-center: ambiguous whether they are doors, windows, projection screens, or equipment; treated as equipment but could be openings.",
+    "Long blue bar at extreme south overlapping south wall: ambiguous whether it is wall thickening, stage, or front table; treated as equipment.",
+    "Individual chair footprints visible but grouped into block polygons to avoid excessive enumeration; exact chair counts 5x6 per block = 30 each observed but precise per-chair coordinates not measured.",
+    "No traversable openings can be confirmed; entry/exit location unknown.",
+    "Wall thickness and material not readable.",
+    "Site height assumed: 2.7 m via explicit user assumption (not observed).",
+    "Scale provenance: User-assumed footprint 18x14 m (explicit --assume-size; not observed). No scale bar, north arrow with dimensions, or figured measurements visible; image is a schematic furniture layout titled LAYOUT BANGUNAN ISTANA ARAU BILIK BIRU with only normalized positions."
+  ]
+}

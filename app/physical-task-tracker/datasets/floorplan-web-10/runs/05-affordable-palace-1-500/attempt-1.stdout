@@ -1,0 +1,127 @@
+{
+  "ok": true,
+  "mock": false,
+  "scene_id": "7e7b82c7-d91b-4d99-8897-0e314159f7cf",
+  "revision": 1,
+  "name": "ds10-05-affordable-palace-1-500",
+  "head_url": "http://127.0.0.1:5173/?sceneId=7e7b82c7-d91b-4d99-8897-0e314159f7cf",
+  "revision_url": "http://127.0.0.1:5173/?sceneId=7e7b82c7-d91b-4d99-8897-0e314159f7cf&revision=1",
+  "bindings": [],
+  "diagnostics": [
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-outer-north",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-outer-east",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-outer-south",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-outer-west",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-inner-north",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-inner-east",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-inner-south",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-inner-west",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "No scale bar or figured dimensions, so site width/depth/height_m cannot be determined",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Height_m null for all walls - plan shows only 2D layout",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Individual dwelling unit labels and room functions unreadable due to small furniture symbols",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Internal partition walls and door swings not legibly measurable - too many small rooms (~100+ units)",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Exact geometry of notched facade along north edge and protruding bays cannot be measured precisely",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Stair cores with triangular, square, circular geometries - traversability and level connectivity ambiguous",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Boundary between building_ring and courtyard is simplified as rectangle; actual inner edge has indentations",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Equipment/furniture footprints visible but not individually identifiable or georeferenceable",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Site height assumed: 2.7 m via explicit user assumption (not observed).",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Scale provenance: User-assumed footprint 18x14 m (explicit --assume-size; not observed). No scale bar, north arrow, or figured dimensions visible in image; drawing is schematic floor-plan with furniture graphics only, so absolute meters cannot be determined. Height information not present.",
+      "message": "Unresolved source assertion retained as diagnostic."
+    }
+  ],
+  "findings": [],
+  "oiIdentity": {
+    "repo": "Mapped-Assembly/OpenIndustries",
+    "pinnedSha": "50f78e0bef23c5a6958d80c50e9232066ecc11d2",
+    "actualSha": "50f78e0bef23c5a6958d80c50e9232066ecc11d2",
+    "version": "0.1.1",
+    "pinned": true,
+    "markers": {
+      "spaceIr": true,
+      "compiler": true,
+      "planViewport": true,
+      "localBackend": true
+    }
+  },
+  "understanding": {
+    "rooms": 2,
+    "walls": 8,
+    "openings": 0,
+    "equipment": 0,
+    "unresolved": 8,
+    "nullGeometry": 0,
+    "scaled": true
+  },
+  "linked": {},
+  "evidence": "C:\\Users\\isaya\\meta-hackathon\\app\\physical-task-tracker\\datasets\\floorplan-web-10\\runs\\05-affordable-palace-1-500\\oi-evidence\\7e7b82c7-d91b-4d99-8897-0e314159f7cf"
+}

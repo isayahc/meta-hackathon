@@ -1,0 +1,1402 @@
+{
+  "site": {
+    "width_m": 18,
+    "depth_m": 14,
+    "height_m": null
+  },
+  "siteEvidence": "User-assumed footprint 18x14 m (explicit --assume-size; not observed). no scale bar or figured dimensions visible; only schematic block plan with numbered zones",
+  "rooms": [
+    {
+      "label": "1. entrance court",
+      "kind": "zone",
+      "polygon": [
+        [
+          0.403,
+          0.977
+        ],
+        [
+          0.403,
+          0.744
+        ],
+        [
+          0.517,
+          0.744
+        ],
+        [
+          0.517,
+          0.836
+        ],
+        [
+          0.832,
+          0.836
+        ],
+        [
+          0.832,
+          0.74
+        ],
+        [
+          0.964,
+          0.74
+        ],
+        [
+          0.964,
+          0.977
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "2. porch",
+      "kind": "room",
+      "polygon": [
+        [
+          0.407,
+          0.737
+        ],
+        [
+          0.515,
+          0.737
+        ],
+        [
+          0.515,
+          0.831
+        ],
+        [
+          0.407,
+          0.831
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "3. altar",
+      "kind": "room",
+      "polygon": [
+        [
+          0.835,
+          0.733
+        ],
+        [
+          0.963,
+          0.733
+        ],
+        [
+          0.963,
+          0.965
+        ],
+        [
+          0.835,
+          0.965
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "4. reception court",
+      "kind": "zone",
+      "polygon": [
+        [
+          0.405,
+          0.384
+        ],
+        [
+          0.963,
+          0.384
+        ],
+        [
+          0.963,
+          0.728
+        ],
+        [
+          0.832,
+          0.728
+        ],
+        [
+          0.832,
+          0.831
+        ],
+        [
+          0.517,
+          0.831
+        ],
+        [
+          0.517,
+          0.734
+        ],
+        [
+          0.405,
+          0.734
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "5. impluvium north",
+      "kind": "zone",
+      "polygon": [
+        [
+          0.488,
+          0.22
+        ],
+        [
+          0.871,
+          0.22
+        ],
+        [
+          0.871,
+          0.324
+        ],
+        [
+          0.488,
+          0.324
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "5. impluvium south",
+      "kind": "zone",
+      "polygon": [
+        [
+          0.492,
+          0.551
+        ],
+        [
+          0.863,
+          0.551
+        ],
+        [
+          0.863,
+          0.653
+        ],
+        [
+          0.492,
+          0.653
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "6. storage NW",
+      "kind": "room",
+      "polygon": [
+        [
+          0.403,
+          0.093
+        ],
+        [
+          0.491,
+          0.093
+        ],
+        [
+          0.491,
+          0.179
+        ],
+        [
+          0.403,
+          0.179
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "6. storage N2",
+      "kind": "room",
+      "polygon": [
+        [
+          0.498,
+          0.094
+        ],
+        [
+          0.62,
+          0.094
+        ],
+        [
+          0.62,
+          0.179
+        ],
+        [
+          0.498,
+          0.179
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "6. storage N3",
+      "kind": "room",
+      "polygon": [
+        [
+          0.629,
+          0.093
+        ],
+        [
+          0.752,
+          0.093
+        ],
+        [
+          0.752,
+          0.179
+        ],
+        [
+          0.629,
+          0.179
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "6. storage NE",
+      "kind": "room",
+      "polygon": [
+        [
+          0.76,
+          0.093
+        ],
+        [
+          0.872,
+          0.093
+        ],
+        [
+          0.872,
+          0.179
+        ],
+        [
+          0.76,
+          0.179
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "6. storage central",
+      "kind": "room",
+      "polygon": [
+        [
+          0.496,
+          0.385
+        ],
+        [
+          0.658,
+          0.385
+        ],
+        [
+          0.658,
+          0.461
+        ],
+        [
+          0.496,
+          0.461
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "6. storage east",
+      "kind": "room",
+      "polygon": [
+        [
+          0.826,
+          0.381
+        ],
+        [
+          0.962,
+          0.381
+        ],
+        [
+          0.962,
+          0.456
+        ],
+        [
+          0.826,
+          0.456
+        ]
+      ],
+      "status": "observed"
+    },
+    {
+      "label": "7.",
+      "kind": "zone",
+      "polygon": [
+        [
+          0.404,
+          0.02
+        ],
+        [
+          0.963,
+          0.02
+        ],
+        [
+          0.963,
+          0.377
+        ],
+        [
+          0.404,
+          0.377
+        ]
+      ],
+      "status": "observed"
+    }
+  ],
+  "walls": [
+    {
+      "label": "west outer north",
+      "kind": "wall",
+      "regions": [
+        "7."
+      ],
+      "path": [
+        [
+          0.394,
+          0.011
+        ],
+        [
+          0.394,
+          0.37
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "west outer middle",
+      "kind": "wall",
+      "regions": [
+        "4. reception court"
+      ],
+      "path": [
+        [
+          0.394,
+          0.386
+        ],
+        [
+          0.394,
+          0.727
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "west outer south",
+      "kind": "wall",
+      "regions": [
+        "1. entrance court"
+      ],
+      "path": [
+        [
+          0.394,
+          0.744
+        ],
+        [
+          0.394,
+          0.977
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "north outer",
+      "kind": "wall",
+      "regions": [
+        "7."
+      ],
+      "path": [
+        [
+          0.394,
+          0.011
+        ],
+        [
+          0.973,
+          0.011
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "east outer north 7",
+      "kind": "wall",
+      "regions": [
+        "7."
+      ],
+      "path": [
+        [
+          0.973,
+          0.011
+        ],
+        [
+          0.973,
+          0.375
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "east outer storage east",
+      "kind": "wall",
+      "regions": [
+        "6. storage east"
+      ],
+      "path": [
+        [
+          0.973,
+          0.381
+        ],
+        [
+          0.973,
+          0.456
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "east outer reception",
+      "kind": "wall",
+      "regions": [
+        "4. reception court"
+      ],
+      "path": [
+        [
+          0.973,
+          0.456
+        ],
+        [
+          0.973,
+          0.728
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "east outer altar",
+      "kind": "wall",
+      "regions": [
+        "3. altar"
+      ],
+      "path": [
+        [
+          0.973,
+          0.733
+        ],
+        [
+          0.973,
+          0.977
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "south outer west",
+      "kind": "wall",
+      "regions": [
+        "1. entrance court"
+      ],
+      "path": [
+        [
+          0.394,
+          0.977
+        ],
+        [
+          0.645,
+          0.977
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "south outer east",
+      "kind": "wall",
+      "regions": [
+        "1. entrance court"
+      ],
+      "path": [
+        [
+          0.73,
+          0.977
+        ],
+        [
+          0.973,
+          0.977
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "top storage north 1",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "6. storage NW"
+      ],
+      "path": [
+        [
+          0.403,
+          0.086
+        ],
+        [
+          0.491,
+          0.086
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "top storage north 2",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "6. storage N2"
+      ],
+      "path": [
+        [
+          0.498,
+          0.086
+        ],
+        [
+          0.62,
+          0.086
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "top storage north 3",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "6. storage N3"
+      ],
+      "path": [
+        [
+          0.629,
+          0.086
+        ],
+        [
+          0.752,
+          0.086
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "top storage north 4",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "6. storage NE"
+      ],
+      "path": [
+        [
+          0.76,
+          0.086
+        ],
+        [
+          0.872,
+          0.086
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "top storage south 1",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "6. storage NW"
+      ],
+      "path": [
+        [
+          0.403,
+          0.186
+        ],
+        [
+          0.491,
+          0.186
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "top storage south 2",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "6. storage N2"
+      ],
+      "path": [
+        [
+          0.498,
+          0.186
+        ],
+        [
+          0.62,
+          0.186
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "top storage south 3",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "6. storage N3"
+      ],
+      "path": [
+        [
+          0.629,
+          0.186
+        ],
+        [
+          0.752,
+          0.186
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "top storage south 4",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "6. storage NE"
+      ],
+      "path": [
+        [
+          0.76,
+          0.186
+        ],
+        [
+          0.872,
+          0.186
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "top storage div 1-2",
+      "kind": "partition",
+      "regions": [
+        "6. storage NW",
+        "6. storage N2"
+      ],
+      "path": [
+        [
+          0.491,
+          0.086
+        ],
+        [
+          0.491,
+          0.186
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "top storage div 2-3",
+      "kind": "partition",
+      "regions": [
+        "6. storage N2",
+        "6. storage N3"
+      ],
+      "path": [
+        [
+          0.62,
+          0.086
+        ],
+        [
+          0.62,
+          0.186
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "top storage div 3-4",
+      "kind": "partition",
+      "regions": [
+        "6. storage N3",
+        "6. storage NE"
+      ],
+      "path": [
+        [
+          0.752,
+          0.086
+        ],
+        [
+          0.752,
+          0.186
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "top storage east end",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "6. storage NE"
+      ],
+      "path": [
+        [
+          0.872,
+          0.086
+        ],
+        [
+          0.872,
+          0.186
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "top storage west end",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "6. storage NW"
+      ],
+      "path": [
+        [
+          0.403,
+          0.086
+        ],
+        [
+          0.403,
+          0.186
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "upper impluvium north",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "5. impluvium north"
+      ],
+      "path": [
+        [
+          0.488,
+          0.22
+        ],
+        [
+          0.871,
+          0.22
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "upper impluvium south",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "5. impluvium north"
+      ],
+      "path": [
+        [
+          0.488,
+          0.324
+        ],
+        [
+          0.871,
+          0.324
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "upper impluvium east",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "5. impluvium north"
+      ],
+      "path": [
+        [
+          0.871,
+          0.22
+        ],
+        [
+          0.871,
+          0.324
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "upper impluvium west",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "5. impluvium north"
+      ],
+      "path": [
+        [
+          0.488,
+          0.22
+        ],
+        [
+          0.488,
+          0.324
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "lower impluvium north",
+      "kind": "wall",
+      "regions": [
+        "4. reception court",
+        "5. impluvium south"
+      ],
+      "path": [
+        [
+          0.492,
+          0.551
+        ],
+        [
+          0.863,
+          0.551
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "lower impluvium south",
+      "kind": "wall",
+      "regions": [
+        "4. reception court",
+        "5. impluvium south"
+      ],
+      "path": [
+        [
+          0.492,
+          0.653
+        ],
+        [
+          0.863,
+          0.653
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "lower impluvium east",
+      "kind": "wall",
+      "regions": [
+        "4. reception court",
+        "5. impluvium south"
+      ],
+      "path": [
+        [
+          0.863,
+          0.551
+        ],
+        [
+          0.863,
+          0.653
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "lower impluvium west",
+      "kind": "wall",
+      "regions": [
+        "4. reception court",
+        "5. impluvium south"
+      ],
+      "path": [
+        [
+          0.492,
+          0.551
+        ],
+        [
+          0.492,
+          0.653
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "horizontal partition west left",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "4. reception court"
+      ],
+      "path": [
+        [
+          0.443,
+          0.377
+        ],
+        [
+          0.566,
+          0.377
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "horizontal partition west mid",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "6. storage central"
+      ],
+      "path": [
+        [
+          0.583,
+          0.377
+        ],
+        [
+          0.658,
+          0.377
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "horizontal partition mid",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "4. reception court"
+      ],
+      "path": [
+        [
+          0.658,
+          0.377
+        ],
+        [
+          0.875,
+          0.377
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "horizontal partition east",
+      "kind": "wall",
+      "regions": [
+        "7.",
+        "4. reception court"
+      ],
+      "path": [
+        [
+          0.893,
+          0.377
+        ],
+        [
+          0.963,
+          0.377
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "storage central north door wall",
+      "kind": "wall",
+      "regions": [
+        "6. storage central"
+      ],
+      "path": [
+        [
+          0.496,
+          0.385
+        ],
+        [
+          0.658,
+          0.385
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "inferred"
+    },
+    {
+      "label": "storage central west",
+      "kind": "wall",
+      "regions": [
+        "4. reception court",
+        "6. storage central"
+      ],
+      "path": [
+        [
+          0.496,
+          0.385
+        ],
+        [
+          0.496,
+          0.461
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "storage central east",
+      "kind": "wall",
+      "regions": [
+        "4. reception court",
+        "6. storage central"
+      ],
+      "path": [
+        [
+          0.658,
+          0.385
+        ],
+        [
+          0.658,
+          0.461
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "storage central south",
+      "kind": "wall",
+      "regions": [
+        "4. reception court",
+        "6. storage central"
+      ],
+      "path": [
+        [
+          0.496,
+          0.461
+        ],
+        [
+          0.658,
+          0.461
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "storage east north",
+      "kind": "wall",
+      "regions": [
+        "4. reception court",
+        "6. storage east"
+      ],
+      "path": [
+        [
+          0.826,
+          0.381
+        ],
+        [
+          0.962,
+          0.381
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "storage east west",
+      "kind": "wall",
+      "regions": [
+        "4. reception court",
+        "6. storage east"
+      ],
+      "path": [
+        [
+          0.826,
+          0.381
+        ],
+        [
+          0.826,
+          0.456
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "storage east south",
+      "kind": "wall",
+      "regions": [
+        "4. reception court",
+        "6. storage east"
+      ],
+      "path": [
+        [
+          0.826,
+          0.456
+        ],
+        [
+          0.962,
+          0.456
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "porch north",
+      "kind": "wall",
+      "regions": [
+        "1. entrance court",
+        "2. porch"
+      ],
+      "path": [
+        [
+          0.462,
+          0.737
+        ],
+        [
+          0.517,
+          0.737
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "porch east",
+      "kind": "wall",
+      "regions": [
+        "1. entrance court",
+        "2. porch"
+      ],
+      "path": [
+        [
+          0.517,
+          0.737
+        ],
+        [
+          0.517,
+          0.836
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "porch south inner",
+      "kind": "wall",
+      "regions": [
+        "1. entrance court",
+        "4. reception court"
+      ],
+      "path": [
+        [
+          0.517,
+          0.831
+        ],
+        [
+          0.832,
+          0.831
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "altar west",
+      "kind": "wall",
+      "regions": [
+        "1. entrance court",
+        "3. altar"
+      ],
+      "path": [
+        [
+          0.832,
+          0.733
+        ],
+        [
+          0.832,
+          0.831
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    },
+    {
+      "label": "altar north",
+      "kind": "wall",
+      "regions": [
+        "4. reception court",
+        "3. altar"
+      ],
+      "path": [
+        [
+          0.832,
+          0.733
+        ],
+        [
+          0.963,
+          0.733
+        ]
+      ],
+      "thickness_m": null,
+      "height_m": null,
+      "status": "observed"
+    }
+  ],
+  "openings": [
+    {
+      "wall": 8,
+      "kind": "gate",
+      "span": [
+        0.38,
+        0.6
+      ],
+      "traversable": true,
+      "status": "observed"
+    },
+    {
+      "wall": 31,
+      "kind": "passage",
+      "span": [
+        0,
+        0.25
+      ],
+      "traversable": true,
+      "status": "inferred"
+    },
+    {
+      "wall": 34,
+      "kind": "passage",
+      "span": [
+        0.25,
+        0.4
+      ],
+      "traversable": true,
+      "status": "observed"
+    },
+    {
+      "wall": 33,
+      "kind": "passage",
+      "span": [
+        0.75,
+        0.9
+      ],
+      "traversable": true,
+      "status": "observed"
+    },
+    {
+      "wall": 36,
+      "kind": "door",
+      "span": [
+        0.35,
+        0.65
+      ],
+      "traversable": true,
+      "status": "inferred"
+    },
+    {
+      "wall": 40,
+      "kind": "door",
+      "span": [
+        0.35,
+        0.55
+      ],
+      "traversable": true,
+      "status": "inferred"
+    },
+    {
+      "wall": 1,
+      "kind": "door",
+      "span": [
+        0.88,
+        0.98
+      ],
+      "traversable": true,
+      "status": "inferred"
+    }
+  ],
+  "equipment": [],
+  "unresolved": [
+    "overall scale unknown: no dimension text",
+    "height_m always null: top view only",
+    "label 7. not in legend: inferred as intermediate court/corridor between entrance and reception",
+    "topmost narrow strip between north outer wall and top storage row is treated as part of 7.",
+    "exact normalized coordinates approximate due to schematic thick lines",
+    "two blue rectangles both labeled 5. impluvium: treated as two separate zones north and south",
+    "west outer wall gaps: ambiguous whether exterior access or internal passage between 7. and 4.",
+    "door spans estimated: narrow gaps in walls are <=0.15 of wall length"
+  ]
+}

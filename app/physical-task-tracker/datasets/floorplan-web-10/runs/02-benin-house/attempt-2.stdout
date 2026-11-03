@@ -1,0 +1,322 @@
+{
+  "ok": true,
+  "mock": false,
+  "scene_id": "2d2dbd1c-e938-4c76-871e-c2f7dbad733c",
+  "revision": 1,
+  "name": "ds10-02-benin-house",
+  "head_url": "http://127.0.0.1:5173/?sceneId=2d2dbd1c-e938-4c76-871e-c2f7dbad733c",
+  "revision_url": "http://127.0.0.1:5173/?sceneId=2d2dbd1c-e938-4c76-871e-c2f7dbad733c&revision=1",
+  "bindings": [],
+  "diagnostics": [
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-west-outer-north",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-west-outer-middle",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-west-outer-south",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-north-outer",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-east-outer-north-7",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-east-outer-storage-east",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-east-outer-reception",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-east-outer-altar",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-south-outer-west",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-south-outer-east",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-top-storage-north-1",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-top-storage-north-2",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-top-storage-north-3",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-top-storage-north-4",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-top-storage-south-1",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-top-storage-south-2",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-top-storage-south-3",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-top-storage-south-4",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-top-storage-div-1-2",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-top-storage-div-2-3",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-top-storage-div-3-4",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-top-storage-east-end",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-top-storage-west-end",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-upper-impluvium-north",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-upper-impluvium-south",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-upper-impluvium-east",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-upper-impluvium-west",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-lower-impluvium-north",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-lower-impluvium-south",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-lower-impluvium-east",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-lower-impluvium-west",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-horizontal-partition-west-left",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-horizontal-partition-west-mid",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-horizontal-partition-mid",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-horizontal-partition-east",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-storage-central-north-door-wall",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-storage-central-west",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-storage-central-east",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-storage-central-south",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-storage-east-north",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-storage-east-west",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-storage-east-south",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-porch-north",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-porch-east",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-porch-south-inner",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-altar-west",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+      "entity_id": "wall-altar-north",
+      "message": "Wall thickness/height unknown; geometry not generated."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "overall scale unknown: no dimension text",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "height_m always null: top view only",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "label 7. not in legend: inferred as intermediate court/corridor between entrance and reception",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "topmost narrow strip between north outer wall and top storage row is treated as part of 7.",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "exact normalized coordinates approximate due to schematic thick lines",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "two blue rectangles both labeled 5. impluvium: treated as two separate zones north and south",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "west outer wall gaps: ambiguous whether exterior access or internal passage between 7. and 4.",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "door spans estimated: narrow gaps in walls are <=0.15 of wall length",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Site height assumed: 2.7 m via explicit user assumption (not observed).",
+      "message": "Unresolved source assertion retained as diagnostic."
+    },
+    {
+      "code": "UNRESOLVED_SOURCE",
+      "entity_id": "Scale provenance: User-assumed footprint 18x14 m (explicit --assume-size; not observed). no scale bar or figured dimensions visible; only schematic block plan with numbered zones",
+      "message": "Unresolved source assertion retained as diagnostic."
+    }
+  ],
+  "findings": [],
+  "oiIdentity": {
+    "repo": "Mapped-Assembly/OpenIndustries",
+    "pinnedSha": "50f78e0bef23c5a6958d80c50e9232066ecc11d2",
+    "actualSha": "50f78e0bef23c5a6958d80c50e9232066ecc11d2",
+    "version": "0.1.1",
+    "pinned": true,
+    "markers": {
+      "spaceIr": true,
+      "compiler": true,
+      "planViewport": true,
+      "localBackend": true
+    }
+  },
+  "understanding": {
+    "rooms": 13,
+    "walls": 47,
+    "openings": 7,
+    "equipment": 0,
+    "unresolved": 8,
+    "nullGeometry": 0,
+    "scaled": true
+  },
+  "linked": {},
+  "evidence": "C:\\Users\\isaya\\meta-hackathon\\app\\physical-task-tracker\\datasets\\floorplan-web-10\\runs\\02-benin-house\\oi-evidence\\2d2dbd1c-e938-4c76-871e-c2f7dbad733c"
+}

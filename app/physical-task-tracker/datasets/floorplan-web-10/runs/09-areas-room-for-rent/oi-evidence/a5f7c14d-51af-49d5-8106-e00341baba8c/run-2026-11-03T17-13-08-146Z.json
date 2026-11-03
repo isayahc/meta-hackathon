@@ -1,0 +1,188 @@
+{
+  "source": {
+    "sourceId": "09-areas-room-for-rent.jpg",
+    "digestSha256": "2c8b65c3e5c68db4a65907a74b89413d2ce0fcfd385f69e461caa5e72ea2b887"
+  },
+  "model": "muse-spark-1.1",
+  "promptVersion": "floorplan-v5",
+  "heightAssumptionM": 2.7,
+  "sizeAssumptionM": {
+    "width_m": 18,
+    "depth_m": 14
+  },
+  "mock": false,
+  "oiIdentity": {
+    "repo": "Mapped-Assembly/OpenIndustries",
+    "pinnedSha": "50f78e0bef23c5a6958d80c50e9232066ecc11d2",
+    "actualSha": "50f78e0bef23c5a6958d80c50e9232066ecc11d2",
+    "version": "0.1.1",
+    "pinned": true,
+    "markers": {
+      "spaceIr": true,
+      "compiler": true,
+      "planViewport": true,
+      "localBackend": true
+    }
+  },
+  "validation": {
+    "valid": true,
+    "findings": [
+      {
+        "code": "UNKNOWN_GEOMETRY",
+        "path": "regions[4].polygon",
+        "message": "Geometry not supplied.",
+        "severity": "unresolved"
+      },
+      {
+        "code": "UNKNOWN_GEOMETRY",
+        "path": "occupancies[1].polygon",
+        "message": "Geometry not supplied.",
+        "severity": "unresolved"
+      },
+      {
+        "code": "UNKNOWN_GEOMETRY",
+        "path": "occupancies[2].polygon",
+        "message": "Geometry not supplied.",
+        "severity": "unresolved"
+      }
+    ]
+  },
+  "compiled": {
+    "source_sha256": "158c5e48d18f134f7a3262cc9a9ba2e480098b3db0dd78e72b34336d2c69743d",
+    "bindings": [],
+    "diagnostics": [
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-west-wall-room-for-rent",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-east-wall-room-for-rent",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-south-wall-room-for-rent",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-west-wall-closet",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-south-wall-closet",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-east-wall-closet",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-north-partition-closet",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-east-wall-bath-upper",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-east-wall-cl",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-south-wall-bath-west",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-south-wall-cl",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-north-wall-cl",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_REGION_GEOMETRY",
+        "entity_id": "room-room-m",
+        "message": "Region topology retained in source; no metric geometry."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-shower",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-toilet",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-sink",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "overall building width/depth/height not dimensioned; only internal room widths of 10', 14', 5'6\", 5\" noted",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "exact footprint of ROOM M. and corridor to west is outside yellow-highlighted area and unclear; polygon null",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "north edge of ROOM FOR RENT. is cropped off image; top wall not visible",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "window/door swings hand-sketched: precise positions along walls are approximate",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "neighbour boundary dashed on far right labeled NEIGHBOUR; setback unknown",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "thickness_m and height_m not labeled in plan",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "west corridor walls yellow but not connected to main unit; connectivity between ROOM M., ROOM FOR RENT., CLOSET., and lower ROOM ambiguous",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Site height assumed: 2.7 m via explicit user assumption (not observed).",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Scale provenance: User-assumed footprint 18x14 m (explicit --assume-size; not observed). No overall site scale bar. Room for rent annotated '10'' (arrow shows width) and '14'' (length) near center; closet annotated '5'6\"' and '5\"'; no figured overall building dimensions, height not labeled.",
+        "message": "Unresolved source assertion retained as diagnostic."
+      }
+    ]
+  },
+  "committed": {
+    "scene_id": "a5f7c14d-51af-49d5-8106-e00341baba8c",
+    "revision": 1,
+    "name": "ds10-09-areas-room-for-rent",
+    "head_url": "http://127.0.0.1:5173/?sceneId=a5f7c14d-51af-49d5-8106-e00341baba8c",
+    "revision_url": "http://127.0.0.1:5173/?sceneId=a5f7c14d-51af-49d5-8106-e00341baba8c&revision=1"
+  }
+}

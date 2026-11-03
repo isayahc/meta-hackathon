@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="687" viewBox="0 0 760 687">
+<rect x="0" y="0" width="760" height="687" fill="#ffffff"/>
+<text x="12" y="24" font-family="sans-serif" font-size="16" font-weight="bold" fill="#111827">02-benin-house</text>
+<text x="12" y="44" font-family="sans-serif" font-size="11" fill="#4b5563">site 18x14x2.7 m · 13 regions · 47 walls · 7 portals · 0 equipment · top-down, x=+X east, y=−Z north</text>
+<g transform="translate(716,100)"><circle r="16" fill="#f3f4f6" stroke="#9ca3af"/><path d="M0,10 L0,-10 M-6,-3 L0,-10 L6,-3" stroke="#111827" stroke-width="2" fill="none"/><text y="-20" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">N</text></g>
+<rect x="52.41" y="106.77" width="655.17" height="509.58" fill="none" stroke="#9ca3af" stroke-dasharray="6,4"><title>site 18x14x2.7 m</title></rect>
+<polygon points="316.45,118.49 316.45,237.22 391.14,237.22 391.14,190.34 597.52,190.34 597.52,239.26 684,239.26 684,118.49" fill="#fef3c7" stroke="#d97706" stroke-width="1"><title>room-1-entrance-court (zone)</title></polygon>
+<text x="497.28" y="196.32" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">1. entrance court</text>
+<polygon points="319.07,240.79 389.83,240.79 389.83,192.89 319.07,192.89" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-2-porch (room)</title></polygon>
+<text x="354.45" y="216.84" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">2. porch</text>
+<polygon points="599.48,242.82 683.34,242.82 683.34,124.6 599.48,124.6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-3-altar (room)</title></polygon>
+<text x="641.41" y="183.71" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">3. altar</text>
+<polygon points="317.76,420.67 683.34,420.67 683.34,245.37 597.52,245.37 597.52,192.89 391.14,192.89 391.14,242.31 317.76,242.31" fill="#fef3c7" stroke="#d97706" stroke-width="1"><title>room-4-reception-court (zone)</title></polygon>
+<text x="497.44" y="275.31" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">4. reception court</text>
+<polygon points="372.14,504.24 623.07,504.24 623.07,451.24 372.14,451.24" fill="#fef3c7" stroke="#d97706" stroke-width="1"><title>room-5-impluvium-north (zone)</title></polygon>
+<text x="497.6" y="477.74" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">5. impluvium north</text>
+<polygon points="374.76,335.57 617.83,335.57 617.83,283.59 374.76,283.59" fill="#fef3c7" stroke="#d97706" stroke-width="1"><title>room-5-impluvium-south (zone)</title></polygon>
+<text x="496.29" y="309.58" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">5. impluvium south</text>
+<polygon points="316.45,568.95 374.1,568.95 374.1,525.13 316.45,525.13" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-6-storage-nw (room)</title></polygon>
+<text x="345.28" y="547.04" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">6. storage NW</text>
+<polygon points="378.69,568.44 458.62,568.44 458.62,525.13 378.69,525.13" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-6-storage-n2 (room)</title></polygon>
+<text x="418.66" y="546.79" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">6. storage N2</text>
+<polygon points="464.52,568.95 545.1,568.95 545.1,525.13 464.52,525.13" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-6-storage-n3 (room)</title></polygon>
+<text x="504.81" y="547.04" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">6. storage N3</text>
+<polygon points="550.34,568.95 623.72,568.95 623.72,525.13 550.34,525.13" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-6-storage-ne (room)</title></polygon>
+<text x="587.03" y="547.04" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">6. storage NE</text>
+<polygon points="377.38,420.16 483.52,420.16 483.52,381.43 377.38,381.43" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-6-storage-central (room)</title></polygon>
+<text x="430.45" y="400.79" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">6. storage central</text>
+<polygon points="593.59,422.2 682.69,422.2 682.69,383.98 593.59,383.98" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"><title>room-6-storage-east (room)</title></polygon>
+<text x="638.14" y="403.09" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">6. storage east</text>
+<polygon points="317.1,606.15 683.34,606.15 683.34,424.23 317.1,424.23" fill="#fef3c7" stroke="#d97706" stroke-width="1"><title>room-7 (zone)</title></polygon>
+<text x="500.22" y="515.19" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1f2937">7.</text>
+<polyline data-layer="boundary" points="310.55,610.74 310.55,427.8" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-west-outer-north (wall)</title></polyline>
+<polyline data-layer="boundary" points="310.55,419.65 310.55,245.88" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-west-outer-middle (wall)</title></polyline>
+<polyline data-layer="boundary" points="310.55,237.22 310.55,118.49" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-west-outer-south (wall)</title></polyline>
+<polyline data-layer="boundary" points="310.55,610.74 689.9,610.74" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-north-outer (wall)</title></polyline>
+<polyline data-layer="boundary" points="689.9,610.74 689.9,425.25" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-east-outer-north-7 (wall)</title></polyline>
+<polyline data-layer="boundary" points="689.9,422.2 689.9,383.98" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-east-outer-storage-east (wall)</title></polyline>
+<polyline data-layer="boundary" points="689.9,383.98 689.9,245.37" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-east-outer-reception (wall)</title></polyline>
+<polyline data-layer="boundary" points="689.9,242.82 689.9,118.49" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-east-outer-altar (wall)</title></polyline>
+<polyline data-layer="boundary" points="310.55,118.49 475,118.49" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-south-outer-west (wall)</title></polyline>
+<polyline data-layer="boundary" points="530.69,118.49 689.9,118.49" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-south-outer-east (wall)</title></polyline>
+<polyline data-layer="boundary" points="316.45,572.52 374.1,572.52" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-top-storage-north-1 (wall)</title></polyline>
+<polyline data-layer="boundary" points="378.69,572.52 458.62,572.52" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-top-storage-north-2 (wall)</title></polyline>
+<polyline data-layer="boundary" points="464.52,572.52 545.1,572.52" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-top-storage-north-3 (wall)</title></polyline>
+<polyline data-layer="boundary" points="550.34,572.52 623.72,572.52" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-top-storage-north-4 (wall)</title></polyline>
+<polyline data-layer="boundary" points="316.45,521.56 374.1,521.56" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-top-storage-south-1 (wall)</title></polyline>
+<polyline data-layer="boundary" points="378.69,521.56 458.62,521.56" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-top-storage-south-2 (wall)</title></polyline>
+<polyline data-layer="boundary" points="464.52,521.56 545.1,521.56" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-top-storage-south-3 (wall)</title></polyline>
+<polyline data-layer="boundary" points="550.34,521.56 623.72,521.56" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-top-storage-south-4 (wall)</title></polyline>
+<polyline data-layer="boundary" points="374.1,572.52 374.1,521.56" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-top-storage-div-1-2 (partition)</title></polyline>
+<polyline data-layer="boundary" points="458.62,572.52 458.62,521.56" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-top-storage-div-2-3 (partition)</title></polyline>
+<polyline data-layer="boundary" points="545.1,572.52 545.1,521.56" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-top-storage-div-3-4 (partition)</title></polyline>
+<polyline data-layer="boundary" points="623.72,572.52 623.72,521.56" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-top-storage-east-end (wall)</title></polyline>
+<polyline data-layer="boundary" points="316.45,572.52 316.45,521.56" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-top-storage-west-end (wall)</title></polyline>
+<polyline data-layer="boundary" points="372.14,504.24 623.07,504.24" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-upper-impluvium-north (wall)</title></polyline>
+<polyline data-layer="boundary" points="372.14,451.24 623.07,451.24" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-upper-impluvium-south (wall)</title></polyline>
+<polyline data-layer="boundary" points="623.07,504.24 623.07,451.24" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-upper-impluvium-east (wall)</title></polyline>
+<polyline data-layer="boundary" points="372.14,504.24 372.14,451.24" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-upper-impluvium-west (wall)</title></polyline>
+<polyline data-layer="boundary" points="374.76,335.57 617.83,335.57" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-lower-impluvium-north (wall)</title></polyline>
+<polyline data-layer="boundary" points="374.76,283.59 617.83,283.59" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-lower-impluvium-south (wall)</title></polyline>
+<polyline data-layer="boundary" points="617.83,335.57 617.83,283.59" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-lower-impluvium-east (wall)</title></polyline>
+<polyline data-layer="boundary" points="374.76,335.57 374.76,283.59" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-lower-impluvium-west (wall)</title></polyline>
+<polyline data-layer="boundary" points="342.66,424.23 423.24,424.23" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-horizontal-partition-west-left (wall)</title></polyline>
+<polyline data-layer="boundary" points="434.38,424.23 483.52,424.23" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-horizontal-partition-west-mid (wall)</title></polyline>
+<polyline data-layer="boundary" points="483.52,424.23 625.69,424.23" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-horizontal-partition-mid (wall)</title></polyline>
+<polyline data-layer="boundary" points="637.48,424.23 683.34,424.23" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-horizontal-partition-east (wall)</title></polyline>
+<polyline data-layer="boundary" points="377.38,420.16 483.52,420.16" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-storage-central-north-door-wall (wall)</title></polyline>
+<polyline data-layer="boundary" points="377.38,420.16 377.38,381.43" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-storage-central-west (wall)</title></polyline>
+<polyline data-layer="boundary" points="483.52,420.16 483.52,381.43" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-storage-central-east (wall)</title></polyline>
+<polyline data-layer="boundary" points="377.38,381.43 483.52,381.43" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-storage-central-south (wall)</title></polyline>
+<polyline data-layer="boundary" points="593.59,422.2 682.69,422.2" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-storage-east-north (wall)</title></polyline>
+<polyline data-layer="boundary" points="593.59,422.2 593.59,383.98" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-storage-east-west (wall)</title></polyline>
+<polyline data-layer="boundary" points="593.59,383.98 682.69,383.98" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-storage-east-south (wall)</title></polyline>
+<polyline data-layer="boundary" points="355.1,240.79 391.14,240.79" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-porch-north (wall)</title></polyline>
+<polyline data-layer="boundary" points="391.14,240.79 391.14,190.34" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-porch-east (wall)</title></polyline>
+<polyline data-layer="boundary" points="391.14,192.89 597.52,192.89" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-porch-south-inner (wall)</title></polyline>
+<polyline data-layer="boundary" points="597.52,242.82 597.52,192.89" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-altar-west (wall)</title></polyline>
+<polyline data-layer="boundary" points="597.52,242.82 683.34,242.82" fill="none" stroke="#1f2937" stroke-width="2.18" stroke-linecap="round"><title>wall-altar-north (wall)</title></polyline>
+<polyline data-layer="portal" points="373.04,118.49 409.22,118.49" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-1 (gate) on wall-south-outer-west</title></polyline>
+<polyline data-layer="portal" points="342.66,424.23 362.8,424.23" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-2 (passage) on wall-horizontal-partition-west-left</title></polyline>
+<polyline data-layer="portal" points="648.95,424.23 655.83,424.23" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-3 (passage) on wall-horizontal-partition-east</title></polyline>
+<polyline data-layer="portal" points="590.15,424.23 611.47,424.23" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-4 (passage) on wall-horizontal-partition-mid</title></polyline>
+<polyline data-layer="portal" points="377.38,406.6 377.38,394.98" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-5 (door) on wall-storage-central-west</title></polyline>
+<polyline data-layer="portal" points="593.59,408.82 593.59,401.18" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-6 (door) on wall-storage-east-west</title></polyline>
+<polyline data-layer="portal" points="310.55,266.73 310.55,249.36" fill="none" stroke="#22c55e" stroke-width="4.68" stroke-linecap="round"><title>portal-7 (door) on wall-west-outer-middle</title></polyline>
+<g><rect x="564.01" y="640" width="181.99" height="5" fill="#111827"/><text x="655.005" y="636" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#111827">5 m</text></g>
+<text x="12" y="677" font-family="sans-serif" font-size="10" fill="#6b7280">10 unresolved notes</text>
+</svg>

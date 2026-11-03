@@ -231,6 +231,8 @@
         <label>Image URL <input type="text" name="url" placeholder="https://�"></label>
         <label>Spot id (optional) <input type="text" name="spot" placeholder="barn-loft"></label>
         <label>Scene name (optional) <input type="text" name="scene" placeholder="barn-loft-plan"></label>
+        <label>Assumed height, m (optional) <input type="text" name="assumeheight" placeholder="2.7" title="Only when the plan shows no heights: sent as your explicit assumption and recorded in run evidence."></label>
+        <label>Assumed footprint, m (optional) <input type="text" name="assumesize" placeholder="12x9" title="Only when the plan shows no scale: WIDTHxDEPTH sent as your explicit assumption and recorded in run evidence."></label>
         <div><button class="btn" type="submit">Build space</button></div>
       </form>
       <div id="spaceresult"></div>
@@ -791,6 +793,8 @@ $('spaceform').addEventListener('submit', (e) => {
     };
     if (f.spot.value.trim()) payload.spot = f.spot.value.trim();
     if (f.scene.value.trim()) payload.sceneName = f.scene.value.trim();
+    if (f.assumeheight.value.trim()) payload.assumeHeight = f.assumeheight.value.trim();
+    if (f.assumesize.value.trim()) payload.assumeSize = f.assumesize.value.trim();
     const out = await api('/api/floorplan', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
     });

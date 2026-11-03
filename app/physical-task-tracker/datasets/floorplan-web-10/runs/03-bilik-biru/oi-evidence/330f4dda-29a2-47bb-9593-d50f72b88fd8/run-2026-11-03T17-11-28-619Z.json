@@ -1,0 +1,159 @@
+{
+  "source": {
+    "sourceId": "03-bilik-biru.jpg",
+    "digestSha256": "3516ac31093cc60198ab15e5cd0c65d5cf30b832e118418687b46570db2560db"
+  },
+  "model": "muse-spark-1.1",
+  "promptVersion": "floorplan-v5",
+  "heightAssumptionM": 2.7,
+  "sizeAssumptionM": {
+    "width_m": 18,
+    "depth_m": 14
+  },
+  "mock": false,
+  "oiIdentity": {
+    "repo": "Mapped-Assembly/OpenIndustries",
+    "pinnedSha": "50f78e0bef23c5a6958d80c50e9232066ecc11d2",
+    "actualSha": "50f78e0bef23c5a6958d80c50e9232066ecc11d2",
+    "version": "0.1.1",
+    "pinned": true,
+    "markers": {
+      "spaceIr": true,
+      "compiler": true,
+      "planViewport": true,
+      "localBackend": true
+    }
+  },
+  "validation": {
+    "valid": true,
+    "findings": []
+  },
+  "compiled": {
+    "source_sha256": "3a8f3c44a11b7f3c84886fe26cb3ff05e3f84cc70352df6f4c61f10829c6a3ab",
+    "bindings": [],
+    "diagnostics": [
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-north-wall",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-east-wall",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-south-wall",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNKNOWN_BOUNDARY_DIMENSIONS",
+        "entity_id": "wall-west-wall",
+        "message": "Wall thickness/height unknown; geometry not generated."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-table-or-cabinet-small-top-left-1",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-table-or-cabinet-small-top-left-2",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-table-or-cabinet-mid-left",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-table-central-north",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-display-or-opening-north-east-red-outline",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-stage-or-front-table-south-full-width",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-display-or-opening-south-central-red-outline",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-chairs-left-block-30-units",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNCOMPILED_OCCUPANCY",
+        "entity_id": "equip-chairs-right-block-30-units",
+        "message": "External equipment placements require explicit asset resolution."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Scale and absolute dimensions unknown: no scale bar or figured dimensions.",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Height unknown: plan only.",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Thin horizontal line inside north wall at y~0.288 spanning full width: function unclear, may be inner wall or projection screen line.",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Red-outlined rectangles at north-east and south-center: ambiguous whether they are doors, windows, projection screens, or equipment; treated as equipment but could be openings.",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Long blue bar at extreme south overlapping south wall: ambiguous whether it is wall thickening, stage, or front table; treated as equipment.",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Individual chair footprints visible but grouped into block polygons to avoid excessive enumeration; exact chair counts 5x6 per block = 30 each observed but precise per-chair coordinates not measured.",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "No traversable openings can be confirmed; entry/exit location unknown.",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Wall thickness and material not readable.",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Site height assumed: 2.7 m via explicit user assumption (not observed).",
+        "message": "Unresolved source assertion retained as diagnostic."
+      },
+      {
+        "code": "UNRESOLVED_SOURCE",
+        "entity_id": "Scale provenance: User-assumed footprint 18x14 m (explicit --assume-size; not observed). No scale bar, north arrow with dimensions, or figured measurements visible; image is a schematic furniture layout titled LAYOUT BANGUNAN ISTANA ARAU BILIK BIRU with only normalized positions.",
+        "message": "Unresolved source assertion retained as diagnostic."
+      }
+    ]
+  },
+  "committed": {
+    "scene_id": "330f4dda-29a2-47bb-9593-d50f72b88fd8",
+    "revision": 1,
+    "name": "ds10-03-bilik-biru",
+    "head_url": "http://127.0.0.1:5173/?sceneId=330f4dda-29a2-47bb-9593-d50f72b88fd8",
+    "revision_url": "http://127.0.0.1:5173/?sceneId=330f4dda-29a2-47bb-9593-d50f72b88fd8&revision=1"
+  }
+}

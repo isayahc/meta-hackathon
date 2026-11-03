@@ -96,3 +96,16 @@ diagnostics, conflicts, digests, preview URLs — come from OI modules.
 6. `localSceneRequest` cannot create scenes (requires base revision >= 1);
    the runner commits new scenes via `LocalSceneBackend.save` with base 0,
    mirroring OI's own verification order.
+
+## Site height rule (verified against the pin)
+
+OI validates a non-null site strictly: width, depth, and height must each
+be within 1–100 m (`SITE` error otherwise). A null site validates with an
+`UNSCALED` unresolved finding, but `compileSpaceIR` throws
+`UNSCALED_SITE` for it — so known width/depth with unknown height cannot
+compile as-is. Field Ops therefore never sends a zero or guessed height:
+unknown heights fail fast (`OBS_MISSING_HEIGHT`) unless the run carries an
+explicit `--assume-height` value, which is labeled as a user assumption in
+the SpaceIR `unresolved` notes and the run evidence. Fully unscaled plans
+fail fast the same way (`OBS_MISSING_SIZE`) unless `--assume-size <WIDTHxDEPTH>`
+supplies an explicit footprint; observed sites always win over either flag.

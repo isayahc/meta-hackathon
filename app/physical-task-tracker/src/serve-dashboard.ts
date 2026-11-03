@@ -28,6 +28,21 @@ const JOB_TIMEOUT_MS = 300000; // model calls are slow; surface hangs as 502s
 
 // Shell out to a sibling CLI, parse its stdout JSON. Nonzero exit (bad key,
 // API error, truncated output) rejects with the script's stderr.
+// stderr mixes Node runtime warnings with the real failure while the
+// user-facing message is capped, so warnings can bury the actual error.
+// Strip incidental runtime warning lines; the failure leads.
+export function primaryError(stderr: string, fallback: string): string {
+  const kept = stderr
+    .split('\n')
+    .map((l) => l.trimEnd())
+    .filter((l) => l.trim() && !isRuntimeWarning(l));
+  return kept.length ? kept.join('\n').trim() : fallback;
+}
+
+function isRuntimeWarning(line: string): boolean {
+  return /^\(node:\d+\)/.test(line) || line.includes('--trace-warnings');
+}
+
 export function runScript(name: string, args: string[], { timeoutMs = JOB_TIMEOUT_MS } = {}): Promise<unknown> {
   return new Promise((resolve, reject) => {
     execFile(
@@ -36,7 +51,7 @@ export function runScript(name: string, args: string[], { timeoutMs = JOB_TIMEOU
       { cwd: HERE, timeout: timeoutMs },
       (err, stdout, stderr) => {
         if (err) {
-          const why = err.killed ? `timed out after ${timeoutMs}ms` : `${stderr || err.message}`;
+          const why = err.killed ? `timed out after ${timeoutMs}ms` : primaryError(stderr, err.message);
           reject(new Error(`${name}: ${why}`.slice(0, 500)));
         } else {
           try {
@@ -486,7 +501,7 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
       if (req.method === 'POST' && url.pathname === '/api/floorplan') {
         const workdir = await mkdtemp(join(tmpdir(), 'fieldops-floorplan-'));
         try {
-          const { imageUrl, imageData, observations = null, spot = null, goal = null, sceneName = null, mockOi = false } = await readBody(req);
+          const { imageUrl, imageData, observations = null, spot = null, goal = null, sceneName = null, assumeHeight = null, assumeSize = null, mockOi = false } = await readBody(req);
           const cliArgs: string[] = [];
           if (observations != null) {
             const obsPath = join(workdir, 'observations.json');
@@ -499,6 +514,18 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
           if (spot) cliArgs.push('--spot', cleanSpotId(spot));
           if (typeof goal === 'string' && goal.trim()) cliArgs.push('--goal', goal.trim().slice(0, 120));
           if (typeof sceneName === 'string' && sceneName.trim()) cliArgs.push('--scene-name', sceneName.trim().slice(0, 120));
+          if (assumeHeight !== null && assumeHeight !== undefined) {
+            const h = typeof assumeHeight === 'number' ? assumeHeight : Number(assumeHeight);
+            if (!Number.isFinite(h) || h <= 0) throw new Error(`Bad assumeHeight "${String(assumeHeight).slice(0, 40)}": expected a positive number of meters.`);
+            cliArgs.push('--assume-height', String(h));
+          }
+          if (assumeSize !== null && assumeSize !== undefined) {
+            const m = String(assumeSize).trim().match(/^(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)$/i);
+            const w = m ? Number(m[1]) : NaN;
+            const d = m ? Number(m[2]) : NaN;
+            if (!m || !Number.isFinite(w) || !Number.isFinite(d) || w <= 0 || d <= 0) throw new Error(`Bad assumeSize "${String(assumeSize).slice(0, 40)}": expected WIDTHxDEPTH in meters, e.g. 12x9.`);
+            cliArgs.push('--assume-size', `${w}x${d}`);
+          }
           if (mockOi) cliArgs.push('--mock-oi');
           const result = await runScript('task-floorplan.js', cliArgs);
           json(200, { ok: true, result });
@@ -522,7 +549,7 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
       json(404, { ok: false, error: 'not found' });
     } catch (err) {
       const msg = (err as Error).message;
-      const code = /No goal|No action|Event title|Bad event|Bad status|Bad URL|Only http|credentials|non-public|Refusing|Too many redirects|Could not resolve|Bad spot|Provide \{|not JSON|over \d+|Bad --eco|Bad location|No spots|Nothing to optimize|Set META_API_KEY|Empty key|required/i.test(msg)
+      const code = /No goal|No action|Event title|Bad event|Bad status|Bad URL|Only http|credentials|non-public|Refusing|Too many redirects|Could not resolve|Bad spot|Provide \{|not JSON|over \d+|Bad assumeHeight|Bad assumeSize|Bad --eco|Bad location|No spots|Nothing to optimize|Set META_API_KEY|Empty key|required/i.test(msg)
         ? 400
         : /task-\w+\.m?js:|timed out/i.test(msg)
           ? 502
