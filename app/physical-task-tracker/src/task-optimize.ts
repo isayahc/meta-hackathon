@@ -23,6 +23,7 @@ import { fetchEco, normalizeSoil, ecoConstraints, summarizeEco, type WeatherDoc 
 import { type SpotBrief } from './lib/analyze-response.js';
 import { listSpotBriefs } from './lib/spot-state.js';
 import { setDoc } from './lib/db.js';
+import { listProcesses } from './lib/processes.js';
 import { loadEnvSync } from './lib/env.js';
 import { flagValue, flagAll } from './lib/args.js';
 
@@ -148,6 +149,8 @@ const planObj = {
   goals_open: goals.filter((g) => g.status !== 'done').length,
   goals_total: goals.length,
   spots: spots.length,
+  process_basis: await listProcesses(root),
+  stale: false,
   plan: result.analysis,
 };
 setDoc(root, 'plan', planObj);

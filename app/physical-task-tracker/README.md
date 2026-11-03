@@ -159,7 +159,7 @@ tracking inflection point: single-visit analysis becomes longitudinal state.
 ## Storage (SQLite)
 
 Project state lives in `<project>/fieldops.db` (built-in `node:sqlite`, no
-new dependencies): `goals`, `spots` + `sessions`, `events`, and `docs`
+new dependencies): `goals`, `spots` + `sessions`, `events`, `processes`, and `docs`
 (latest plan, latest eco fusion). First open migrates any legacy JSON files
 (`goals.json`, `spots/`, `events.json`, `plan.json`, `eco.json`) once and
 leaves them in place, unread afterwards. Only the API key stays out of the
@@ -183,6 +183,24 @@ node dist/task-compare.js visit-a visit-b --spot north-fence --root ./my-farm
 ```
 
 Tests: `node --test dist/spot-state.test.js`.
+## Farmer processes
+
+A scan event also yields a versioned process (`farm-process/1`): goals,
+steps with inputs/outputs, tools/materials, actor roles, preconditions
+and completion criteria, `requires` precedence kept separate from
+observed footage order, plus evidence, coverage, confidence/unknowns,
+and model provenance. Claim status (`observed|inferred|corrected|
+unknown`) is tracked separately from execution status, and partial
+footage can never establish completion — unsupported details stay
+unknown. Farmer corrections append revisions (originals retained);
+plans stamped with an older revision go stale:
+
+```bash
+node dist/task-process.js build --root ./my-farm --event <scanEventId>
+node dist/task-process.js correct --root ./my-farm --id <pid> --set '{"steps":{"<pid>-s0":{"requires":[]}}}' --rationale "..."
+```
+
+Tests: `node --test dist/lib/processes.test.js dist/task-process.test.js`.
 ## Resume briefing
 
 `src/task-briefing.ts` reads every spot's state and briefs the operator —
