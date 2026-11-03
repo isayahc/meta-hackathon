@@ -17,6 +17,7 @@ import { listGoals, setGoalStatus, addGoal } from './lib/goals.js';
 import { listStoredEvents, getStoredEvent, addEvent, dayOf, isDay, type CalendarEvent } from './lib/events.js';
 import { listActions, syncActions, setActionStatus } from './lib/actions.js';
 import { listSpotBriefs, recentSessions } from './lib/spot-state.js';
+import { readOiLinks } from './lib/oi-links.js';
 import { getDoc } from './lib/db.js';
 import { loadEnvSync } from './lib/env.js';
 
@@ -234,6 +235,7 @@ export interface OverviewSpot {
   session_count: number;
   recent_sessions: string[];
   updated_at: string | null;
+  oi_links: Array<{ scene_id: string; revision: number; oi_entity_id: string; oi_revision: string; role: string }>;
 }
 
 export async function loadSpots(root: string): Promise<OverviewSpot[]> {
@@ -248,6 +250,7 @@ export async function loadSpots(root: string): Promise<OverviewSpot[]> {
       session_count: b.session_count ?? 0,
       recent_sessions: await recentSessions(root, b.id),
       updated_at: b.updated_at ?? null,
+      oi_links: await readOiLinks(root, 'spot', b.id),
     });
   }
   return spots;
@@ -475,6 +478,30 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
           if (goal) args.push('--goal', goal);
           const analysis = await runScript('task-compare.js', args);
           json(200, { ok: true, spot: id, analysis });
+        } finally {
+          await rm(workdir, { recursive: true, force: true });
+        }
+        return;
+      }
+      if (req.method === 'POST' && url.pathname === '/api/floorplan') {
+        const workdir = await mkdtemp(join(tmpdir(), 'fieldops-floorplan-'));
+        try {
+          const { imageUrl, imageData, observations = null, spot = null, goal = null, sceneName = null, mockOi = false } = await readBody(req);
+          const cliArgs: string[] = [];
+          if (observations != null) {
+            const obsPath = join(workdir, 'observations.json');
+            await writeFile(obsPath, JSON.stringify(observations));
+            cliArgs.push('--observations', obsPath);
+          } else {
+            cliArgs.push(await materializeImage({ imageUrl, imageData }, workdir, 'floorplan'));
+          }
+          cliArgs.push('--root', root);
+          if (spot) cliArgs.push('--spot', cleanSpotId(spot));
+          if (typeof goal === 'string' && goal.trim()) cliArgs.push('--goal', goal.trim().slice(0, 120));
+          if (typeof sceneName === 'string' && sceneName.trim()) cliArgs.push('--scene-name', sceneName.trim().slice(0, 120));
+          if (mockOi) cliArgs.push('--mock-oi');
+          const result = await runScript('task-floorplan.js', cliArgs);
+          json(200, { ok: true, result });
         } finally {
           await rm(workdir, { recursive: true, force: true });
         }

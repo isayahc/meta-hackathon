@@ -283,3 +283,37 @@ test('overview degrades on an empty project dir', async (t: TestContext) => {
   assert.equal(ov.plan, null);
   assert.equal(ov.eco, null);
 });
+test('dashboard page carries the Space tab', async () => {
+  const html = await readFile(new URL('./dashboard/index.html', import.meta.url), 'utf8');
+  assert.match(html, /data-view="space"/);
+  assert.match(html, /id="spaceform"/);
+  assert.match(html, /\/api\/floorplan/);
+});
+
+test('floorplan: observations + mock OI build a space and link the spot', async (t: TestContext) => {
+  const root = await scratch(t);
+  const obs = JSON.parse(await readFile(new URL('./samples/floorplan-cabin-observations.json', import.meta.url), 'utf8'));
+  const r = await call(root, 'POST', '/api/floorplan', { observations: obs, spot: 'north-fence', sceneName: 'barn-test', mockOi: true });
+  assert.equal(r.status, 200);
+  assert.equal(r.json.result.ok, true);
+  assert.equal(r.json.result.mock, true);
+  assert.match(r.json.result.revision_url, /sceneId=/);
+  const ov = (await call(root, 'GET', '/api/overview')).json;
+  const spot = ov.spots.find((s: any) => s.id === 'north-fence');
+  assert.ok(spot.oi_links.length >= 1);
+  assert.ok(spot.oi_links.every((l: any) => l.scene_id === r.json.result.scene_id));
+});
+
+test('floorplan: missing image and bad spot are 400, never shelled', async (t: TestContext) => {
+  const root = await scratch(t);
+  const badSpot = await call(root, 'POST', '/api/floorplan', {
+    observations: { site: null, rooms: [], walls: [], openings: [], equipment: [], unresolved: [] },
+    spot: '../evil',
+    mockOi: true,
+  });
+  assert.equal(badSpot.status, 400);
+  assert.match(badSpot.json.error, /Bad spot/);
+  const noImage = await call(root, 'POST', '/api/floorplan', {});
+  assert.equal(noImage.status, 400);
+  assert.match(noImage.json.error, /data URL/);
+});

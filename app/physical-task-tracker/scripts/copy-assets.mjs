@@ -10,5 +10,8 @@ await mkdir(distDir, { recursive: true });
 for (const entry of ['dashboard', 'samples']) {
   await cp(join(appDir, 'src', entry), join(distDir, entry), { recursive: true });
 }
+// Plain-JS OI runner (runs inside the OI checkout, not compiled by tsc).
+await mkdir(join(distDir, 'lib'), { recursive: true });
+await cp(join(appDir, 'src', 'lib', 'oi-runner.mjs'), join(distDir, 'lib', 'oi-runner.mjs'));
 await cp(join(appDir, 'src', 'example.env'), join(distDir, 'example.env'));
 console.log('assets copied to dist/');

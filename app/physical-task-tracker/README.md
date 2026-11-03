@@ -255,6 +255,30 @@ offline runs and tests. Samples: `samples/eco-kansas.json` (documented
 shapes, fictional readings — recapture live with the first command).
 Tests: `node --test dist/eco.test.js`.
 
+## Floor plans to OpenIndustries spaces
+
+`src/task-floorplan.ts` sends a floor-plan image to the Meta model, shapes
+the observations into SpaceIR v0.1, and runs the pinned OpenIndustries
+checkout (validate, compile, local commit). OI owns all spatial state;
+Field Ops keeps OI references on spots/goals plus replayable evidence.
+Boundary, pin, and setup: [doc/oi-boundary.md](../../doc/oi-boundary.md).
+
+```bash
+node dist/task-floorplan.js plan.png --root ./my-farm --spot barn-loft --scene-name barn-loft-plan
+node dist/task-floorplan.js --observations path/to/obs.json --root ./my-farm --spot barn-loft  # replay, no model call
+node dist/task-floorplan.js --benchmark --root ./my-farm   # fixtures through OI, no model calls
+node dist/task-floorplan.js --print-prompt                 # offline: show the model prompt
+```
+
+Live runs need `OI_ROOT` (pinned OI checkout + `npm install` there; the
+scene store defaults to `<project>/oi-scenes`). `--mock-oi` runs the full
+flow against a labeled scripted transport for offline demos and tests.
+Evidence lands in `<project>/oi-evidence/<scene-id>/`; the result JSON
+carries OI preview links (`revision_url`) for the workbench 2D plan.
+Dashboard: the Space tab posts to `/api/floorplan`. Tests: `node --test
+dist/task-floorplan.test.js dist/lib/oi-connector.test.js
+dist/lib/oi-links.test.js dist/lib/oi-integration.test.js` (live-OI tests
+run when `OI_ROOT` is pinned, else skip).
 ## Sample
 
 "Harvesting carrots" — agricultural workers harvesting carrots into crates,
