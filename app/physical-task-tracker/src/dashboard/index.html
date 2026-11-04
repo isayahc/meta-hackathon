@@ -128,6 +128,17 @@
   .addrow { display: flex; gap: 8px; flex-wrap: wrap; }
   .addrow input[type="text"] { flex: 3 1 180px; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; }
   .addrow select, .addrow input[type="date"] { flex: 1 1 90px; font: inherit; padding: 8px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+  #view-plan input:not([type="checkbox"]), #view-plan select, #view-plan textarea { font: inherit; padding: 8px; max-width: 100%; border: 1px solid var(--line); border-radius: 4px; }
+  .task-card { border-top: 1px solid var(--line); padding: 12px 0; overflow-wrap: anywhere; }
+  .task-card h3 { margin: 0 0 6px; }
+  .task-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+  .goal-link-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(100px,140px); gap: 8px; padding: 8px 0; }
+  .goal-link-row input { grid-column: 1 / -1; width: 100%; }
+  .planning-status { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .planning-fields { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 10px; }
+  .planning-fields label { display: grid; gap: 4px; }
+  .ev.task { background: #dbe7ec; }
+  .goal-chip { cursor: pointer; border: 1px solid var(--line); padding: 4px 8px; margin: 2px; }
   @media (max-width: 760px) {
     main { padding: 8px; }
     .cols { grid-template-columns: 1fr; }
@@ -265,6 +276,7 @@
       <ul class="goals" id="goals"></ul>
       <form class="addrow" id="goalform">
         <input type="text" name="text" required placeholder="New goal…" aria-label="Goal text">
+        <input type="text" name="success_criteria" placeholder="How will you verify success?" aria-label="Goal success criteria">
         <select name="weight" aria-label="Weight">
           <option value="5">weight 5</option>
           <option value="4">weight 4</option>
@@ -275,6 +287,54 @@
         <input type="date" name="deadline" aria-label="Deadline">
         <button class="btn" type="submit">Add</button>
       </form>
+      <div id="goalplanningdetail" tabindex="-1"></div>
+    </section>
+    <section aria-label="Tasks and goal contributions">
+      <h2>Work contributing to your goals</h2>
+      <p>Tasks can support several goals. Completing a task does not verify the goal outcome.</p>
+      <label>Show tasks for <select id="taskgoalfilter"><option value="">All goals</option><option value="unassigned">Unassigned</option></select></label>
+      <form class="run" id="newtaskform">
+        <label>Task<input name="text" type="text" required placeholder="Stage trays and materials"></label>
+        <label>Done when<input name="criteria" type="text" required placeholder="Trays and materials are ready at the bench"></label>
+        <button class="btn" type="submit">Add task</button>
+      </form>
+      <p id="planningstatus" class="planning-status" role="status"></p>
+      <div id="planningtasks"></div>
+      <div id="planningtaskdetail" tabindex="-1"></div>
+    </section>
+    <section aria-label="Work availability and commitments">
+      <h2>Your time and resources</h2>
+      <form class="run" id="availabilityform">
+        <div class="planning-fields">
+          <label>Project timezone<input name="timezone" type="text" value="America/New_York" required></label>
+          <label>Person / role<input name="person" type="text" value="operator" required></label>
+          <label>Repeated clock time at daylight-saving change<select name="fold"><option value="">Ask me to choose</option><option value="earlier">Earlier occurrence</option><option value="later">Later occurrence</option></select></label>
+          <label>Daily work limit (minutes)<input name="limit" type="number" min="1" value="480" required></label>
+          <label>Work begins<input name="start" type="datetime-local" required></label>
+          <label>Work ends<input name="end" type="datetime-local" required></label>
+        </div>
+        <label>Resources (one per line: name = available, unavailable, or unknown)<textarea name="resources" rows="3" placeholder="scoop = available"></textarea></label>
+        <label><input name="replace" type="checkbox"> Replace saved working intervals</label>
+        <button class="btn" type="submit">Save working time</button>
+      </form>
+      <div id="savedavailability"></div>
+      <details><summary>Add or update a fixed commitment / break</summary>
+        <form class="run" id="commitmentform">
+          <label>Name<input name="title" type="text" required placeholder="Lunch"></label>
+          <label>Existing commitment to update<select name="existing"><option value="">New commitment</option></select></label>
+          <label>Begins<input name="start" type="datetime-local" required></label>
+          <label>Ends<input name="end" type="datetime-local" required></label>
+          <label><input name="blocking" type="checkbox" checked> Reserves my time</label>
+          <label>Reserved resources (comma separated)<input name="resources" type="text"></label>
+          <button class="btn" type="submit">Save commitment</button>
+        </form>
+      </details>
+    </section>
+    <section aria-label="Review day plan">
+      <h2>Today and next action</h2>
+      <form class="addrow" id="dayplanform"><label>Plan date<input name="day" type="date" required></label><button class="btn" type="submit">Propose day plan</button></form>
+      <p>Proposals need your review. Accepted and pinned work stays reserved until you release it.</p>
+      <div id="humanplan"></div>
     </section>
     <section aria-label="Next actions">
       <h2>Next actions</h2>
@@ -285,6 +345,8 @@
   <div class="view" id="view-cal">
     <section aria-label="Calendar">
       <h2>Calendar</h2>
+      <label>Task goal filter<select id="calgoalfilter"><option value="">All goals</option></select></label>
+      <p class="hint" id="caltimezone">Fixed commitments remain visible with every goal filter.</p>
       <div class="calbar">
         <div class="seg" aria-label="Range">
           <button type="button" data-cal="day">Day</button><button type="button" data-cal="week" class="sel">Week</button><button type="button" data-cal="month">Month</button>
@@ -400,8 +462,8 @@ function renderGoals(ov) {
   const el = $('goals');
   el.innerHTML = ov.goals.map((g) =>
     `<li><span class="chip${g.status === 'done' ? ' done' : g.status === 'at-risk' ? ' risk' : ''}">${esc(g.status)}</span>` +
-    `<span>${esc(g.text)}</span><span class="meta">weight ${g.weight}/5${g.deadline ? ` · due ${esc(g.deadline)}` : ''}</span>` +
-    (g.status !== 'done' ? ` <button type="button" class="ghost" data-goal="${esc(g.id)}">done</button>` : '') + '</li>'
+    `<button class="ghost" type="button" data-goaldetail="${esc(g.id)}">${esc(g.text)}</button><span class="meta">weight ${g.weight}/5${g.deadline ? ` · due ${esc(g.deadline)}` : ''}</span>` +
+    (g.status !== 'done' ? ` <button type="button" class="ghost" data-goal="${esc(g.id)}">Mark outcome verified</button>` : '') + '</li>'
   ).join('') || '<li>No goals yet — add one below.</li>';
   el.querySelectorAll('button[data-goal]').forEach((b) =>
     b.addEventListener('click', () => setGoal(b.dataset.goal, 'done', b)));
@@ -422,14 +484,19 @@ function renderActions(ov) {
   const plan = ov.plan?.plan ?? ov.plan;
   const ranked = plan?.ranked_actions ?? [];
   if (!ranked.length) { el.innerHTML = '<p>No plan yet — run the optimizer.</p>'; return; }
-  el.innerHTML = '<ol class="actions">' + ranked.map((a) =>
+  el.innerHTML = '<ol class="actions">' + ranked.map((a, i) =>
     `<li>${esc(a.action)} <span class="why">— ${esc(a.why)}${a.effort ? ` (${esc(a.effort)})` : ''}</span>` +
-    (a.goal_id ? ` <button type="button" class="ghost" data-goal="${esc(a.goal_id)}">done</button>` : '') + '</li>'
+    ` <button type="button" class="ghost" data-adopt="${i}">Review as task</button></li>`
   ).join('') + '</ol>' +
     ((plan?.deferred ?? []).length ? `<details class="deferred"><summary>deferred (${plan.deferred.length})</summary><ul>` +
       plan.deferred.map((d) => `<li>${esc(d.action)} — ${esc(d.why)}</li>`).join('') + '</ul></details>' : '');
-  el.querySelectorAll('button[data-goal]').forEach((b) =>
-    b.addEventListener('click', () => setGoal(b.dataset.goal, 'done', b)));
+  el.querySelectorAll('button[data-adopt]').forEach(b => b.addEventListener('click', () => planningAction(async () => {
+    const a = ranked[Number(b.dataset.adopt)];
+    const task = await planningPost({ command: 'create', request_id: `optimizer:${String(a.goal_id ?? '')}:${String(a.action).slice(0,800)}`, task: {
+      text: a.action, review: 'proposed', links: a.goal_id ? [{ goal_id: a.goal_id, explanation: a.why || 'Suggested by optimizer; confirm contribution', origin: 'model', review: 'proposed' }] : []
+    } });
+    await openTask(task.id);
+  })));
 }
 
 function renderFeed(ov) {
@@ -631,13 +698,19 @@ function parseDay(s) {
 function evChip(e, clickable = false) {
   // Every video entry opens its detail panel; entries recorded before
   // payloads existed simply show less inside it.
-  const click = clickable && e.kind === 'scan';
+  const click = clickable && ['scan', 'task', 'goal'].includes(e.kind);
   return `<div class="ev ${esc(e.kind)}${click ? ' clickable' : ''}" title="${esc(e.detail ?? e.kind)}"` +
     (click ? ` data-eid="${esc(e.id)}"` : '') + '>' +
     (e.time ? `<span class="t">${esc(e.time)}</span> ` : '') + `${esc(e.title)}</div>`;
 }
 
 async function renderCalDetail(box, e, actions = null) {
+  if (e.kind === 'task') {
+    await loadPlanning(); const task = planningState.tasks.find(t => t.id === e.task_id);
+    box.innerHTML = `<h3>${esc(e.title)}</h3><p>${esc(e.scheduling)} · ${esc(e.execution)} · ${esc(formatPlanningTime(e.start))} – ${esc(formatPlanningTime(e.end))}</p>${task ? goalChips(task) : ''}<p><button type="button" class="btn" data-opentask="${esc(e.task_id)}">Open task and record work</button></p>`;
+    return;
+  }
+  if (e.kind === 'goal') { await showPlanningGoal(e.id.slice(5)); return; }
   if ((!actions || !actions.length) && e && e.kind === 'scan' && e.id) {
     box.innerHTML = '<p class="hint">Loading…</p>';
     try {
@@ -727,7 +800,8 @@ async function loadCal() {
   try {
     const { events } = await api('/api/events');
     lastCalEvents = events ?? [];
-    renderCal(box, lastCalEvents);
+    const goal = $('calgoalfilter').value;
+    renderCal(box, lastCalEvents.filter(e => !goal || e.kind !== 'task' || (e.goal_ids ?? []).includes(goal)));
     box.querySelectorAll('[data-eid]').forEach((c) =>
       c.addEventListener('click', (ev) => { ev.stopPropagation(); showCalEntry(c.dataset.eid); }));
   } catch (e) { box.innerHTML = `<p>calendar failed: ${esc(e.message)}</p>`; }
@@ -825,11 +899,12 @@ $('goalform').addEventListener('submit', (e) => {
   e.preventDefault();
   const f = e.target;
   busy(f.querySelector('button'), async () => {
-    const payload = { text: f.text.value.trim(), weight: Number(f.weight.value) };
+    const payload = { text: f.text.value.trim(), weight: Number(f.weight.value), success_criteria: f.success_criteria.value.trim() };
     if (f.deadline.value) payload.deadline = f.deadline.value;
     await api('/api/goals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     f.reset();
     tick(false);
+    await loadPlanning();
   }, 'goal added');
 });
 
@@ -913,6 +988,145 @@ $('walkthroughruns').addEventListener('submit', async e => {
     await loadWalkthroughs();
   } catch (error) { $('walkthroughstatus').textContent = error.message; }
 });
+// Human planning uses the existing action identities and calendar.
+let planningState = null, selectedPlanningTask = null;
+const selectedValues = select => [...select.selectedOptions].map(o => o.value);
+const commaList = value => [...new Set(value.split(',').map(s => s.trim()).filter(Boolean))];
+function planningPost(body) { return api('/api/task-planning', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
+async function planningAction(fn) {
+  try { await fn(); $('planningstatus').textContent = 'Saved. Review the updated task and day plan.'; }
+  catch (error) { $('planningstatus').textContent = error.message; }
+}
+function formatPlanningTime(value) { return new Date(value).toLocaleString(undefined, { timeZone: planningState?.schedule.config.timezone || 'UTC', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+function planningLocalInput(value) { if(!value)return ''; const parts=new Intl.DateTimeFormat('en-CA',{timeZone:planningState.schedule.config.timezone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(value)); const p=Object.fromEntries(parts.map(x=>[x.type,x.value])); return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`; }
+function goalChips(task) {
+  const links = task.links.filter(l => l.review === 'confirmed');
+  return links.length ? links.map(l => `<button type="button" class="chip goal-chip" data-goaldetail="${esc(l.goal_id)}" title="${esc(l.explanation)}">${esc(planningState.goals.find(g => g.id === l.goal_id)?.text ?? l.goal_id)}</button>`).join(' ') : '<span class="chip">Unassigned</span>';
+}
+async function loadPlanning() {
+  planningState = await api('/api/task-planning');
+  for (const id of ['taskgoalfilter', 'calgoalfilter']) {
+    const old = $(id).value;
+    $(id).innerHTML = '<option value="">All goals</option>' + (id === 'taskgoalfilter' ? '<option value="unassigned">Unassigned</option>' : '') + planningState.goals.map(g => `<option value="${esc(g.id)}">${esc(g.text)}</option>`).join('');
+    $(id).value = old;
+  }
+  const config = planningState.schedule.config, f = $('availabilityform');
+  f.timezone.value = config.timezone; f.person.value = config.person; f.limit.value = config.max_minutes;
+  f.resources.value = Object.entries(config.resources).map(([key, value]) => `${key} = ${value}`).join('\n');
+  $('savedavailability').innerHTML = '<p>Saved working intervals:</p><ul>' + config.availability.map(w => `<li>${esc(formatPlanningTime(w.start))} – ${esc(formatPlanningTime(w.end))}</li>`).join('') + '</ul>';
+  $('commitmentform').existing.innerHTML = '<option value="">New commitment</option>' + planningState.events.filter(e => e.timing).map(e => `<option value="${esc(e.id.replace(/^commitment-/, ''))}">${esc(e.title)}</option>`).join('');
+  $('caltimezone').textContent = `Task times use ${config.timezone}. Fixed commitments remain visible with every goal filter.`;
+  renderPlanningTasks(); renderHumanPlan();
+  if (selectedPlanningTask) renderTaskDetail(selectedPlanningTask);
+}
+function renderPlanningTasks() {
+  if (!planningState) return;
+  const goal = $('taskgoalfilter').value;
+  const tasks = planningState.tasks.filter(t => !goal || goal === 'unassigned' ? !goal || !t.links.some(l => l.review === 'confirmed') : t.links.some(l => l.goal_id === goal && l.review === 'confirmed'));
+  $('planningtasks').innerHTML = tasks.map(t => `<article class="task-card"><h3><button type="button" class="ghost" data-opentask="${esc(t.id)}">${esc(t.text)}</button></h3>
+    <p>${esc(t.execution)} · ${esc(t.review)} · ${t.remaining_minutes === null ? 'Time estimate needed' : `${t.remaining_minutes} active minutes remaining`}</p>${goalChips(t)}
+    <p>${t.links.filter(l => l.review === 'confirmed').map(l => 'Contributes to: ' + esc(l.explanation)).join('<br>')}</p>
+    <p>${t.links.some(l => l.review === 'proposed') ? 'Suggested goal links need review.' : ''}</p>
+    <div class="task-buttons"><button class="ghost" type="button" data-opentask="${esc(t.id)}">Assign goals / edit task</button><button class="ghost" type="button" data-taskcalendar="${esc(t.id)}">Calendar</button></div></article>`).join('') || '<p>No matching tasks. Add work or analyze a video.</p>';
+}
+async function showPlanningGoal(id) {
+  if (!planningState) await loadPlanning();
+  const goal = planningState.goals.find(g => g.id === id); if (!goal) return;
+  const count = planningState.goal_progress.find(g => g.goal_id === id);
+  $('taskgoalfilter').value = id; renderPlanningTasks();
+  const linked = planningState.tasks.filter(t => t.links.some(l => l.goal_id === id && l.review === 'confirmed'));
+  $('goalplanningdetail').innerHTML = `<h3>${esc(goal.text)}</h3><p>Success: ${esc(goal.success_criteria || 'Define how you will verify this outcome.')}</p><p>${count.completed} of ${count.total} linked tasks completed · ${esc(count.outcome)}.</p><form class="run" id="editgoalform" data-id="${esc(id)}"><label>Success criteria<input name="criteria" type="text" value="${esc(goal.success_criteria)}" required></label><label>Due date<input name="deadline" type="date" value="${goal.deadline ?? ''}"></label><label>Priority (1–5)<input name="weight" type="number" min="1" max="5" value="${goal.weight}" required></label><label>Reason<input name="reason" type="text" required></label><button class="btn" type="submit">Update goal</button></form>` +
+    ['open','in_progress','paused','blocked','done','cancelled'].filter(state => linked.some(t => t.execution === state)).map(state => `<h4>${esc(state)}</h4><ul>${linked.filter(t => t.execution === state).map(t => `<li><button class="ghost" type="button" data-opentask="${esc(t.id)}">${esc(t.text)}</button> ${planningState.schedule.blocks.some(b => b.status === 'accepted' && b.task_id === t.id) ? 'scheduled' : 'unscheduled'}</li>`).join('')}</ul>`).join('') + '<p>Add a task below or open an existing task to assign this goal. Task counts do not measure goal achievement.</p>';
+  showPlanningTab(); $('goalplanningdetail').focus();
+}
+function renderTaskDetail(id) {
+  const t = planningState.tasks.find(t => t.id === id); if (!t) return;
+  const opts = (values, current) => values.map(v => `<option value="${v}" ${v === current ? 'selected' : ''}>${v.replaceAll('_',' ')}</option>`).join('');
+  $('planningtaskdetail').innerHTML = `<article class="task-card"><h3>${esc(t.text)}</h3><p>Revision ${t.revision} · Original active estimate: ${t.original_minutes ?? 'unknown'} minutes</p>
+    <form class="run" id="taskeditform" data-id="${esc(t.id)}" data-revision="${t.revision}">
+      <label>Task<input name="text" type="text" value="${esc(t.text)}" required></label>
+      <label>Done when<input name="criteria" type="text" value="${esc(t.completion_criteria)}" required></label>
+      <div class="planning-fields"><label>Execution state<select name="execution">${opts(['open','in_progress','paused','blocked','done','cancelled'],t.execution)}</select></label>
+      <label>Task review<select name="review">${opts(['proposed','confirmed','rejected'],t.review)}</select></label>
+      <label>Estimated active minutes<input name="active" type="number" min="0" value="${t.active_minutes ?? ''}"></label>
+      <label>Remaining active minutes<input name="remaining" type="number" min="0" value="${t.remaining_minutes ?? ''}"></label>
+      <label>Setup minutes<input name="setup" type="number" min="0" value="${t.setup_minutes}"></label>
+      <label>Travel minutes<input name="travel" type="number" min="0" value="${t.travel_minutes}"></label>
+      <label>Passive waiting minutes<input name="passive" type="number" min="0" value="${t.passive_minutes}"></label>
+      <label>Due date<input name="deadline" type="date" value="${t.deadline ?? ''}"></label>
+      <label>Allowed start (optional)<input name="windowstart" type="datetime-local" value="${planningLocalInput(t.window?.start)}"></label>
+      <label>Must finish by (optional)<input name="windowend" type="datetime-local" value="${planningLocalInput(t.window?.end)}"></label>
+      <label>Defer until (optional)<input name="defer" type="datetime-local" value="${planningLocalInput(t.defer_until)}"></label>
+      <label>Total quantity (optional)<input name="totalquantity" type="number" min="1" value="${t.quantity?.total ?? ''}"></label>
+      <label>Remaining quantity<input name="remainingquantity" type="number" min="0" value="${t.quantity?.remaining ?? ''}"></label>
+      <label>Quantity unit<input name="quantityunit" type="text" value="${esc(t.quantity?.unit ?? '')}" placeholder="tray"></label>
+      <label>Person / role<input name="person" type="text" value="${esc(t.person)}" required></label>
+      <label>Location<input name="location" type="text" value="${esc(t.location)}"></label></div>
+      <label>Source of estimate<input name="source" type="text" value="${esc(t.estimate_source)}" placeholder="Your estimate or measurement"></label>
+      <label><input name="split" type="checkbox" ${t.splittable ? 'checked' : ''}> Work can be split across available intervals</label>
+      <label>Required resources (comma separated)<input name="resources" type="text" value="${esc(t.resources.join(', '))}"></label>
+      <label>Must follow these tasks<select name="dependencies" multiple size="4">${planningState.tasks.filter(x => x.id !== id).map(x => `<option value="${esc(x.id)}" ${t.dependencies.includes(x.id) ? 'selected' : ''}>${esc(x.text)}</option>`).join('')}</select></label>
+      <p class="hint">Hold Ctrl/Command to select multiple dependencies. Resource and prerequisite checks must be reviewed before scheduling.</p>
+      ${t.preconditions.map((p,i) => `<label>${esc(p.text)}<select data-condition="${i}">${opts(['unknown','unmet','met'],p.status)}</select></label>`).join('')}
+      <label>Add prerequisite<input name="condition" type="text" placeholder="e.g. Soil delivered (starts as unknown)"></label>
+      <h4>Assign goals</h4>
+      ${planningState.goals.map(g => { const l=t.links.find(l=>l.goal_id===g.id); return `<div class="goal-link-row" data-linkgoal="${esc(g.id)}"><label>${esc(g.text)}</label><select aria-label="Relationship to ${esc(g.text)}">${opts(['unassigned','proposed','confirmed','rejected'],l?.review ?? 'unassigned')}</select><input type="text" aria-label="Contribution to ${esc(g.text)}" value="${esc(l?.explanation ?? '')}" placeholder="How does this task contribute?"></div>`; }).join('')}
+      <p class="hint">Create another goal using the form above, then assign it here.</p>
+      <label>Reason for changes<input name="reason" type="text" required></label><button class="btn" type="submit">Save task and goal links</button>
+    </form>
+    <div class="task-buttons"><button class="ghost" type="button" data-taskcalendar="${esc(t.id)}">Open calendar</button><button class="ghost" type="button" data-taskevidence="${esc(t.event_id)}">Open source evidence</button></div>
+    <details><summary>Record actual work / partial completion</summary><form class="run" id="worklogform" data-id="${esc(t.id)}" data-revision="${t.revision}">
+      <label>Started<input name="start" type="datetime-local" required></label><label>Stopped<input name="end" type="datetime-local" required></label>
+      <label>Remaining active minutes<input name="remaining" type="number" min="0" required></label>
+      <label>Quantity completed, if tracked<input name="quantity" type="number" min="0"></label>
+      <label>What happened / result<input name="outcome" type="text" required></label><label><input name="done" type="checkbox"> Completion criteria met</label>
+      <button class="btn" type="submit">Record work</button></form></details>
+    <details><summary>Work history (${t.actuals.length}) and corrections (${t.history.length})</summary><ul>${t.actuals.map(a=>`<li>${esc(formatPlanningTime(a.start))} – ${esc(formatPlanningTime(a.end))}: ${esc(a.outcome)}</li>`).join('')}${t.history.map(h=>`<li>${esc(h.reason)}</li>`).join('')}</ul></details></article>`;
+}
+function showPlanningTab() { document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.view==='plan'))); document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-plan')); }
+async function openTask(id) { selectedPlanningTask = id; showPlanningTab(); await loadPlanning(); $('planningtaskdetail').focus(); }
+function renderHumanPlan() {
+  const p = planningState.latest_plan, s = planningState.schedule;
+  const label = id => planningState.tasks.find(t => t.id === id)?.text ?? id;
+  $('humanplan').innerHTML = (p ? `<p><strong>${esc(p.next.action)}: ${esc(p.next.reason)}</strong></p><p>${p.stale ? 'Inputs changed: regenerate before accepting.' : 'Current proposal'} · ${p.scheduled_minutes} proposed operator minutes · ${p.available_minutes} free minutes before proposals</p>
+    ${p.explanations.map(e=>`<p><button class="ghost" type="button" data-opentask="${esc(e.task_id)}">${esc(label(e.task_id))}</button>: ${esc(e.reason)}</p>`).join('')}
+    <ul>${p.blocks.map(b=>`<li>${esc(label(b.task_id))}: ${esc(formatPlanningTime(b.start))} – ${esc(formatPlanningTime(b.end))} (proposed)</li>`).join('')}</ul>
+    ${p.conflicts.map(c=>`<p class="err">${esc(c)}</p>`).join('')}
+    <h4>Unscheduled / needs review</h4><ul>${p.deferred.map(d=>`<li><button class="ghost" type="button" data-opentask="${esc(d.task_id)}">${esc(label(d.task_id))}</button>: ${esc(d.reason)}</li>`).join('')}</ul>
+    <form class="run" id="plandecisionform"><label>Decision reason<input name="reason" type="text" required></label><div class="task-buttons"><button class="btn" name="decision" value="accepted" ${p.stale || p.conflicts.length || !p.blocks.length ? 'disabled' : ''}>Accept proposed blocks</button><button class="btn" name="decision" value="rejected" ${p.stale ? 'disabled' : ''}>Reject proposal</button></div></form>` : '<p>Add working hours and task estimates, then propose a plan.</p>') +
+    '<h4>Accepted reservations</h4>' + s.blocks.filter(b=>b.status==='accepted').map(b=>`<div class="task-card"><button class="ghost" type="button" data-opentask="${esc(b.task_id)}">${esc(label(b.task_id))}</button><p>${esc(formatPlanningTime(b.start))} – ${esc(formatPlanningTime(b.end))} · ${b.pinned ? 'Pinned' : 'Accepted'}</p><form class="run blockform" data-id="${esc(b.id)}"><label>Reason<input name="reason" type="text" required></label><div class="task-buttons"><button class="ghost" name="action" value="pin" ${b.pinned ? 'disabled' : ''}>Pin time</button><button class="ghost" name="action" value="release">Release to replan</button></div></form></div>`).join('');
+}
+async function localPlanningTime(local) { return (await planningPost({ command: 'time', local, timezone: $('availabilityform').timezone.value || planningState.schedule.config.timezone, fold: $('availabilityform').fold.value || undefined })).instant; }
+document.querySelector('[data-view="plan"]').addEventListener('click', () => planningAction(loadPlanning));
+document.querySelector('[data-view="cal"]').addEventListener('click', () => planningAction(async () => { await loadPlanning(); await loadCal(); }));
+$('taskgoalfilter').addEventListener('change', renderPlanningTasks);
+$('goalplanningdetail').addEventListener('submit', e => { e.preventDefault(); const f=e.target; if(f.id!=='editgoalform')return; planningAction(async () => { const goal=planningState.goals.find(g=>g.id===f.dataset.id); await planningPost({command:'goal',id:goal.id,expected:goal,reason:f.reason.value,patch:{success_criteria:f.criteria.value,deadline:f.deadline.value||null,weight:Number(f.weight.value)}}); await loadPlanning(); await showPlanningGoal(goal.id); tick(false); }); });
+$('calgoalfilter').addEventListener('change', loadCal);
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.goaldetail) planningAction(() => showPlanningGoal(b.dataset.goaldetail));
+  if (b.dataset.opentask) planningAction(() => openTask(b.dataset.opentask));
+  if (b.dataset.taskcalendar) planningAction(async () => { await loadPlanning(); const id=b.dataset.taskcalendar; const block = planningState.schedule.blocks.find(b=>b.task_id===id && b.status==='accepted') ?? planningState.latest_plan?.blocks.find(b=>b.task_id===id); if(block) { const date = new Intl.DateTimeFormat('en-CA', { timeZone: planningState.schedule.config.timezone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(block.start)); calCursor=parseDay(date); } document.querySelector('[data-view="cal"]').click(); await loadCal(); });
+  if (b.dataset.taskevidence) planningAction(async () => { const detail=await api(`/api/events/${encodeURIComponent(b.dataset.taskevidence)}`); document.querySelector('[data-view="cal"]').click(); $('caldetailwrap').hidden=false; await renderCalDetail($('caldetail'),detail.event,detail.actions); });
+});
+$('newtaskform').addEventListener('submit', e => { e.preventDefault(); const f=e.currentTarget; planningAction(async () => { const goal=$('taskgoalfilter').value; f.dataset.requestId ||= crypto.randomUUID(); const task=await planningPost({ command:'create', request_id:f.dataset.requestId, task:{ text:f.text.value,completion_criteria:f.criteria.value,links:goal && goal!=='unassigned' ? [{goal_id:goal,origin:'human',review:'proposed',explanation:'Confirm the contribution when reviewing this task'}] : [] } }); f.reset(); delete f.dataset.requestId; selectedPlanningTask=task.id; await loadPlanning(); }); });
+$('availabilityform').addEventListener('submit', e => { e.preventDefault(); const f=e.currentTarget; planningAction(async () => { const resources={}; for(const line of f.resources.value.split('\n').filter(x=>x.trim())) { const [name,status]=line.split('=').map(s=>s.trim()); resources[name]=status; } const window={ start:await localPlanningTime(f.start.value),end:await localPlanningTime(f.end.value) }; await planningPost({command:'configure',revision:planningState.schedule.revision,config:{timezone:f.timezone.value,person:f.person.value,max_minutes:Number(f.limit.value),resources,availability:f.replace.checked?[window]:[...planningState.schedule.config.availability,window]}}); await loadPlanning(); }); });
+$('commitmentform').addEventListener('submit', e => { e.preventDefault(); const f=e.currentTarget; planningAction(async () => { await planningPost({command:'commitment',event:{id:f.existing.value||crypto.randomUUID(),title:f.title.value,start:await localPlanningTime(f.start.value),end:await localPlanningTime(f.end.value),blocking:f.blocking.checked,resources:commaList(f.resources.value)}}); await loadPlanning(); }); });
+$('dayplanform').day.value = new Date().toLocaleDateString('en-CA');
+$('dayplanform').addEventListener('submit', e => { e.preventDefault(); planningAction(async () => { await planningPost({command:'propose',day:e.target.day.value,now:new Date(Math.ceil((Date.now()+60000)/60000)*60000).toISOString()}); await loadPlanning(); }); });
+$('planningtaskdetail').addEventListener('submit', e => {
+  e.preventDefault(); const f=e.target, task=planningState.tasks.find(t=>t.id===f.dataset.id); if(!task)return;
+  planningAction(async () => {
+    if(f.id==='taskeditform') {
+      const links=[...f.querySelectorAll('[data-linkgoal]')].filter(row=>row.querySelector('select').value!=='unassigned').map(row=>({goal_id:row.dataset.linkgoal,explanation:row.querySelector('input').value,origin:task.links.find(l=>l.goal_id===row.dataset.linkgoal)?.origin ?? 'human',review:row.querySelector('select').value}));
+      const preconditions=task.preconditions.map((p,i)=>({...p,status:f.querySelector(`[data-condition="${i}"]`).value})); if(f.condition.value.trim())preconditions.push({text:f.condition.value.trim(),status:'unknown'});
+      if(!!f.windowstart.value!==!!f.windowend.value)throw new Error('Set both allowed start and finish, or leave both empty.');
+      await planningPost({command:'edit',id:task.id,revision:Number(f.dataset.revision),reason:f.reason.value,patch:{text:f.text.value,completion_criteria:f.criteria.value,execution:f.execution.value,review:f.review.value,active_minutes:f.active.value===''?null:Number(f.active.value),remaining_minutes:f.remaining.value===''?null:Number(f.remaining.value),setup_minutes:Number(f.setup.value),travel_minutes:Number(f.travel.value),passive_minutes:Number(f.passive.value),estimate_source:f.source.value,splittable:f.split.checked,resources:commaList(f.resources.value),dependencies:selectedValues(f.dependencies),person:f.person.value,location:f.location.value,deadline:f.deadline.value||null,window:f.windowstart.value?{start:await localPlanningTime(f.windowstart.value),end:await localPlanningTime(f.windowend.value)}:null,defer_until:f.defer.value?await localPlanningTime(f.defer.value):null,quantity:f.totalquantity.value?{total:Number(f.totalquantity.value),remaining:Number(f.remainingquantity.value),unit:f.quantityunit.value}:null,links,preconditions}});
+    } else if(f.id==='worklogform') await planningPost({command:'work',id:task.id,revision:Number(f.dataset.revision),work:{id:crypto.randomUUID(),start:await localPlanningTime(f.start.value),end:await localPlanningTime(f.end.value),remaining_minutes:Number(f.remaining.value),outcome:f.outcome.value,done:f.done.checked,...(f.quantity.value===''?{}:{quantity:Number(f.quantity.value)})}});
+    await loadPlanning();
+  });
+});
+$('humanplan').addEventListener('submit', e => { e.preventDefault(); const f=e.target; planningAction(async () => { if(f.id==='plandecisionform') await planningPost({command:'decide',id:planningState.latest_plan.id,decision:e.submitter.value,reason:f.reason.value}); else if(f.matches('.blockform')) await planningPost({command:'block',id:f.dataset.id,revision:planningState.schedule.revision,action:e.submitter.value,reason:f.reason.value}); await loadPlanning(); }); });
 </script>
 </body>
 </html>

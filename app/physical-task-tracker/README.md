@@ -315,6 +315,11 @@ dist/lib/oi-links.test.js dist/lib/oi-integration.test.js` (live-OI tests
 run when `OI_ROOT` is pinned, else skip).
 ## Test capabilities without the dashboard
 
+The Plan tab now supports goal-linked tasks, operator availability, fixed
+commitments, reviewed day plans, and actual work/replanning. Task completion and
+goal outcome confirmation remain separate. See [human planning](../../doc/human-planning.md)
+for policy behavior, CLI/API commands, migration, and the pending visual check.
+
 Tell OpenCode: **“Read `doc/headless-testing.md` and test all offline capabilities.
 Save the report and evidence in a new test directory. Do not launch the app.”**
 

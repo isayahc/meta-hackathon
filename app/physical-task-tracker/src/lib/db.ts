@@ -182,7 +182,11 @@ export function openDb(root: string): DatabaseSync {
   db.exec('PRAGMA journal_mode = WAL');
   db.exec(SCHEMA);
   // Column upgrades for DBs created before the column existed.
-  for (const [table, column, decl] of [['events', 'payload', 'TEXT'], ['events', 'media', 'TEXT']] as const) {
+  for (const [table, column, decl] of [
+    ['events', 'payload', 'TEXT'], ['events', 'media', 'TEXT'], ['events', 'timing_json', 'TEXT'],
+    ['actions', 'task_json', 'TEXT'], ['actions', 'task_rev', 'INTEGER NOT NULL DEFAULT 1'],
+    ['goals', 'success_criteria', "TEXT NOT NULL DEFAULT ''"],
+  ] as const) {
     const cols = (db.prepare(`PRAGMA table_info(${table})`).all() as unknown as Array<{ name: string }>).map((c) => c.name);
     if (!cols.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
   }

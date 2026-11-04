@@ -8,7 +8,7 @@ try {
     const report = await testCapabilities(args[1], args[3]);
     console.log(JSON.stringify(report, null, 2));
     process.exitCode = report.status === 'failed' ? 1 : report.status === 'blocked' ? 2 : 0;
-  } else throw new Error('Use list OR test process|improvements|floorplan|walkthrough|all --out <new absolute directory>.');
+  } else throw new Error('Use list OR test planning|process|improvements|floorplan|walkthrough|all --out <new absolute directory>.');
 } catch (error) {
   console.log(JSON.stringify({ status: 'failed', error: (error as Error).message })); process.exitCode = 1;
 }

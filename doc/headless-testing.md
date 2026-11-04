@@ -51,6 +51,7 @@ executable if it is not named `python3`.
 
 | Scenario | What runs | What it proves |
 | --- | --- | --- |
+| `planning` | Goal-linked tray workflow → accepted schedule → actual overrun → revised plan | Shared tasks counted once, dependencies/breaks, retained actuals, explicit downstream conflicts |
 | `process` | Synthetic scan event → process CLI → correction → reopen original/current revisions | Evidence-backed process persistence and correction history |
 | `improvements` | Synthetic fixture → real optimizer replay → accept decision → correct process → reopen review | Comparison/decision persistence and stale-result detection |
 | `floorplan` | Scaled and unscaled observation fixtures through the real connector using **mock OI** | Consumer contract behavior and retained evidence; not actual OI execution |
