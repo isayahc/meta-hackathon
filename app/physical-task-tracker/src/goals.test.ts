@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { addGoal, listGoals, setGoalStatus } from './lib/goals.js';
 import { buildOptimizerPrompt } from './lib/analyze-response.js';
+import { buildProcessFromScan } from './lib/processes.js';
 
 async function freshRoot(t: TestContext) {
   const dir = await mkdtemp(join(tmpdir(), 'goals-test-'));
@@ -58,21 +59,32 @@ test('optimizer prompt degrades gracefully with no goals or spots', () => {
   assert.match(p, /no spots observed/i);
 });
 test('optimizer prompt carries corrected processes with revisions', () => {
-  const p = buildOptimizerPrompt([], [], [], null, [
-    {
-      id: 'proc-mulch',
-      rev: 2,
-      title: 'Mulch the north fence',
-      goals: [{ label: 'Mulch the north fence', execution: 'unknown' }],
-      steps: [
-        { id: 'proc-mulch-s0', label: 'Finish spreading by hand', claim: 'corrected', execution: 'not_started', requires: [], observed_order: null, unknowns: [] },
-      ],
-      gaps: ['step "proc-mulch-s0": no supporting footage'],
-    },
-  ]);
+  const process = buildProcessFromScan({
+    id: 'proc-mulch',
+    analysis: { observed_task: 'Mulch the north fence', suggested_next_steps: ['Finish spreading by hand'] },
+  });
+  process.rev = 2;
+  process.steps[0]!.claim = 'corrected';
+  const p = buildOptimizerPrompt([], [], [], null, [process]);
   assert.match(p, /proc-mulch/);
   assert.match(p, /rev 2/);
   assert.match(p, /Finish spreading by hand/);
   assert.match(p, /claim=corrected/);
   assert.match(p, /farmer-corrected steps outrank/);
+});
+
+test('optimizer keeps late steps, long constraints, and dependency uncertainty', () => {
+  const process = buildProcessFromScan({
+    id: 'long',
+    analysis: { suggested_next_steps: Array.from({ length: 51 }, (_, i) => `Step ${i}`) },
+  });
+  process.steps[50]!.preconditions = ['x'.repeat(200) + ' wait for soil to dry'];
+  process.steps[1]!.requires_unknown = false;
+  process.steps[2]!.requires = ['long-s1'];
+  const prompt = buildOptimizerPrompt([], [], [], null, [process]);
+  assert.ok(prompt.includes(JSON.stringify(process)));
+  assert.match(prompt, /\[long-s0\].*requires=unknown/);
+  assert.match(prompt, /\[long-s1\].*requires=none/);
+  assert.match(prompt, /\[long-s2\].*requires=unknown; known=long-s1/);
+  assert.ok(prompt.includes(process.steps[50]!.preconditions[0]!));
 });

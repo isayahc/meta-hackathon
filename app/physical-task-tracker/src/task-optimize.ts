@@ -13,7 +13,6 @@ import { readFile, writeFile } from 'node:fs/promises';
 import {
   buildRequestBody,
   buildOptimizerPrompt,
-  type OptimizerProcess,
   extractAnalysis,
   DEFAULT_MAX_TOKENS,
   resolveApiKey,
@@ -69,17 +68,6 @@ if (assign) {
   });
   console.error(`goal ${g.id} -> ${g.status}`);
 }
-function toOptimizerProcess(doc: ProcessDoc): OptimizerProcess {
-  return {
-    id: doc.id,
-    rev: doc.rev,
-    title: doc.title,
-    goals: doc.goals.map((g) => ({ label: g.label, execution: g.execution })),
-    steps: doc.steps.map((s) => ({ id: s.id, label: s.label, claim: s.claim, execution: s.execution, requires: s.requires, observed_order: s.observed_order, unknowns: s.unknowns })),
-    gaps: doc.gaps,
-  };
-}
-
 const constraints = flagAll(args, '--constraint');
 
 // Ecology fusion: live fetch (--eco lat,lon) or a saved capture
@@ -130,7 +118,7 @@ const suppliedCurrents = await listProcesses(root);
 const suppliedDocs: ProcessDoc[] = [];
 for (const c of suppliedCurrents) suppliedDocs.push(await readProcess(root, c.process_id, c.rev));
 const suppliedBasis = suppliedDocs.map((d) => ({ process_id: d.id, rev: d.rev }));
-const prompt = buildOptimizerPrompt(goals, spots, constraints, ecoSummary, suppliedDocs.map(toOptimizerProcess));
+const prompt = buildOptimizerPrompt(goals, spots, constraints, ecoSummary, suppliedDocs);
 
 if (offline) {
   console.log(prompt);

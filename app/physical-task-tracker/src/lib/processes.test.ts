@@ -355,3 +355,59 @@ test('completion requires resolvable media and covered spans', async (t: TestCon
     assert.equal(saved.steps[0]?.execution, 'complete');
   }
 });
+
+
+for (const missing of ['', '  ', null, 42, {}]) {
+  test(`filtered frame description ${JSON.stringify(missing)} preserves source indices`, () => {
+    const doc = buildProcessFromScan({
+      id: 'p', media: 'clip.mp4', duration_s: 30,
+      analysis: { per_frame: ['fill soil', missing, 'water'], frame_times_s: [5, 15, 25] },
+    });
+    assert.deepEqual(doc.steps.map((s) => s.id), ['p-o0', 'p-o2']);
+    assert.deepEqual(doc.steps.map((s) => s.observed_order), [0, 2]);
+    assert.deepEqual(doc.goals[0]?.step_ids, ['p-o0', 'p-o2']);
+    assert.deepEqual(doc.steps[1]?.evidence.spans, [{ start_s: 25, end_s: 25, frame: 2 }]);
+    assert.equal(doc.steps[1]?.label, 'water');
+  });
+}
+
+test('completion binds each frame to its own timestamp, including through corrections', async (t: TestContext) => {
+  const root = await freshRoot(t);
+  await mkdir(join(root, 'media'), { recursive: true });
+  await writeFile(join(root, 'media', 'clip.mp4'), 'fake-bytes');
+  await saveRevision(root, buildProcessFromScan({
+    id: 'p', media: 'clip.mp4', duration_s: 30,
+    analysis: { suggested_next_steps: ['Water'], frame_times_s: [5, 15, 25] },
+  }));
+  await assertProcError(() => applyCorrection(root, 'p', { steps: { 'p-s0': {
+    execution: 'complete', completion_criteria: ['wet soil'],
+    criteria_evidence: { 'wet soil': [{ start_s: 25, end_s: 25, frame: 0 }] },
+  } } }, 'Claimed complete.'), 'PROC_UNEVIDENCED_COMPLETION');
+  assert.equal((await readProcess(root, 'p')).rev, 1);
+  for (const [frame, time] of [[0, 5], [2, 25]] as const) {
+    const { doc } = await applyCorrection(root, 'p', { steps: { 'p-s0': {
+      execution: 'complete', completion_criteria: ['wet soil'],
+      criteria_evidence: { 'wet soil': [{ start_s: time, end_s: time, frame }] },
+    } } }, 'Observed wet soil at the matching frame.');
+    assert.equal(doc.steps[0]?.execution, 'complete');
+  }
+});
+
+test('frame-specific interval evidence cannot borrow another frame or unframed coverage', async (t: TestContext) => {
+  const root = await freshRoot(t);
+  await mkdir(join(root, 'media'), { recursive: true });
+  await writeFile(join(root, 'media', 'clip.mp4'), 'fake-bytes');
+  const doc = buildProcessFromScan({ id: 'p', media: 'clip.mp4', duration_s: 30,
+    analysis: { suggested_next_steps: ['Water'] } });
+  doc.coverage.observed_spans = [
+    { start_s: 0, end_s: 10, frame: 0 },
+    { start_s: 10, end_s: 30, frame: 1 },
+    { start_s: 0, end_s: 30 },
+  ];
+  doc.steps[0]!.execution = 'complete';
+  doc.steps[0]!.completion_criteria = ['wet soil'];
+  doc.steps[0]!.criteria_evidence = { 'wet soil': [{ start_s: 5, end_s: 25, frame: 0 }] };
+  await assertProcError(() => saveRevision(root, doc), 'PROC_UNEVIDENCED_COMPLETION');
+  doc.steps[0]!.criteria_evidence = { 'wet soil': [{ start_s: 5, end_s: 10, frame: 0 }] };
+  assert.equal((await saveRevision(root, doc)).steps[0]?.execution, 'complete');
+});

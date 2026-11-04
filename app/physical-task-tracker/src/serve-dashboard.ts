@@ -142,9 +142,11 @@ function isBlockedIp(ip: string): boolean {
 }
 
 async function assertPublicHost(hostname: string): Promise<void> {
+  // URL.hostname retains IPv6 brackets; DNS lookup expects the bare address.
+  const host = hostname.startsWith('[') && hostname.endsWith(']') ? hostname.slice(1, -1) : hostname;
   let addrs: Array<{ address: string }>;
   try {
-    addrs = await lookup(hostname, { all: true });
+    addrs = await lookup(host, { all: true });
   } catch {
     throw new Error(`Could not resolve host "${hostname}".`);
   }

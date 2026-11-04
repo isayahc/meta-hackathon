@@ -346,14 +346,17 @@ export interface SourceContext {
 export function validateCompletion(doc: ProcessDoc, ctx: SourceContext): void {
   const totalS = doc.coverage.total_s;
   const covered = doc.coverage.observed_spans;
-  const framed = new Set(covered.map((o) => o.frame).filter((f): f is number => typeof f === 'number'));
   const supports = (span: TimeSpan): boolean => {
-    if (span.frame !== null && span.frame !== undefined && !framed.has(span.frame)) return false;
+    // A frame reference and its timestamp describe the same observation.
+    // Never borrow coverage from another frame to validate that reference.
+    const matching = span.frame === null || span.frame === undefined
+      ? covered
+      : covered.filter((o) => o.frame === span.frame);
     if (span.start_s === span.end_s) {
-      return covered.some((o) => o.start_s <= span.start_s && span.start_s <= o.end_s);
+      return matching.some((o) => o.start_s <= span.start_s && span.start_s <= o.end_s);
     }
     let reach = span.start_s;
-    for (const o of [...covered].sort((a, b) => a.start_s - b.start_s)) {
+    for (const o of [...matching].sort((a, b) => a.start_s - b.start_s)) {
       if (o.start_s > reach) break;
       reach = Math.max(reach, o.end_s);
       if (reach >= span.end_s) return true;
@@ -427,13 +430,21 @@ function cleanLines(value: unknown): string[] {
   return value.filter((v): v is string => typeof v === 'string').map((v) => v.trim()).filter(Boolean);
 }
 
-// A video scan yields a process: the observed task becomes the goal and
-// each suggested next step becomes an inferred, not-started step. Nothing
-// is marked observed or complete — the scan never saw these steps happen.
+// Retain source indices before filtering descriptions so that missing model
+// output cannot shift a later observation onto an earlier frame/time.
+function frameDescriptions(value: unknown): Array<{ label: string; frame: number }> {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((label: unknown, frame: number) =>
+    typeof label === 'string' && label.trim() ? [{ label: label.trim(), frame }] : []
+  );
+}
+
+// Keep observed frames separate from proposed future steps. Neither sparse
+// observations nor suggestions establish completion.
 export function buildProcessFromScan(input: BuildProcessInput): ProcessDoc {
   const id = input.id?.trim() || `proc-${input.eventId ?? Date.now()}`;
   const stepsRaw = cleanLines(input.analysis.suggested_next_steps);
-  const frames = cleanLines(input.analysis.per_frame);
+  const frames = frameDescriptions(input.analysis.per_frame);
   const durationRaw = typeof input.duration_s === 'number' && Number.isFinite(input.duration_s) && input.duration_s > 0
     ? input.duration_s
     : input.analysis.video_duration_s;
@@ -481,7 +492,7 @@ export function buildProcessFromScan(input: BuildProcessInput): ProcessDoc {
     location: null,
     unknowns: [] as string[],
   };
-  const observedSteps: ProcessStep[] = frames.map((label, i) => {
+  const observedSteps: ProcessStep[] = frames.map(({ label, frame: i }) => {
     const t = frameTimes[i] ?? null;
     return {
       ...structuredClone(emptyStep),

@@ -1,75 +1,72 @@
-// task-optimize process tests: the optimizer request carries corrected
-// process content, and mid-generation corrections save stale, never
-// current. A localhost stub answers the model call: no network, no key.
+// Exercise the optimizer CLI with a fetch stub: no sockets or API calls.
 import { test, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { createServer, type Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { addGoal } from './lib/goals.js';
 import { getDoc } from './lib/db.js';
-import { applyCorrection, buildProcessFromScan, saveRevision } from './lib/processes.js';
+import { applyCorrection, buildProcessFromScan, readProcess, saveRevision } from './lib/processes.js';
 
 const CLI = fileURLToPath(new URL('./task-optimize.js', import.meta.url));
 
-interface Captured {
-  url: string;
-  body: string;
-}
-
-async function startStub(t: TestContext, delayMs = 0): Promise<{ port: number; captured: Captured[] }> {
-  const captured: Captured[] = [];
-  const server: Server = createServer((req, res) => {
-    let body = '';
-    req.on('data', (c) => { body += c; });
-    req.on('end', () => {
-      captured.push({ url: req.url ?? '', body });
-      setTimeout(() => {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          choices: [{ message: { content: '{"ranked_actions":[],"deferred":[],"goal_effects":[]}' }, finish_reason: 'stop' }],
-          usage: {},
-        }));
-      }, delayMs);
-    });
+/** Run the real CLI with a deterministic, entirely offline model response. */
+async function runCli(root: string, correctDuringRequest = false): Promise<{
+  code: number; stdout: string; stderr: string; captured: { url: string; body: string };
+}> {
+  const stub = join(root, 'fetch-stub.mjs');
+  const capture = join(root, 'request.json');
+  await writeFile(stub, `
+    import { writeFile } from 'node:fs/promises';
+    import { applyCorrection } from ${JSON.stringify(new URL('./lib/processes.js', import.meta.url).href)};
+    globalThis.fetch = async (url, init) => {
+      await writeFile(${JSON.stringify(capture)}, JSON.stringify({ url: String(url), body: init.body }));
+      ${correctDuringRequest ? `await applyCorrection(${JSON.stringify(root)}, 'p', { title: 'Mid-flight retitle' }, 'Changed while generating.');` : ''}
+      return new Response(JSON.stringify({
+        choices: [{ message: { content: '{"ranked_actions":[],"deferred":[],"goal_effects":[]}' }, finish_reason: 'stop' }],
+        usage: {},
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    };
+  `);
+  const result = await new Promise<{ code: number; stdout: string; stderr: string }>((resolve) => {
+    execFile(process.execPath, ['--import', pathToFileURL(stub).href, CLI, root], {
+      cwd: root,
+      env: { ...process.env, META_API_BASE: 'https://optimizer.invalid', META_API_KEY: 'test-key' },
+    }, (err, stdout, stderr) => resolve({ code: err ? 1 : 0, stdout: String(stdout), stderr: String(stderr) }));
   });
-  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-  t.after(() => server.close());
-  return { port: (server.address() as AddressInfo).port, captured };
+  assert.equal(result.code, 0, result.stderr);
+  return { ...result, captured: JSON.parse(await readFile(capture, 'utf8')) as { url: string; body: string } };
 }
 
-function runCli(root: string, port: number): Promise<{ code: number; stdout: string; stderr: string }> {
-  return new Promise((resolve) => {
-    execFile(
-      process.execPath,
-      [CLI, root],
-      { cwd: root, env: { ...process.env, META_API_BASE: `http://127.0.0.1:${port}`, META_API_KEY: 'test-key' } },
-      (err, stdout, stderr) => resolve({ code: err ? 1 : 0, stdout: String(stdout), stderr: String(stderr) })
-    );
-  });
-}
-
+/** Seed an original process and a farmer revision with operational corrections. */
 async function seedProcess(root: string): Promise<void> {
   await addGoal(root, { text: 'Mulch the north fence' });
   await saveRevision(root, buildProcessFromScan({ id: 'p', analysis: { suggested_next_steps: ['Spread the run'] } }));
-  await applyCorrection(root, 'p', { steps: { 'p-s0': { label: 'CORRECTED spread the run by hand' } } }, 'No barrow access.');
+  await applyCorrection(root, 'p', { steps: { 'p-s0': {
+    label: 'CORRECTED spread the run by hand',
+    inputs: ['uncovered north run'], outputs: ['covered north run'],
+    tools: ['hand rake'], materials: ['aged wood chips'], actors: ['two workers'],
+    preconditions: ['Wait until the soil is dry'],
+    completion_criteria: ['Mulch is 5 cm deep'],
+    repeat: { until: 'the whole run is covered' }, location: 'north fence',
+    unknowns: ['remaining mulch volume'],
+  } } }, 'No barrow access.');
 }
 
-test('optimizer request contains the corrected process at its exact revision', async (t: TestContext) => {
+test('optimizer request contains the complete corrected process at its exact revision', async (t: TestContext) => {
   const root = await mkdtemp(join(tmpdir(), 'task-opt-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   await seedProcess(root);
-  const { port, captured } = await startStub(t);
-  const r = await runCli(root, port);
-  assert.equal(r.code, 0, r.stderr);
-  assert.equal(captured.length, 1);
-  assert.match(captured[0]?.url ?? '', /\/chat\/completions$/);
-  assert.match(captured[0]?.body ?? '', /CORRECTED spread the run by hand/);
-  assert.match(captured[0]?.body ?? '', /\(rev 2\)/);
+  const { captured } = await runCli(root);
+  assert.match(captured.url, /\/chat\/completions$/);
+  const request = JSON.parse(captured.body) as { messages: Array<{ content: Array<{ type: string; text?: string }> }> };
+  const prompt = request.messages.flatMap((m) => m.content.map((part) => part.text ?? '')).join('\n');
+  assert.ok(prompt.includes(JSON.stringify(await readProcess(root, 'p'))));
+  assert.match(prompt, /CORRECTED spread the run by hand/);
+  assert.match(prompt, /\(rev 2\)/);
+  assert.match(prompt, /\[p-s0\].*requires=unknown/);
   const plan = getDoc(root, 'plan') as { process_basis: Array<{ process_id: string; rev: number }>; stale: boolean };
   assert.deepEqual(plan.process_basis, [{ process_id: 'p', rev: 2 }]);
   assert.equal(plan.stale, false);
@@ -79,14 +76,7 @@ test('a correction landing mid-generation saves stale, never current', async (t:
   const root = await mkdtemp(join(tmpdir(), 'task-opt-race-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   await seedProcess(root);
-  const { port, captured } = await startStub(t, 1500);
-  const pending = runCli(root, port);
-  // Wait until the request is in flight, then correct before it answers.
-  for (let i = 0; i < 100 && !captured.length; i++) await new Promise((r) => setTimeout(r, 50));
-  assert.equal(captured.length, 1);
-  await applyCorrection(root, 'p', { title: 'Mid-flight retitle' }, 'Changed while generating.');
-  const r = await pending;
-  assert.equal(r.code, 0, r.stderr);
+  await runCli(root, true);
   const plan = getDoc(root, 'plan') as { process_basis: Array<{ process_id: string; rev: number }>; stale: boolean; stale_reason: string };
   assert.deepEqual(plan.process_basis, [{ process_id: 'p', rev: 2 }]);
   assert.equal(plan.stale, true);
