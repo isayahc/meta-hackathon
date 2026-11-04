@@ -1,0 +1,42 @@
+# Isolated migration laboratory. No database or asset ports are published.
+services:
+  mongo:
+    image: mongo:8.0
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    volumes: ["mongo:/data/db"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "try { if (!rs.status().ok) quit(1); } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}); quit(1); }"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+  minio:
+    build:
+      context: .
+      dockerfile: docker/MinIO.Dockerfile
+    environment:
+      MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY:?Set STORAGE_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_KEY:?Set STORAGE_SECRET_KEY}
+    volumes: ["objects:/data"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  transfer:
+    build: .
+    profiles: ["tools"]
+    depends_on:
+      mongo: {condition: service_healthy}
+      minio: {condition: service_healthy}
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/?replicaSet=rs0
+      MONGODB_DATABASE: fieldops
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: fieldops
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY:?Set STORAGE_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${STORAGE_SECRET_KEY:?Set STORAGE_SECRET_KEY}
+    command: ["node", "/app/docker/storage-smoke.mjs"]
+volumes:
+  mongo:
+  objects:
