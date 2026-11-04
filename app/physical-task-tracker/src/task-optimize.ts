@@ -5,6 +5,7 @@
 //   node task-optimize.mjs <project-root> [--goal "text" --deadline DATE --weight 1-5]
 //       [--set-status <id>=<open|at-risk|done>] [--constraint "..."]
 //       [--eco <lat,lon> | --eco-file samples/eco-x.json] [--offline] [--out plan.json]
+//       [--workflow-context operator-inputs.json] [--workflow-candidates replay-candidates.json]
 //
 // The finished plan is stored in the project's fieldops.db (and exported
 // to --out when given). Same env and key handling as task-briefing.mjs.
@@ -26,6 +27,8 @@ import { setDoc } from './lib/db.js';
 import { listProcesses, readProcess, type ProcessDoc } from './lib/processes.js';
 import { loadEnvSync } from './lib/env.js';
 import { flagValue, flagAll } from './lib/args.js';
+import { improvementPlan, buildImprovementPrompt, readWorkflowContext, writeWorkflowContext, parseWorkflowContext, saveImprovementReview } from './lib/improvements.js';
+import { OiRunnerTransport, resolveOiRoot } from './lib/oi-connector.js';
 
 // .env (cwd, then app root) fills gaps; real environment always wins.
 loadEnvSync();
@@ -38,6 +41,8 @@ const positionals = args.filter((a) => !a.startsWith('--'));
 const root = positionals[0];
 const outPath = flagValue(args, '--out', null);
 const offline = args.includes('--offline');
+const contextFile = flagValue(args, '--workflow-context', null);
+const candidatesFile = flagValue(args, '--workflow-candidates', null);
 if (!root) {
   console.error(
     'Usage: node task-optimize.mjs <project-root> [--goal "text" --deadline DATE --weight 1-5]\n' +
@@ -110,59 +115,86 @@ if (ecoLoc || ecoFile) {
 const spots: SpotBrief[] = await listSpotBriefs(root);
 
 const goals = await listGoals(root);
-if (!spots.length && !goals.length) {
+const suppliedCurrents = await listProcesses(root);
+if (!spots.length && !goals.length && !suppliedCurrents.length) {
   console.error('Nothing to optimize: no spot state and no goals (add --goal to start).');
   process.exit(1);
 }
-const suppliedCurrents = await listProcesses(root);
 const suppliedDocs: ProcessDoc[] = [];
 for (const c of suppliedCurrents) suppliedDocs.push(await readProcess(root, c.process_id, c.rev));
 const suppliedBasis = suppliedDocs.map((d) => ({ process_id: d.id, rev: d.rev }));
-const prompt = buildOptimizerPrompt(goals, spots, constraints, ecoSummary, suppliedDocs);
+const workflowContext = contextFile ? parseWorkflowContext(JSON.parse(await readFile(contextFile, 'utf8'))) : readWorkflowContext(root);
+workflowContext.constraints.notes = [...new Set([...workflowContext.constraints.notes, ...constraints])];
+const prompt = buildOptimizerPrompt(goals, spots, constraints, ecoSummary, suppliedDocs) +
+  (suppliedDocs.length ? buildImprovementPrompt(workflowContext) : '');
 
 if (offline) {
   console.log(prompt);
   process.exit(0);
 }
 
-const KEY = await resolveApiKey();
-const maxTokens = Number.parseInt(process.env.MAX_TOKENS ?? '', 10) || DEFAULT_MAX_TOKENS;
-const body = buildRequestBody({
-  model: MODEL,
-  prompt,
-  maxTokens,
-  reasoningEffort: process.env.REASONING_EFFORT ?? null,
-});
+if (suppliedDocs.length) writeWorkflowContext(root, workflowContext);
+let analysis: unknown;
+if (candidatesFile) {
+  // Explicit offline replay: no key resolution and no model request.
+  analysis = { ranked_actions: [], deferred: [], goal_effects: [], improvements: JSON.parse(await readFile(candidatesFile, 'utf8')) };
+} else {
+  const KEY = await resolveApiKey();
+  const maxTokens = Number.parseInt(process.env.MAX_TOKENS ?? '', 10) || DEFAULT_MAX_TOKENS;
+  const body = buildRequestBody({
+    model: MODEL,
+    prompt,
+    maxTokens,
+    reasoningEffort: process.env.REASONING_EFFORT ?? null,
+  });
 
-const res = await postApi(`${API_BASE}/chat/completions`, KEY, body);
+  const res = await postApi(`${API_BASE}/chat/completions`, KEY, body);
 
-if (!res.ok) {
-  console.error(`API error ${res.status}: ${(await res.text()).slice(0, 500)}`);
-  process.exit(1);
+  if (!res.ok) {
+    console.error(`API error ${res.status}: ${(await res.text()).slice(0, 500)}`);
+    process.exit(1);
+  }
+
+  const result = extractAnalysis(await res.json());
+  if (!result.ok) {
+    console.error(`ERROR [${result.code}]: ${result.error}`);
+    if (result.usage) console.error(`usage: ${JSON.stringify(result.usage)}`);
+    if (result.raw) console.error(`--- raw model output ---\n${result.raw}`);
+    if (result.detail) console.error(`--- raw response ---\n${JSON.stringify(result.detail).slice(0, 1000)}`);
+    process.exit(1);
+  }
+  analysis = result.analysis;
 }
-
-const result = extractAnalysis(await res.json());
-if (!result.ok) {
-  console.error(`ERROR [${result.code}]: ${result.error}`);
-  if (result.usage) console.error(`usage: ${JSON.stringify(result.usage)}`);
-  if (result.raw) console.error(`--- raw model output ---\n${result.raw}`);
-  if (result.detail) console.error(`--- raw response ---\n${JSON.stringify(result.detail).slice(0, 1000)}`);
-  process.exit(1);
+let improvementReview = null;
+if (suppliedDocs.length) {
+  let transport: OiRunnerTransport | undefined;
+  if (workflowContext.spatial_options.length && process.env.OI_ROOT) {
+    try { transport = new OiRunnerTransport(resolveOiRoot()); }
+    catch { /* Assessment reports unavailable OI checks explicitly. */ }
+  }
+  improvementReview = await saveImprovementReview(root, suppliedDocs, goals, workflowContext,
+    (analysis as { improvements?: unknown })?.improvements ?? [], candidatesFile ? 'replay' : 'model', transport);
 }
 // A correction landing mid-generation must not save as current against a
 // revision the model never saw: re-read and mark stale instead of current.
 const freshBasis = await listProcesses(root);
 const moved = suppliedBasis.filter((b) => (freshBasis.find((f) => f.process_id === b.process_id)?.rev ?? -1) !== b.rev);
 const added = freshBasis.filter((f) => !suppliedBasis.some((b) => b.process_id === f.process_id));
-const wentStale = moved.length > 0 || added.length > 0;
+const wentStale = moved.length > 0 || added.length > 0 || improvementReview?.stale === true;
 const planObj = {
   goals_open: goals.filter((g) => g.status !== 'done').length,
   goals_total: goals.length,
   spots: spots.length,
   process_basis: suppliedBasis,
   stale: wentStale,
-  ...(wentStale ? { stale_reason: `process revisions changed during generation: ${[...moved.map((m) => m.process_id), ...added.map((a) => a.process_id)].join(', ')}` } : {}),
-  plan: result.analysis,
+  ...(wentStale ? { stale_reason: [
+    ...(moved.length || added.length ? [`process revisions changed during generation: ${[...moved.map((m) => m.process_id), ...added.map((a) => a.process_id)].join(', ')}`] : []),
+    ...(improvementReview?.stale_reasons ?? []),
+  ].join(' ') } : {}),
+  plan: improvementReview ? improvementPlan(improvementReview) : analysis,
+  model_narrative: improvementReview ? analysis : null,
+  improvement_review_id: improvementReview?.id ?? null,
+  improvements: improvementReview,
 };
 setDoc(root, 'plan', planObj);
 const text = JSON.stringify(planObj, null, 2);

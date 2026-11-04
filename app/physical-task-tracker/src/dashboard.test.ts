@@ -12,6 +12,8 @@ import { createServer, loadSpots, buildFeed, waitForOk, fetchRemote, primaryErro
 import { addGoal, listGoals } from './lib/goals.js';
 import { initSpot, appendSession } from './lib/spot-state.js';
 import { setDoc } from './lib/db.js';
+import { applyCorrection, buildProcessFromScan, saveRevision, type BuildProcessInput } from './lib/processes.js';
+import { saveImprovementReview, type WorkflowContext, type ImprovementCandidate } from './lib/improvements.js';
 
 // Minimal HTTP shape: just what the handler touches.
 interface MockReq {
@@ -421,4 +423,34 @@ test('floorplan: unknown scale fails fast with guidance', async (t: TestContext)
   assert.equal(r.status, 502);
   assert.match(r.json.error, /OBS_MISSING_SIZE/);
   assert.match(r.json.error, /assume-size/);
+});
+
+test('improvement API persists decisions, validates context, and refreshes plan freshness', async (t: TestContext) => {
+  const root = await scratch(t);
+  const fixture = JSON.parse(await readFile(new URL('./samples/workflow-improvements.json', import.meta.url), 'utf8')) as {
+    scan: BuildProcessInput; context: WorkflowContext; candidates: ImprovementCandidate[];
+  };
+  const original = buildProcessFromScan(fixture.scan);
+  await saveRevision(root, original);
+  const { doc } = await applyCorrection(root, original.id, { steps: Object.fromEntries(original.steps.map((s) => [s.id, { requires_unknown: false }])) }, 'Synthetic farmer review.');
+  assert.equal((await call(root, 'POST', '/api/improvement-context', { context: {} })).status, 400);
+  assert.equal((await call(root, 'POST', '/api/improvement-context', { context: fixture.context })).status, 200);
+  assert.equal((await call(root, 'GET', '/api/improvement-context')).json.context.constraints.budget_usd, 25);
+  const review = await saveImprovementReview(root, [doc], [], fixture.context, fixture.candidates, 'replay');
+  setDoc(root, 'plan', { improvement_review_id: review.id, stale: false });
+  assert.equal((await call(root, 'GET', '/api/improvements')).json.reviews.length, 1);
+  const url = `/api/improvements/${review.id}`;
+  const candidate_id = fixture.candidates[0].id;
+  assert.equal((await call(root, 'POST', url, { candidate_id, status: 'accepted', rationale: '' })).status, 400);
+  assert.equal((await call(root, 'POST', url, { candidate_id, status: 'accepted', rationale: 'Trial approved.' })).json.review.assessments[0].actionable, true);
+  assert.equal((await call(root, 'GET', url)).json.review.assessments[0].decisions[0].rationale, 'Trial approved.');
+  assert.equal((await call(root, 'POST', url, { candidate_id, status: 'rejected', rationale: 'Prefer current method.' })).status, 200);
+  const rejectedPlan = (await call(root, 'GET', '/api/overview')).json.plan;
+  assert.equal(rejectedPlan.plan.ranked_actions.length, 0);
+  assert.match(rejectedPlan.plan.deferred[0].why, /Prefer current method/);
+  await applyCorrection(root, doc.id, { title: 'New process' }, 'Changed work.');
+  const overview = (await call(root, 'GET', '/api/overview')).json;
+  assert.equal(overview.plan.stale, true);
+  assert.equal(overview.plan.improvements.stale, true);
+  assert.equal((await call(root, 'POST', url, { candidate_id, status: 'accepted', rationale: 'Ignore new revision.' })).status, 400);
 });
