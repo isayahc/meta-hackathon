@@ -13,9 +13,9 @@ jobs:
       STORAGE_SECRET_KEY: test-only-secret-not-production
     steps:
       - uses: actions/checkout@v4
-      - run: docker compose -f compose.storage.yaml build
+      - run: docker compose -f compose.storage.yaml --profile tools build
       - run: docker builder prune --all --force
-      - run: docker compose -f compose.storage.yaml run --no-build --rm transfer
+      - run: docker compose -f compose.storage.yaml run --rm transfer
       - if: failure()
         run: docker compose -f compose.storage.yaml logs --tail 100
       - if: always()
