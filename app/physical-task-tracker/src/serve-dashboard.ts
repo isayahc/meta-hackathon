@@ -26,6 +26,7 @@ import { improvementPlan, readWorkflowContext, writeWorkflowContext, Improvement
 import { getDoc } from './lib/db.js';
 import { WalkthroughError, captureWalkthrough, listWalkthroughs, readWalkthrough, reviewWalkthrough, walkthroughHandoff, walkthroughImage } from './lib/walkthrough.js';
 import { planningCommand, planningView, planningCalendar } from './lib/task-planning.js';
+import { lifecycleCommand } from './lib/lifecycle.js';
 import { outcomeCommand, outcomeView } from './lib/outcomes.js';
 import { reconciliationCommand, reconciliationView } from './lib/reconciliation.js';
 import { reconcileVideo } from './lib/reconciliation-video.js';
@@ -345,6 +346,11 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
           }
           json(200, { workflow: await captureJourney(root, { ...input, media }, scanRunner) });
         } catch (error) { const message = (error as Error).message; json(/Stale/.test(message) ? 409 : 400, { error: message }); }
+        return;
+      }
+      if (url.pathname === '/api/lifecycle' && ['GET','POST'].includes(req.method || '')) {
+        try { json(200, await lifecycleCommand(root, req.method === 'GET' ? {command:'view'} : await readBody(req), spatialReader)); }
+        catch(error) { const message=(error as Error).message; json(/stale/i.test(message)?409:400,{error:message}); }
         return;
       }
       if (url.pathname === '/api/outcomes' && req.method === 'GET') { json(200, outcomeView(root)); return; }
