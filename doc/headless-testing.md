@@ -12,6 +12,7 @@ persists actual test state so you can inspect what happened afterward.
 
 Or give it a narrower task:
 
+- “Test spatial associations: link a source timestamp to a location, review ambiguous identity, and prove moved/deleted objects never silently relink.”
 - “Test the video-first journey: correction → confirmed goal → accepted plan → partial work → reviewed follow-up → replan, preserving the same task.”
 - “Test process corrections and prove the original revision survives.”
 - “Test the improvement comparison and prove a correction makes it stale.”
@@ -52,6 +53,7 @@ executable if it is not named `python3`.
 
 | Scenario | What runs | What it proves |
 | --- | --- | --- |
+| `spatial` | Synthetic source/identity review → moved/deleted OI responses → separate CLI reopen | Durable source spans/checksums, review history and stale states, no automatic relinking or scene writes; OI responses are mocked |
 | `journey` | Synthetic retained capture → reviewed process → confirmed purpose → future task → accepted plan → partial actuals → reviewed follow-up → replan | One canonical workflow/task, correction persistence, resumable identity, explicit unknown outcomes; see [journey contract](video-first-journey.md) |
 | `planning` | Goal-linked tray workflow → accepted schedule → actual overrun → revised plan | Shared tasks counted once, dependencies/breaks, retained actuals, explicit downstream conflicts |
 | `process` | Synthetic scan event → process CLI → correction → reopen original/current revisions | Evidence-backed process persistence and correction history |

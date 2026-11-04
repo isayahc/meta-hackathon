@@ -59,7 +59,10 @@ Goal/note creation now accepts an optional request ID and commits a receipt in
 the existing database transaction. Task creation and workflow commands retain
 their existing idempotency contracts. There is no second scheduling engine.
 
-Task-to-map-object associations depend on #41 and are explicitly unavailable.
+Process/video-to-location associations are available through #41; see
+[spatial evidence](spatial-evidence.md). The pinned OI interface resolves scene
+instances; unresolved regions/occupancies remain explicit rather than being
+matched by label.
 The UI uses existing OI handoff URLs, not an invented embedded scene. No live
 model quality, actual productivity savings, or farmer validation is claimed.
 

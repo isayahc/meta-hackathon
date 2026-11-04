@@ -51,6 +51,32 @@ async function opHead(payload) {
   }
 }
 
+/** Read pinned/head OI manifests, projecting identity only; never commit or evaluate geometry. */
+async function opInspect(payload) {
+  const { LocalSceneBackend } = await mod('server/local-scene-backend.ts');
+  const { readManifest, canonicalJSON } = await mod('src/lib/workspace.ts');
+  const { sceneURLs } = await mod('src/lib/scene-links.ts');
+  const backend = new LocalSceneBackend(payload.dataDir);
+  try {
+    const pinned = await backend.read(payload.sceneId, payload.revision);
+    const head = await backend.read(payload.sceneId);
+    const before = readManifest(pinned.document), current = readManifest(head.document);
+    const supported = ['scene', 'instance'].includes(payload.entityKind);
+    const beforeItem = before.instances.find(i => i.id === payload.entityId);
+    const currentItem = current.instances.find(i => i.id === payload.entityId);
+    const state = item => !supported ? 'unsupported' : payload.entityKind === 'scene' || item ? 'present' : 'missing';
+    const fingerprint = (item, manifest) => createHash('sha256').update(canonicalJSON({ item, asset: manifest.assets.find(a => a.id === item.assetId) })).digest('hex');
+    return {
+      scene_id: pinned.id, revision: pinned.revision, head_revision: head.revision, name: pinned.name,
+      entity_state: state(beforeItem), head_entity_state: state(currentItem),
+      changed: beforeItem && currentItem ? fingerprint(beforeItem, before) !== fingerprint(currentItem, current) : null,
+      scale: 'unknown', scale_reason: 'OI scene units are meters; physical calibration is not certified by the pinned scene interface.',
+      ...sceneURLs(pinned.id, pinned.revision, payload.workbenchOrigin),
+      entities: before.instances.map(i => ({ id: i.id, name: i.name, kind: 'instance' })), mock: false,
+    };
+  } finally { backend.close(); }
+}
+
 async function opCommit(payload) {
   const { sceneId, baseRevision, requestId, dataDir, workbenchOrigin, agent } = payload;
   if (typeof sceneId !== 'string' || !sceneId) throw Object.assign(new Error('commit needs sceneId.'), { code: 'INVALID_REQUEST' });
@@ -131,6 +157,7 @@ async function main() {
     if (op === 'validate') console.log(JSON.stringify({ ok: true, result: await opValidate(payload) }));
     else if (op === 'compile') console.log(JSON.stringify({ ok: true, result: await opCompile(payload) }));
     else if (op === 'commit') console.log(JSON.stringify({ ok: true, result: await opCommit(payload) }));
+    else if (op === 'inspect') console.log(JSON.stringify({ ok: true, result: await opInspect(payload) }));
     else if (op === 'head') console.log(JSON.stringify({ ok: true, result: await opHead(payload) }));
     else console.log(JSON.stringify(fail('INVALID_REQUEST', `Unknown runner op "${op}".`, null, false)));
   } catch (error) {
