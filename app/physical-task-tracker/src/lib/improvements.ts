@@ -1,4 +1,5 @@
 /** Evidence-backed workflow proposals. Model narrative never decides feasibility. */
+import { outcomeView } from './outcomes.js';
 import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { basename, join } from 'node:path';
@@ -446,15 +447,20 @@ export function buildImprovementPrompt(context: WorkflowContext): string {
 }
 
 /** Only checked proposals enter ranked actions; unresolved alternatives remain deferred. */
-export function improvementPlan(review: ImprovementReview): {
+export function improvementPlan(review: ImprovementReview, root?: string): {
   ranked_actions: Array<{ action: string; why: string; effort: string; do_first_if: string }>;
   deferred: Array<{ action: string; why: string }>;
   goal_effects: unknown[];
 } {
   const ranked_actions: Array<{ action: string; why: string; effort: string; do_first_if: string }> = [];
   const deferred: Array<{ action: string; why: string }> = [];
+  const outcomes = root ? outcomeView(root).trials.sort((a, b) => b.trial.created_at.localeCompare(a.trial.created_at)) : [];
   for (const a of review.assessments) {
     const p = a.candidate;
+    const trial = outcomes.find(t => t.trial.candidate_id === p.id && (t.trial.review_id === review.id || t.trial.assessment.candidate.process_id === p.process_id && t.trial.assessment.candidate.change === p.change));
+    if (trial && !(trial.result.latest_decision?.current && trial.result.latest_decision.decision === 'keep')) {
+      deferred.push({ action: p.change, why: trial.result.next_action }); continue;
+    }
     if (!review.stale && a.feasibility === 'eligible' && a.decision !== 'rejected' && a.decision !== 'deferred') {
       ranked_actions.push({ action: p.change, why: `${p.mechanism} (goals: ${p.goal_ids.join(', ') || 'process upkeep'})`,
         effort: p.tradeoffs.effort, do_first_if: 'Farmer accepts this proposal; then follow its verification plan.' });

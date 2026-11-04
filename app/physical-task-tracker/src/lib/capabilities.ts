@@ -13,6 +13,7 @@ const execute = promisify(execFile);
 const dist = fileURLToPath(new URL('../', import.meta.url));
 const scripts = fileURLToPath(new URL('../../scripts/', import.meta.url));
 export const CAPABILITIES = [
+  { id: 'outcomes', mode: 'synthetic intervention outcome replay', requires: ['Node 22+'], checks: ['baseline and follow-up evidence retained', 'unequal workloads normalized', 'predictions separate from measurements', 'corrections invalidate decisions; rejection changes briefing without completing work'] },
   { id: 'reconciliation', mode: 'synthetic evidence/review replay', requires: ['Node 22+'], checks: ['follow-up updates canonical tasks', 'late evidence requires confirmation', 'duplicate upload/review does not duplicate progress', 'blocker propagates while accepted schedule and goal outcome remain separate'] },
   { id: 'planning', mode: 'synthetic goal/task/calendar replay', requires: ['Node 22+'], checks: ['shared goal task scheduled once', 'dependencies and break respected', 'overrun preserves actuals and flags downstream accepted conflicts', 'goal outcome stays separate'] },
   { id: 'process', mode: 'synthetic replay', requires: ['Node 22+'], checks: ['scan event → process', 'correction persists', 'original revision retained'] },
@@ -137,7 +138,13 @@ export async function testCapabilities(selection: string, directory: string): Pr
   if (!isAbsolute(directory)) throw new Error('--out must be an absolute path to a new directory.');
   await mkdir(directory); // Deliberately refuse an existing directory, even if empty.
   const report: CapabilityReport = { schema: 'fieldops-capability-test/1', status: 'passed', started_at: new Date().toISOString(), node: process.version, directory, live_inference: false, results: [] };
-  const scenarios = { reconciliation: async (s: Scenario): Promise<void> => {
+  const scenarios = { outcomes: async (s: Scenario): Promise<void> => {
+    const result = await s.command<{ passed: boolean; corrected_status: string; unfinished_task_preserved: boolean }>(process.execPath, [join(scripts, 'replay-outcomes.mjs'), join(s.directory, 'project')], 'outcomes-replay');
+    assert.equal(result.passed, true); assert.equal(result.corrected_status, 'worse'); assert.equal(result.unfinished_task_preserved, true);
+    const briefing = await s.cli<{ next_actions: string[] }>('task-briefing', [join(s.directory, 'project'), '--offline'], 'offline-briefing');
+    assert.ok(briefing.next_actions.some(a => a.includes('Stop using')));
+    s.checks.push('Normalized measured differences stay separate from prediction; correction and rejection persist through the actual briefing CLI');
+  }, reconciliation: async (s: Scenario): Promise<void> => {
     const result = await s.command<{ passed: boolean; duplicate_progress: boolean; accepted_schedule_preserved: boolean }>(process.execPath, [join(scripts, 'replay-reconciliation.mjs'), join(s.directory, 'project')], 'reconciliation-replay');
     assert.equal(result.passed, true); assert.equal(result.duplicate_progress, false); assert.equal(result.accepted_schedule_preserved, true);
     s.checks.push('Reviewed evidence updates canonical tasks once; blocker flags downstream work without replacing accepted schedule or completing goal');

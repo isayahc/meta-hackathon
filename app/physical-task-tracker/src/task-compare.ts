@@ -19,6 +19,7 @@ import {
   resolveApiKey,
   postApi,
 } from './lib/analyze-response.js';
+import { retainVisitEvidence } from './lib/visit-evidence.js';
 import { loadEnvSync } from './lib/env.js';
 
 // .env (cwd, then app root) fills gaps; real environment always wins.
@@ -99,7 +100,7 @@ async function loadFrames(source: string, n: number, tag: string): Promise<strin
   }
   const toDataUrl = async (p: string): Promise<string> => {
     const bytes = await readFile(p);
-    const ext = extname(p).toLowerCase() === '.png' ? 'png' : 'jpeg';
+    const ext = extname(p).toLowerCase() === '.png' ? 'png' : extname(p).toLowerCase() === '.webp' ? 'webp' : 'jpeg';
     return `data:image/${ext};base64,${bytes.toString('base64')}`;
   };
   const urls: string[] = [];
@@ -157,7 +158,7 @@ if (!result.ok) {
     console.error(`--- raw response ---\n${JSON.stringify(result.detail).slice(0, 1000)}`);
   process.exit(1);
 }
-console.log(JSON.stringify(result.analysis, null, 2));
+const analysis = result.analysis as VisitAnalysis;
 
 const spotFlag = flagValue(args, '--spot', null);
 if (spotFlag) {
@@ -169,9 +170,13 @@ if (spotFlag) {
     process.exit(1);
   }
   const root = rootFlag ?? dirname(dirname(spotFlag));
-  const { sessionId, quarantined } = await appendSession(root, id, result.analysis as VisitAnalysis);
+  analysis.visit_evidence = { before: await retainVisitEvidence(root, visitA, urlsA), after: await retainVisitEvidence(root, visitB, urlsB) };
+  const { sessionId, quarantined } = await appendSession(root, id, analysis);
+  analysis.session = { spot_id: id, session_id: sessionId, quarantined };
   console.error(`Saved session ${sessionId} to ${spotFlag}.`);
   if (quarantined) {
     console.error('Quarantined: model doubts same_location — standing state left untouched.');
   }
 }
+
+console.log(JSON.stringify(analysis, null, 2));

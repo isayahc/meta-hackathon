@@ -23,6 +23,7 @@ import { improvementPlan, readWorkflowContext, writeWorkflowContext, Improvement
 import { getDoc } from './lib/db.js';
 import { WalkthroughError, captureWalkthrough, listWalkthroughs, readWalkthrough, reviewWalkthrough, walkthroughHandoff, walkthroughImage } from './lib/walkthrough.js';
 import { planningCommand, planningView, planningCalendar } from './lib/task-planning.js';
+import { outcomeCommand, outcomeView } from './lib/outcomes.js';
 import { reconciliationCommand, reconciliationView } from './lib/reconciliation.js';
 import { reconcileVideo } from './lib/reconciliation-video.js';
 import { randomUUID } from 'node:crypto';
@@ -317,6 +318,12 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
         res.end(html);
         return;
       }
+      if (url.pathname === '/api/outcomes' && req.method === 'GET') { json(200, outcomeView(root)); return; }
+      if (url.pathname === '/api/outcomes' && req.method === 'POST') {
+        try { json(200, outcomeCommand(root, await readBody(req))); }
+        catch (error) { const message = (error as Error).message; json(/Stale/.test(message) ? 409 : 400, { error: message }); }
+        return;
+      }
       if (url.pathname === '/api/reconciliation' && req.method === 'GET') {
         json(200, reconciliationView(root)); return;
       }
@@ -385,7 +392,7 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
         if (typeof plan?.improvement_review_id === 'string') {
           const review = readImprovementReview(root, plan.improvement_review_id);
           plan.improvements = review;
-          plan.plan = improvementPlan(review);
+          plan.plan = improvementPlan(review, root);
           if (review.stale) { plan.stale = true; plan.stale_reason = review.stale_reasons.join(' '); }
         }
         const ecoDoc = (await getDoc(root, 'eco')) as { summary?: string } | null;
@@ -511,20 +518,15 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
       }
       if (req.method === 'GET' && url.pathname.startsWith('/media/')) {
         const name = decodeURIComponent(url.pathname.slice('/media/'.length));
-        if (!name || name.includes('/') || name.includes('\\') || !/\.(mp4|webm|mov|gif)$/i.test(name)) {
+        if (!name || name.includes('/') || name.includes('\\') || !/\.(mp4|webm|mov|gif|png|jpg|jpeg|webp|bin)$/i.test(name)) {
           json(404, { ok: false, error: 'not found' });
           return;
         }
         try {
           const data = await readFile(join(root, 'media', name));
-          const type = /\.webm$/i.test(name)
-            ? 'video/webm'
-            : /\.mov$/i.test(name)
-              ? 'video/quicktime'
-              : /\.gif$/i.test(name)
-                ? 'image/gif'
-                : 'video/mp4';
-          res.writeHead(200, { 'Content-Type': type });
+          const extension = name.split('.').pop()!.toLowerCase();
+          const type = ({ webm: 'video/webm', mov: 'video/quicktime', mp4: 'video/mp4', gif: 'image/gif', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', bin: 'application/octet-stream' } as Record<string, string>)[extension];
+          res.writeHead(200, { 'Content-Type': type, 'X-Content-Type-Options': 'nosniff' });
           res.end(data);
         } catch {
           json(404, { ok: false, error: 'not found' });

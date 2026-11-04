@@ -151,3 +151,7 @@ real OI integration, and visual checks are different evidence categories.
 ### Repeated evidence and reconciliation
 
 Run `task-capabilities.js test reconciliation --out <new absolute directory>` after building. The labeled synthetic replay exercises partial progress, quantity correction, duplicate ingestion/review, historical evidence and blocker propagation while preserving accepted scheduling and goal outcome. See [the reconciliation contract](evidence-reconciliation.md) for agent-driven commands, retained artifacts and browser verification limits.
+
+### Intervention outcomes
+
+Run `task-capabilities.js test outcomes --out <new absolute directory>`. The synthetic scenario retains the baseline, prediction, normalized measured comparison, later correction, farmer rejection and updated real briefing output. It preserves unfinished tasks. Use `task-outcomes.js --root <absolute-project> --command <absolute-json-file>` for individual operations, or `task-briefing.js <absolute-project> --offline` for current verified-state actions. See [intervention outcomes](intervention-outcomes.md) for contracts and verification limits.
