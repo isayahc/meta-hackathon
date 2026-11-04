@@ -10,6 +10,7 @@
 // readable. Downstream docs (optimizer plan) stamp the process revisions
 // they were built from and go stale when a correction lands.
 // No dependencies beyond node:sqlite (via lib/db).
+import type { DatabaseSync } from 'node:sqlite';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { withDb, getDoc, setDoc } from './db.js';
@@ -628,8 +629,19 @@ export async function applyCorrection(
   rationale: string,
   author = 'farmer'
 ): Promise<{ doc: ProcessDoc; staleDocs: string[] }> {
+  return withDb(root, db => {
+    db.exec('BEGIN IMMEDIATE');
+    try { const result = correctProcessInDb(db, root, id, patch, rationale, author); db.exec('COMMIT'); return result; }
+    catch (error) { db.exec('ROLLBACK'); throw error; }
+  });
+}
+/** Append a validated correction atomically with the enclosing workflow review. */
+export function correctProcessInDb(db: DatabaseSync, root: string, id: string, patch: CorrectionPatch, rationale: string, author = 'farmer', expectedRev?: number): { doc: ProcessDoc; staleDocs: string[] } {
   if (!rationale?.trim()) throw new ProcessError('PROC_CORRECTION', 'A correction needs a rationale.');
-  const current = await readProcess(root, id);
+  const row = db.prepare('SELECT body FROM processes WHERE id=? ORDER BY rev DESC LIMIT 1').get(id) as { body: string } | undefined;
+  if (!row) throw new Error(`No process "${id}".`);
+  const current = JSON.parse(row.body) as ProcessDoc;
+  if (expectedRev !== undefined && current.rev !== expectedRev) throw new Error('Stale process revision.');
   const next: ProcessDoc = structuredClone(current);
   const paths: string[] = [];
   if (typeof patch.title === 'string' && patch.title.trim()) {
@@ -693,8 +705,17 @@ export async function applyCorrection(
   next.rev = current.rev + 1;
   next.updated_at = new Date().toISOString();
   next.corrections = [...next.corrections, { rev: next.rev, at: next.updated_at, rationale: rationale.trim(), paths }];
-  const saved = await saveRevision(root, next, author);
-  const staleDocs = await markDependentStale(root, id, saved.rev);
+  const saved = normalizeProcess(next);
+  db.prepare('INSERT INTO processes(id,rev,body,author,created) VALUES(?,?,?,?,?)').run(id, saved.rev, JSON.stringify(saved), author, saved.updated_at);
+  const staleDocs: string[] = [];
+  const planRow = db.prepare("SELECT body FROM docs WHERE key='plan'").get() as { body: string } | undefined;
+  if (planRow) {
+    const plan = JSON.parse(planRow.body);
+    if (Array.isArray(plan.process_basis) && plan.process_basis.some((b: {process_id: string; rev: number}) => b.process_id === id && b.rev < saved.rev) && !plan.stale) {
+      plan.stale = true; plan.stale_reason = `process "${id}" corrected to rev ${saved.rev}`;
+      db.prepare("UPDATE docs SET body=?,updated_at=? WHERE key='plan'").run(JSON.stringify(plan), saved.updated_at); staleDocs.push('plan');
+    }
+  }
   return { doc: saved, staleDocs };
 }
 

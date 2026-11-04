@@ -5,7 +5,7 @@ export interface VideoFollowupInput { media?: string; task_id?: string; recorded
 export type ScanRunner = (file: string, args: string[]) => Promise<unknown>;
 
 /** Process a retained source, preserving retry state even if model extraction fails. */
-export async function reconcileVideo(root: string, input: VideoFollowupInput, run: ScanRunner): Promise<EvidenceSource> {
+export async function reconcileVideo(root: string, input: VideoFollowupInput, run: ScanRunner, origin: 'model' | 'replay' = 'model'): Promise<EvidenceSource> {
   let source = input.source_id ? reconciliationView(root).sources.find(s => s.id === input.source_id) : ingestEvidence(root, {
     kind: 'video', media: input.media, recorded_at: input.recorded_at ?? null,
     time_uncertainty: input.recorded_at ? 'Operator supplied recording time' : 'Recording time unknown', context: { task_ids: input.task_id ? [input.task_id] : [] }
@@ -26,7 +26,7 @@ export async function reconcileVideo(root: string, input: VideoFollowupInput, ru
       confidence: ['low', 'medium', 'high'].includes(String(raw.confidence)) ? raw.confidence as Observation['confidence'] : 'unknown', coverage: 'sampled' as const,
       uncertainty: `Sparse frames do not establish continuous work or completion. ${raw.frame_times_estimated ? 'Frame times estimated. ' : ''}${Array.isArray(raw.unknowns) ? raw.unknowns.join('; ').slice(0, 3000) : 'Unknown coverage.'}` }] : []);
     if (!observations.length) observations.push({ id: 'summary', text: typeof raw.observed_task === 'string' ? raw.observed_task.slice(0, 4000) : 'No usable observation extracted', start_s: null, end_s: null, confidence: 'unknown', coverage: 'sampled', uncertainty: 'No frame-specific evidence. Confirm identity and quantity manually.' });
-    source = finishInterpretation(root, source.id, token, { origin: 'model', model: typeof raw.model === 'string' ? raw.model : 'unknown', prompt_version: typeof raw.prompt_version === 'string' ? raw.prompt_version : 'unknown', observations, metadata: { duration_s: raw.video_duration_s ?? null, recorded_at: raw.recorded_at ?? null, recorded_source: raw.recorded_source ?? 'unknown', video: raw.video_metadata ?? null, frame_times_estimated: raw.frame_times_estimated ?? null }, raw });
+    source = finishInterpretation(root, source.id, token, { origin, model: typeof raw.model === 'string' ? raw.model : 'unknown', prompt_version: typeof raw.prompt_version === 'string' ? raw.prompt_version : 'unknown', observations, metadata: { duration_s: raw.video_duration_s ?? null, recorded_at: raw.recorded_at ?? null, recorded_source: raw.recorded_source ?? 'unknown', video: raw.video_metadata ?? null, frame_times_estimated: raw.frame_times_estimated ?? null }, raw });
     // A single supported quantitative/blocker claim may be proposed. Invalid model fields remain raw evidence.
     const claim = raw.work_update && typeof raw.work_update === 'object' ? raw.work_update as Record<string, unknown> : null;
     const obs = claim && observations.find(o => o.id === `frame-${claim.frame_index}`);

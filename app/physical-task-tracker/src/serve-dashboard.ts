@@ -1,3 +1,4 @@
+import { journeyCommand, journeyView, captureJourney } from './lib/journey.js';
 // Field Ops app server: serves dashboard/index.html plus a JSON API that
 // runs the sibling CLIs as jobs (scan, compare, briefing, optimizer) and
 // manages goals. Project state lives in <projectDir>/fieldops.db.
@@ -301,7 +302,7 @@ export function buildFeed(spots: OverviewSpot[]): FeedEvent[] {
   return events.sort((a, b) => (b.sort > a.sort ? 1 : -1)).slice(0, 15);
 }
 
-export function createServer(rootArg: string, { eco = null }: { eco?: string | null } = {}) {
+export function createServer(rootArg: string, { eco = null, scanRunner = runScript }: { eco?: string | null; scanRunner?: typeof runScript } = {}) {
   // Absolute from the start: CLI children run from dist/, so stored paths
   // (media clips, the db) must resolve identically in every process.
   const root = resolve(rootArg);
@@ -316,6 +317,24 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
         const html = await readFile(join(HERE, 'dashboard', 'index.html'), 'utf8');
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(html);
+        return;
+      }
+      if (url.pathname === '/api/journeys' && req.method === 'GET') { json(200, journeyView(root)); return; }
+      if (url.pathname === '/api/journeys' && req.method === 'POST') {
+        try { json(200, journeyCommand(root, await readBody(req))); }
+        catch (error) { const message = (error as Error).message; json(/Stale/.test(message) ? 409 : 400, { error: message }); }
+        return;
+      }
+      if (url.pathname === '/api/journey-video' && req.method === 'POST') {
+        try {
+          const input = await readBody(req, 200 * 1024 * 1024);
+          let media: string | undefined;
+          if (!input.source_id) {
+            const dir = join(root, 'media'); await mkdir(dir, { recursive: true });
+            const path = await materializeVideo(input, dir, `work-${randomUUID()}`); media = path.split(/[\\/]/).pop();
+          }
+          json(200, { workflow: await captureJourney(root, { ...input, media }, scanRunner) });
+        } catch (error) { const message = (error as Error).message; json(/Stale/.test(message) ? 409 : 400, { error: message }); }
         return;
       }
       if (url.pathname === '/api/outcomes' && req.method === 'GET') { json(200, outcomeView(root)); return; }

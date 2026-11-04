@@ -22,10 +22,10 @@ export interface Task {
 }
 export interface PlanningConfig { timezone: string; availability: Interval[]; resources: Record<string, 'available' | 'unavailable' | 'unknown'>; max_minutes: number; person: string }
 export interface TaskBlock extends Interval { id: string; task_id: string; task_revision: number; active_minutes: number; passive_end: string; resources: string[]; status: 'accepted' | 'released'; pinned: boolean; plan_id: string }
-interface Schedule { revision: number; config: PlanningConfig; blocks: TaskBlock[]; decisions: Array<{ plan_id: string; decision: 'accepted' | 'rejected' | 'released' | 'pinned'; reason: string; at: string }> }
-interface GoalRow { id: string; text: string; weight: number; deadline: string | null; status: string; success_criteria: string }
-interface TimedEvent { id: string; title: string; timing: (Interval & { blocking: boolean; resources: string[] }) | null }
-interface Snapshot { tasks: Task[]; goals: GoalRow[]; events: TimedEvent[]; schedule: Schedule; process_revisions: Record<string, number> }
+export interface Schedule { revision: number; config: PlanningConfig; blocks: TaskBlock[]; decisions: Array<{ plan_id: string; decision: 'accepted' | 'rejected' | 'released' | 'pinned'; reason: string; at: string }> }
+export interface GoalRow { id: string; text: string; weight: number; deadline: string | null; status: string; success_criteria: string }
+export interface TimedEvent { id: string; title: string; timing: (Interval & { blocking: boolean; resources: string[] }) | null }
+export interface Snapshot { tasks: Task[]; goals: GoalRow[]; events: TimedEvent[]; schedule: Schedule; process_revisions: Record<string, number>; superseded_process_ids: string[] }
 export interface TaskPlan {
   schema: 'human-plan/1'; id: string; policy: 'single-person-greedy/1'; input_digest: string; now: string; day: string;
   timezone: string; blocks: TaskBlock[]; preserved: TaskBlock[]; deferred: Array<{ task_id: string; reason: string }>;
@@ -62,7 +62,7 @@ export function tasks(db: DatabaseSync): Task[] {
 function snapshot(db: DatabaseSync): Snapshot {
   const events = (db.prepare('SELECT id,title,timing_json FROM events WHERE timing_json IS NOT NULL ORDER BY id').all() as unknown as Array<{ id: string; title: string; timing_json: string | null }>).map(e => ({ id: e.id, title: e.title, timing: e.timing_json ? JSON.parse(e.timing_json) : null }));
   return { tasks: tasks(db), goals: db.prepare('SELECT id,text,weight,deadline,status,success_criteria FROM goals ORDER BY id').all() as unknown as GoalRow[], events,
-    schedule: doc(db, 'human-schedule', defaultSchedule()), process_revisions: Object.fromEntries((db.prepare('SELECT id,MAX(rev) as rev FROM processes GROUP BY id ORDER BY id').all() as unknown as Array<{ id: string; rev: number }>).map(p => [p.id, p.rev])) };
+    schedule: doc(db, 'human-schedule', defaultSchedule()), superseded_process_ids: (db.prepare("SELECT key FROM docs WHERE key LIKE 'superseded-process:%' ORDER BY key").all() as unknown as {key:string}[]).map(r=>r.key.slice('superseded-process:'.length)), process_revisions: Object.fromEntries((db.prepare('SELECT id,MAX(rev) as rev FROM processes GROUP BY id ORDER BY id').all() as unknown as Array<{ id: string; rev: number }>).map(p => [p.id, p.rev])) };
 }
 function saveTask(db: DatabaseSync, task: Task): void { db.prepare('UPDATE actions SET text=?,status=?,task_json=?,task_rev=?,updated_at=? WHERE id=?').run(task.text, task.execution === 'done' ? 'done' : 'open', JSON.stringify(task), task.revision, new Date().toISOString(), task.id); }
 function validateTask(db: DatabaseSync, task: Task, all: Task[]): void {
@@ -106,17 +106,20 @@ export function update(db: DatabaseSync, task: Task, raw: unknown, reason: strin
 }
 /** Create one manual/reviewed proposal in the existing action table; a caller key makes retries idempotent. */
 export function createTask(root: string, raw: unknown, requestId: string): Task {
-  words(requestId, 'Request ID'); const patch = object(raw);
-  return atomic(root, db => {
-    const key = `task-create:${hash(requestId)}`, prior = doc<{ id: string; digest: string } | null>(db, key, null);
-    if (prior) { check(prior.digest === hash(patch), 'Request ID already used with different task input.'); return tasks(db).find(t => t.id === prior.id)!; }
-    const id = randomUUID(), now = new Date().toISOString(), eventId = `manual-${id}`;
-    db.prepare('INSERT INTO events(id,title,date,kind,created_at) VALUES(?,?,?,?,?)').run(eventId, 'Manual task', now.slice(0, 10), 'note', now);
-    db.prepare('INSERT INTO actions(id,event_id,idx,text,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?)').run(id, eventId, 0, String(patch.text ?? ''), 'open', now, now);
-    const initial = tasks(db).find(t => t.id === id)!; initial.review = 'confirmed';
-    const task = update(db, initial, patch, 'Task created'); saveDoc(db, key, { id, digest: hash(patch) }); return task;
-  });
+  return atomic(root, db => createTaskInDb(db, raw, requestId));
 }
+/** Create a canonical task inside an enclosing workflow transaction. */
+export function createTaskInDb(db: DatabaseSync, raw: unknown, requestId: string): Task {
+  words(requestId, 'Request ID'); const patch = object(raw);
+  const key = `task-create:${hash(requestId)}`, prior = doc<{ id: string; digest: string } | null>(db, key, null);
+  if (prior) { check(prior.digest === hash(patch), 'Request ID already used with different task input.'); return tasks(db).find(t => t.id === prior.id)!; }
+  const id = randomUUID(), now = new Date().toISOString(), eventId = `manual-${id}`;
+  db.prepare('INSERT INTO events(id,title,date,kind,created_at) VALUES(?,?,?,?,?)').run(eventId, 'Manual task', now.slice(0, 10), 'note', now);
+  db.prepare('INSERT INTO actions(id,event_id,idx,text,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?)').run(id, eventId, 0, String(patch.text ?? ''), 'open', now, now);
+  const initial = tasks(db).find(t => t.id === id)!; initial.review = 'confirmed';
+  const task = update(db, initial, patch, 'Task created'); saveDoc(db, key, { id, digest: hash(patch) }); return task;
+}
+
 /** Revision-checked correction; links never create duplicate task records. */
 export function editTask(root: string, id: string, revision: number, patch: unknown, reason: string): Task {
   return atomic(root, db => { const task = tasks(db).find(t => t.id === id); check(task, 'Task not found.'); check(task.revision === revision, 'Stale task revision.'); return update(db, task, patch, reason); });
@@ -204,7 +207,7 @@ function calculate(s: Snapshot, day: string, now: string): TaskPlan {
   for (const b of preserved) {
     const t = s.tasks.find(t => t.id === b.task_id); if (!t) continue;
     if (localParts(b.passive_end, zone).day > deadline(t) || t.window && (b.start < t.window.start || b.passive_end > t.window.end)) plan.conflicts.push(`Accepted block for ${t.text} violates its current deadline/window.`);
-    if (t.person !== s.schedule.config.person || t.process && s.process_revisions[t.process.id] !== t.process.revision) plan.conflicts.push(`Accepted block for ${t.text} needs person/process review.`);
+    if (t.person !== s.schedule.config.person || t.process && (s.process_revisions[t.process.id] !== t.process.revision || s.superseded_process_ids.includes(t.process.id))) plan.conflicts.push(`Accepted block for ${t.text} needs person/process review.`);
   }
   const priority = (t: Task): number => Math.max(0, ...confirmed(t).map(g => g.weight));
   const unlocks = (t: Task): number => s.tasks.filter(other => other.dependencies.includes(t.id)).length;
@@ -217,7 +220,7 @@ function calculate(s: Snapshot, day: string, now: string): TaskPlan {
   for (let round = 0; pending.size && round <= ordered.length; round++) {
     let progress = false;
     for (const t of ordered.filter(t => pending.has(t.id))) {
-      const invalid = t.review !== 'confirmed' ? 'Confirm this task before planning.' : ['paused', 'blocked'].includes(t.execution) ? `Task is ${t.execution}; resume or resolve the blocker.` : t.person !== s.schedule.config.person ? 'Required person is not available in this single-person plan.' : !t.completion_criteria.trim() ? 'Add completion criteria.' : t.remaining_minutes === null ? 'Provide remaining active minutes and estimate source.' : t.preconditions.some(p => p.status !== 'met') ? 'A required precondition is unmet or unknown.' : t.resources.some(r => s.schedule.config.resources[r] !== 'available') ? 'Required resource availability is missing or blocked.' : t.process && s.process_revisions[t.process.id] !== t.process.revision ? 'Process reference is stale; review the task.' : deadline(t) < day ? 'Deadline is already past; review priorities or deadline.' : null;
+      const invalid = t.review !== 'confirmed' ? 'Confirm this task before planning.' : ['paused', 'blocked'].includes(t.execution) ? `Task is ${t.execution}; resume or resolve the blocker.` : t.person !== s.schedule.config.person ? 'Required person is not available in this single-person plan.' : !t.completion_criteria.trim() ? 'Add completion criteria.' : t.remaining_minutes === null ? 'Provide remaining active minutes and estimate source.' : t.preconditions.some(p => p.status !== 'met') ? 'A required precondition is unmet or unknown.' : t.resources.some(r => s.schedule.config.resources[r] !== 'available') ? 'Required resource availability is missing or blocked.' : t.process && (s.process_revisions[t.process.id] !== t.process.revision || s.superseded_process_ids.includes(t.process.id)) ? 'Process reference is stale; review the task.' : deadline(t) < day ? 'Deadline is already past; review priorities or deadline.' : null;
       if (invalid) { defer(t, invalid); progress = true; continue; }
       if (s.schedule.blocks.some(b => b.status === 'accepted' && b.task_id === t.id && b.end <= now)) { defer(t, 'An accepted interval elapsed without a completion update. Record actual work or release the reservation.'); progress = true; continue; }
       if (t.dependencies.some(d => pending.has(d) && !completion.has(d))) continue;

@@ -188,6 +188,7 @@ function freshResult(db: DatabaseSync, t: InterventionTrial, followupId?: string
   if (currentReview?.assessments.find(a => a.candidate.id === t.candidate_id)?.decision !== 'accepted') result.source_warnings.push('Original improvement approval is no longer accepted; review before reuse.');
   const expectedProcess = f?.process_revision ?? t.baseline?.process_revision ?? t.assessment.candidate.process_rev;
   const current = db.prepare('SELECT MAX(rev) AS rev FROM processes WHERE id=?').get(t.assessment.candidate.process_id) as { rev: number | null };
+  if (get(db, `superseded-process:${t.assessment.candidate.process_id}`)) result.source_warnings.push('The process was superseded by new source analysis; review the new interpretation before reuse.');
   if (current.rev !== expectedProcess) result.source_warnings.push('Current process differs from the evaluated process revision; review before reusing this recommendation.');
   if (result.source_warnings.length) { if (result.latest_decision) result.latest_decision.current = false; result.next_action = (result.latest_decision?.decision === 'reject' ? 'Keep the previously rejected intervention stopped. ' : result.latest_decision?.decision === 'revise' ? `Revision remains pending: ${result.latest_decision.revision_plan}. ` : '') + result.source_warnings.join(' '); }
   return result;
