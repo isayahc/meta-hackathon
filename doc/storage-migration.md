@@ -29,6 +29,8 @@ Restore refuses an existing destination. It verifies the generation, record coun
 docker compose -f compose.storage.yaml run --build --rm transfer
 ```
 
+MongoDB 8 has a documented incompatibility with some Linux kernels beginning at 6.19; CI uses Ubuntu 22.04 rather than bypassing its startup guard. Docker shares the host/VM kernel, so verify compatibility on Docker Desktop/WSL2 as well. See https://www.mongodb.com/docs/v8.0/release-notes/8.0/ .
+
 The default tool command generates synthetic reviewed work, uploads it twice, checks scope isolation, and restores from actual MongoDB/MinIO, verifying IDs, corrections and MP4/GIF hashes. It uses persistent development volumes; `down -v` deletes those laboratory volumes. No live inference is used.
 
 MinIO is built from the source release RELEASE.2025-10-15T17-29-55Z rather than relying on an old community image. Its AGPL license is included in the image. The adapter uses standard S3 operations so another compatible deployment can be selected. Verify supported distribution, patching and deployment terms before production use. Source: https://github.com/minio/minio/releases
