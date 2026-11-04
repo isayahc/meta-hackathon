@@ -93,7 +93,7 @@ test('location evidence filters keep process and named-area context separate',()
 
 
 test('GIF selection follows observed frame identity and rejects unsupported suggestions or unsafe paths',()=>{
- const ctx=context(['stepGif']);ctx.clip={interpretation_id:'i',source:{interpretations:[{id:'i',raw:{gif_segments:[{frame:2,file:'segment-2.gif',start_s:4,end_s:6}]}}]}};
+ const ctx=context(['stepGif','previewKey'],{reviewPreviews:new Map()});ctx.clip={interpretation_id:'i',source:{interpretations:[{id:'i',raw:{gif_segments:[{frame:2,file:'segment-2.gif',start_s:4,end_s:6}]}}]}};
  ctx.step={observed_order:2,evidence:{spans:[{frame:2}]}};
  assert.equal(new Script('stepGif(clip,step).file').runInContext(ctx),'segment-2.gif');
  new Script('step.observed_order=null').runInContext(ctx);assert.equal(new Script('stepGif(clip,step)').runInContext(ctx),null);
