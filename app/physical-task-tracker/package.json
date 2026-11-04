@@ -12,6 +12,7 @@
     "prestart": "npm run build",
     "start": "node dist/serve-dashboard.js ./my-farm --port 8123 --open",
     "test": "npm run build && node --test dist/*.test.js dist/lib/*.test.js",
+    "capabilities": "npm run build --silent && node dist/task-capabilities.js",
     "dataset:floorplan-web-10": "node datasets/floorplan-web-10/run.mjs",
     "dataset:render-floorplan-web-10": "node datasets/floorplan-web-10/render.mjs"
   },

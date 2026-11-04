@@ -20,6 +20,19 @@ npm start     # build + serve ./my-farm on :8123 + open browser
 
 ## Conventions
 
+### Headless capability testing (OpenCode and other agents)
+
+When asked to test a capability without the app, read
+`doc/headless-testing.md`. Do not start the dashboard or a server. Build the app,
+then use `dist/task-capabilities.js list` and `test <capability|all> --out <new
+absolute directory>` for repeatable offline scenarios. Use the documented
+individual CLIs for supplied media or explicitly requested live model/OI tests.
+Keep test projects separate from the user's working farm. Report passed, failed,
+and blocked separately; include artifact paths and whether inference was live,
+replayed, or mocked. A replay pass never proves live model quality or UI behavior.
+
+### Implementation conventions
+
 - Keep the suite green (`node:test`, no frameworks). Every behavior change
   ships with a committed test next to the code it covers.
 - Single-file dashboard (`src/dashboard/index.html`), mobile-friendly, no

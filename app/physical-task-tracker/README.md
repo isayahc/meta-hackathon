@@ -313,6 +313,18 @@ Dashboard: the Space tab posts to `/api/floorplan`. Tests: `node --test
 dist/task-floorplan.test.js dist/lib/oi-connector.test.js
 dist/lib/oi-links.test.js dist/lib/oi-integration.test.js` (live-OI tests
 run when `OI_ROOT` is pinned, else skip).
+## Test capabilities without the dashboard
+
+Tell OpenCode: **“Read `doc/headless-testing.md` and test all offline capabilities.
+Save the report and evidence in a new test directory. Do not launch the app.”**
+
+The `task-capabilities` CLI lists scenarios and runs real process, improvement,
+floor-plan connector, and walkthrough CLI operations against isolated projects.
+Results include JSON reports, command outputs, saved SQLite state, and evidence;
+missing Python dependencies are reported as blocked. Model/geometry fixtures
+are explicitly labeled. See [the headless guide](../../doc/headless-testing.md)
+for single-capability tests and direct commands using your own video or models.
+
 ## Walkthrough capture and review
 
 The Space tab accepts a short walkthrough video or overlapping photos, saves
