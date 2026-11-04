@@ -32,8 +32,8 @@ try {
     catch (error) { await route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: error.message }) }); }
   });
   await page.goto('http://fieldops.test/');
-  await page.getByRole('tab', { name: 'Space', exact: true }).click();
-  await page.getByText('Replay — not fresh inference', { exact: false }).waitFor();
+  await page.getByRole('tab', { name: 'Workspace', exact: true }).click();
+  await page.getByText('Map a work area',{exact:true}).click();await page.getByText('Replay — not fresh inference', { exact: false }).waitFor();
   const station = page.locator('.stationreview').first();
   await station.locator('[name=station]').fill('Tray filling station');
   await station.locator('[name=static]').check();
@@ -43,7 +43,7 @@ try {
   assert.equal(readWalkthrough(root, replay.id).reviews[0].decision, 'confirmed');
   assert.equal(await page.locator('.stationreview').nth(1).getByRole('button', { name: 'Confirm station' }).isDisabled(), true);
   await page.locator('#walkthroughruns').screenshot({ path: join(output, 'review-mobile.png') });
-  await page.reload(); await page.getByRole('tab', { name: 'Space', exact: true }).click();
+  await page.reload(); await page.getByRole('tab', { name: 'Workspace', exact: true }).click();
   await page.locator('.stationreview [name=station]').first().waitFor();
   assert.equal(await page.locator('.stationreview [name=station]').first().inputValue(), 'Tray filling station');
   await page.locator('#walkthroughform [name=images]').setInputFiles([join(root, 'bundle', 'candidate-0.png'), join(root, 'bundle', 'candidate-1.png')]);

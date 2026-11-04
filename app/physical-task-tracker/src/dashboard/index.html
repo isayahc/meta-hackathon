@@ -5,340 +5,254 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Field Ops — task tracker</title>
 <style>
-  :root {
-    --ink: #1d2118;
-    --muted: #5c6152;
-    --line: #d8d5c8;
-    --paper: #f4f2ea;
-    --panel: #fbfaf5;
-    --green: #2e7d32;
-    --amber: #b26a00;
-    --red: #b3261e;
-    --soil: #6d4c2f;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; color: var(--ink); background: var(--paper);
-    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-    font-size: 14px; line-height: 1.45;
-  }
-  header { background: var(--panel); border-bottom: 2px solid var(--soil); }
-  .topbar { display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; padding: 10px 16px 0; max-width: 1080px; margin: 0 auto; }
-  nav.tabs { max-width: 1080px; margin: 0 auto; }
-  .topbar h1 { font-size: 17px; margin: 0; font-weight: 650; }
-  .topbar .strip { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
-  .topbar .strip b { color: var(--ink); font-weight: 600; }
-  nav.tabs { display: flex; gap: 2px; padding: 8px 16px 0; }
-  nav.tabs button {
-    font: inherit; font-size: 14px; font-weight: 600; padding: 8px 16px;
-    border: 1px solid transparent; border-bottom: 0; border-radius: 6px 6px 0 0;
-    background: transparent; color: var(--muted); cursor: pointer;
-  }
-  nav.tabs button[aria-selected="true"] {
-    background: var(--paper); color: var(--ink); border-color: var(--line);
-  }
-  main { padding: 12px 16px; max-width: 1080px; margin: 0 auto; }
-  .view { display: none; }
-  .view.active { display: block; }
-  .cols { display: grid; gap: 12px; grid-template-columns: minmax(280px, 5fr) minmax(360px, 7fr); }
-  section { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; }
-  section h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 8px; font-weight: 650; }
-  #spots { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-  .spot { border: 1px solid var(--line); border-radius: 4px; padding: 8px; cursor: pointer; background: #fff; text-align: left; font: inherit; }
-  .spot:hover { border-color: var(--soil); }
-  .spot.sel { outline: 2px solid var(--soil); outline-offset: -2px; }
-  .spot .nm { font-weight: 650; display: flex; justify-content: space-between; gap: 6px; }
-  .spot .st { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex: none; margin-top: 5px; }
-  .dot.warn { background: var(--amber); }
-  .chip { display: inline-block; font-size: 11px; font-weight: 650; padding: 1px 7px; border-radius: 20px; background: #e4e1d3; }
-  .chip.risk { background: #f3d9a7; color: var(--amber); }
-  .chip.done { background: #cfe3d0; color: var(--green); }
-  ol.actions { margin: 0; padding-left: 20px; }
-  ol.actions li { margin-bottom: 8px; }
-  ol.actions .why { color: var(--muted); font-size: 13px; }
-  button.btn {
-    font: inherit; font-size: 13px; padding: 6px 14px; border-radius: 4px;
-    border: 1px solid var(--soil); background: var(--soil); color: #fff; cursor: pointer;
-  }
-  button.btn:disabled { opacity: 0.55; cursor: wait; }
-  button.ghost {
-    font: inherit; font-size: 12px; padding: 2px 10px; margin-left: 8px;
-    border: 1px solid var(--line); border-radius: 4px; background: #fff; cursor: pointer;
-  }
-  button.ghost:hover { border-color: var(--green); color: var(--green); }
-  details.deferred { margin-top: 6px; color: var(--muted); font-size: 13px; }
-  #feed { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow: auto; }
-  #feed li { padding: 4px 0; border-top: 1px dotted var(--line); font-size: 13px; }
-  #feed li:first-child { border-top: 0; }
-  #feed time { color: var(--muted); margin-right: 6px; font-variant-numeric: tabular-nums; }
-  form.run { display: grid; gap: 10px; }
-  form.run label { display: grid; gap: 4px; font-weight: 600; font-size: 13px; }
-  form.run input[type="text"], form.run select {
-    font: inherit; font-weight: 400; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: #fff; width: 100%;
-  }
-  form.run input[type="file"] { font: inherit; font-size: 13px; }
-  .hint { font-weight: 400; color: var(--muted); font-size: 12px; }
-  .calbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
-  .seg button { font: inherit; font-size: 13px; padding: 6px 12px; border: 0; background: #fff; color: var(--muted); cursor: pointer; }
-  .seg button.sel { background: var(--soil); color: #fff; }
-  .calnav { display: flex; gap: 6px; align-items: center; }
-  .calnav button { font: inherit; font-size: 13px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 4px; background: #fff; cursor: pointer; }
-  #caltitle { font-weight: 650; }
-  .calgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-  .calgrid.head { font-size: 11px; color: var(--muted); text-transform: uppercase; margin-bottom: 2px; }
-  .cell { min-height: 64px; border: 1px solid var(--line); border-radius: 4px; padding: 2px 4px; font-size: 12px; background: #fff; overflow: hidden; }
-  .cell.clickable { cursor: pointer; }
-  .cell.dim { opacity: 0.45; }
-  .cell .d { font-weight: 650; }
-  .cell.today { outline: 2px solid var(--green); outline-offset: -2px; }
-  .ev { margin-top: 2px; padding: 0 4px; border-radius: 3px; background: #e4e1d3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .ev.scan { background: #cfe3d0; }
-  .ev.goal { background: #f3d9a7; }
-  .ev.clickable { cursor: pointer; outline: 1px solid var(--soil); outline-offset: -1px; }
-  #caldetail video { width: 100%; max-height: 340px; border-radius: 4px; background: #000; margin-top: 8px; }
-  ol.actions img { width: 100%; max-width: 420px; border-radius: 4px; margin-top: 4px; }
-  .car { margin-top: 4px; }
-  .carview { overflow: hidden; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
-  .cartrack { display: flex; transition: transform 0.2s ease; }
-  .carslide { min-width: 100%; box-sizing: border-box; padding: 6px 8px; }
-  .carslide img { width: 100%; max-width: 420px; border-radius: 4px; display: block; }
-  .carslide p { margin: 6px 0 2px; font-size: 14px; }
-  .carnav { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 6px; }
-  .carnav button { font: inherit; font-size: 15px; padding: 2px 12px; border: 1px solid var(--line); border-radius: 4px; background: #fff; cursor: pointer; }
-  .ev .t { font-weight: 650; }
-  .daylist { display: grid; gap: 6px; }
-  .daylist .ev { white-space: normal; padding: 6px 8px; font-size: 13px; }
-  #status { font-size: 13px; color: var(--muted); padding: 0 16px 8px; min-height: 1.4em; display: block; }
-  #status.err { color: var(--red); }
-  pre.result {
-    background: #fff; border: 1px solid var(--line); border-radius: 4px;
-    padding: 10px; overflow: auto; max-height: 320px; font-size: 12px;
-  }
-  ul.tasks { list-style: none; margin: 8px 0; padding: 0; }
-  ul.tasks li { padding: 8px 4px; border-top: 1px dotted var(--line); font-size: 14px; }
-  ul.tasks li:first-child { border-top: 0; }
-  ul.tasks input[type="checkbox"] { width: 18px; height: 18px; margin-right: 8px; vertical-align: -3px; }
-  ul.tasks label:has(input:checked) { color: var(--muted); text-decoration: line-through; }
-  ul.goals { list-style: none; margin: 0 0 10px; padding: 0; }
-  ul.goals li { padding: 6px 0; border-top: 1px dotted var(--line); display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
-  ul.goals li:first-child { border-top: 0; }
-  ul.goals .meta { color: var(--muted); font-size: 12px; }
-  .addrow { display: flex; gap: 8px; flex-wrap: wrap; }
-  .addrow input[type="text"] { flex: 3 1 180px; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; }
-  .addrow select, .addrow input[type="date"] { flex: 1 1 90px; font: inherit; padding: 8px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
-  #view-plan input:not([type="checkbox"]), #view-plan select, #view-plan textarea { font: inherit; padding: 8px; max-width: 100%; border: 1px solid var(--line); border-radius: 4px; }
-  .task-card { border-top: 1px solid var(--line); padding: 12px 0; overflow-wrap: anywhere; }
-  .task-card h3 { margin: 0 0 6px; }
-  .task-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
-  .goal-link-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(100px,140px); gap: 8px; padding: 8px 0; }
-  .goal-link-row input { grid-column: 1 / -1; width: 100%; }
-  .planning-status { white-space: pre-wrap; overflow-wrap: anywhere; }
-  .planning-fields { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 10px; }
-  .planning-fields label { display: grid; gap: 4px; }
-  .ev.task { background: #dbe7ec; }
-  .goal-chip { cursor: pointer; border: 1px solid var(--line); padding: 4px 8px; margin: 2px; }
-  @media (max-width: 760px) {
-    main { padding: 8px; }
-    .cols { grid-template-columns: 1fr; }
-    nav.tabs { padding: 8px 8px 0; overflow-x: auto; }
-    nav.tabs button { flex: 1; padding: 10px 8px; white-space: nowrap; }
-    #spots { grid-template-columns: repeat(2, 1fr); }
-    section { padding: 8px 10px; }
-    button.btn { width: 100%; padding: 12px; }
-  }
-  @media (pointer: coarse) {
-    .spot { padding: 12px 10px; }
-    button.ghost { min-height: 44px; padding: 8px 14px; }
-    nav.tabs button { min-height: 44px; }
-    details.deferred summary { min-height: 44px; display: inline-flex; align-items: center; }
-  }
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
-  #view-today { font-size:16px; }
-  #view-today h2 { font-size:18px; text-transform:none; letter-spacing:0; color:var(--ink); }
-  #view-today input:not([type=checkbox]), #view-today select, #view-today textarea { font:inherit; padding:10px; width:100%; min-width:0; max-width:100%; }
-  #view-today button, #view-today summary { min-height:44px; }
-  #view-today video { width:100%; max-height:360px; background:#111; }
-  #view-today article { min-width:0; }
-  #view-today form { margin:12px 0; }
-  #view-today ol { padding-left:22px; }
-  #view-today :focus-visible { outline:3px solid #245c9b; outline-offset:3px; }
-  #journeystatus, #capturestatus { white-space:pre-wrap; overflow-wrap:anywhere; }
+:root { color-scheme:light; --ink:#182a27; --muted:#52645e; --line:#d5dfd8; --paper:#f3f6f1; --panel:#fff; --green:#21634c; --soil:#21634c; --amber:#805112; --red:#a02c2c; --soft:#e7eee6; --radius:16px; }
+* { box-sizing:border-box; }
+[hidden] { display:none !important; }
+body { margin:0; color:var(--ink); background:var(--paper); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+button,input,select,textarea { font:inherit; }
+button,a,input,select,textarea,summary { -webkit-tap-highlight-color:transparent; }
+button { cursor:pointer; }
+button:disabled { cursor:not-allowed; opacity:.6; }
+:focus-visible { outline:3px solid #2f73a2; outline-offset:3px; }
+a { color:var(--green); text-underline-offset:3px; }
+h1,h2,h3,h4,p { margin:0 0 12px; }
+h1 { font-size:clamp(28px,3vw,40px); letter-spacing:-.035em; line-height:1.15; font-weight:650; }
+h2 { font-size:21px; line-height:1.3; letter-spacing:-.015em; font-weight:650; }
+h3 { font-size:18px; line-height:1.4; }
+h4 { font-size:16px; }
+p:last-child { margin-bottom:0; }
+small,.hint,.meta { color:var(--muted); font-size:14px; }
+.eyebrow { text-transform:uppercase; font-size:12px; letter-spacing:.12em; font-weight:700; color:var(--green); }
+.skip-link { position:fixed; top:8px; left:8px; transform:translateY(-160%); z-index:30; background:#fff; padding:12px; }
+.skip-link:focus { transform:none; }
+.app-header { position:fixed; inset:0 auto 0 0; width:224px; padding:32px 20px; background:#193c31; color:#fff; z-index:10; display:flex; flex-direction:column; align-items:stretch; }
+.brand { color:#fff; text-decoration:none; display:flex; align-items:center; gap:10px; font-size:20px; font-weight:650; }
+.brand small { display:block; color:#c7d9cc; font-size:11px; font-weight:400; margin-top:3px; }
+.brand-mark { display:grid; place-items:center; width:36px; height:36px; background:#d9edac; color:#193c31; border-radius:10px; font-size:24px; }
+#globalrecordwork { margin-top:auto; background:#d9edac; color:#193c31; border-color:#d9edac; }
+nav.tabs { position:fixed; top:140px; left:16px; width:192px; z-index:11; display:grid; gap:8px; }
+nav.tabs button { background:transparent; color:#d4e1d8; padding:14px 16px; border:0; border-radius:10px; display:flex; align-items:center; gap:12px; text-align:left; min-height:48px; font-weight:550; }
+nav.tabs button[aria-selected=true] { color:#fff; background:#36564a; }
+nav.tabs button:hover { background:#2d4e40; }
+nav.tabs svg { width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+main { margin-left:224px; padding:38px clamp(20px,4vw,64px) 64px; max-width:1680px; }
+.app-status { margin-left:224px; padding:8px 32px 0; min-height:0; color:var(--muted); font-size:14px; }
+.app-status:empty { display:none; }
+.view { display:none; }
+.view.active { display:block; }
+.page-heading { margin-bottom:28px; max-width:820px; }
+.page-heading>p:last-child { color:var(--muted); }
+section { margin-bottom:24px; }
+section>section { padding:0; background:transparent; border:0; }
+.next-action { background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:28px; border-top:4px solid var(--green); }
+.next-action h3 { font-size:28px; letter-spacing:-.02em; }
+.next-action .task-buttons { margin-top:24px; }
+.today-grid,.cols { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; }
+.today-grid>section,.master-detail>section,.detail-panel,.calendar-tools>section,#view-plan>section,#workflowsection,#areassection,#outcomessection,#updatessection { background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:24px; }
+.master-detail { display:grid; grid-template-columns:minmax(240px,.85fr) minmax(0,1.2fr); gap:24px; align-items:start; }
+.master-detail>* { min-width:0; }
+.detail-panel { position:sticky; top:24px; max-height:calc(100vh - 48px); overflow:auto; }
+.detail-placeholder { color:var(--muted); }
+#planningtaskdetail:not(:empty)+.detail-placeholder { display:none; }
+#goalplanningdetail:empty,#planningstatus:empty,#updatestatus:empty,#outcomestatus:empty,#journeystatus:empty { display:none; }
+.section-heading,.task-buttons,.workspace-links,.calbar,.calnav,.addrow { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.section-heading { justify-content:space-between; }
+.workspace-links { margin:0 0 24px; }
+.btn,.ghost,.spot,.goal-chip { min-height:44px; border-radius:9px; padding:10px 16px; border:1px solid var(--line); background:#fff; color:var(--ink); text-align:center; line-height:1.3; font-weight:550; }
+.btn { background:var(--green); border-color:var(--green); color:white; }
+.ghost { background:transparent; }
+.btn:hover { background:#174d3a; }
+.ghost:hover,.spot:hover,.goal-chip:hover { background:var(--soft); }
+.task-buttons { margin:16px 0; }
+button.ghost { margin:0; }
+form.run { display:grid; gap:16px; margin:16px 0; }
+label { display:grid; gap:6px; font-size:14px; font-weight:600; color:var(--ink); }
+label:has(input[type=checkbox]) { display:flex; align-items:center; gap:10px; min-height:44px; }
+input:not([type=checkbox]),select,textarea { width:100%; min-width:0; max-width:100%; padding:11px 12px; border:1px solid #a8b9ac; border-radius:8px; background:#fff; color:var(--ink); font-size:16px; font-weight:400; min-height:44px; }
+input[type=checkbox] { flex:none; width:20px; height:20px; accent-color:var(--green); margin:2px 0 0; }
+input[type=file] { padding:10px; font-size:14px; }
+textarea { resize:vertical; }
+form fieldset { border:1px solid var(--line); border-radius:10px; min-width:0; }
+.addrow>* { flex:1 1 160px; }
+.addrow .btn { flex:0 1 auto; }
+.planning-fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; }
+.goal-link-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(110px,150px); gap:10px; margin:12px 0; }
+.goal-link-row input { grid-column:1/-1; }
+details { margin:14px 0; }
+summary { min-height:44px; padding:10px 0; cursor:pointer; font-weight:550; color:var(--ink); }
+.disclosure { border:1px solid var(--line); border-radius:12px; background:var(--panel); }
+.disclosure>summary { padding:16px 20px; }
+.disclosure-body { padding:0 20px 20px; }
+.task-card { border-top:1px solid var(--line); padding:18px 0; overflow-wrap:anywhere; }
+.task-card:first-child { border-top:0; }
+.task-card h3 button { font-size:inherit; text-align:left; }
+.task-card .chip { margin:2px; }
+.task-summary { display:grid; gap:8px; }
+.task-summary h3 { margin:0; }
+.chip { display:inline-block; border-radius:6px; padding:4px 8px; background:var(--soft); color:#264d3d; font-size:12px; font-weight:650; }
+.chip.risk { background:#fff0cf; color:#70460c; }
+.chip.done { background:#ddeddf; color:#1f5435; }
+.err,.error { color:var(--red); }
+.status-local,.planning-status { white-space:pre-wrap; overflow-wrap:anywhere; margin:12px 0; }
+.status-local:empty { display:none; }
+.goals,.tasks,#feed { list-style:none; margin:0; padding:0; }
+.goals { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
+.goals li { background:var(--paper); border-radius:10px; padding:16px; display:grid; gap:8px; }
+.goals li button:first-child { text-align:left; font-size:18px; }
+.tasks li,#feed li { padding:12px 0; border-top:1px solid var(--line); }
+#feed time { display:block; color:var(--muted); font-size:13px; }
+#spots { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); }
+.spot { text-align:left; }
+.spot.sel { outline:2px solid var(--green); }
+.spot .nm { display:flex; justify-content:space-between; font-weight:650; }
+.spot .st { font-size:13px; color:var(--muted); margin-top:8px; }
+.dot { width:8px; height:8px; border-radius:50%; background:var(--green); margin-top:6px; }
+.dot.warn { background:var(--amber); }
+.calendar-layout { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(270px,1fr); gap:24px; align-items:start; }
+.calendar-layout>div>section { background:#fff; padding:24px; border-radius:var(--radius); border:1px solid var(--line); }
+.calbar { margin:16px 0; justify-content:space-between; }
+.seg { display:flex; border:1px solid var(--line); border-radius:9px; overflow:hidden; }
+.seg button { padding:10px 14px; min-height:44px; border:0; background:#fff; color:var(--muted); }
+.seg button.sel { background:var(--green); color:#fff; }
+.calnav button { border:1px solid var(--line); background:#fff; border-radius:8px; min-width:44px; min-height:44px; }
+#caltitle { display:block; width:100%; font-weight:600; margin:8px 0; }
+.cal-scroll { overflow:auto; overscroll-behavior-inline:contain; }
+.calgrid { display:grid; grid-template-columns:repeat(7,minmax(90px,1fr)); gap:4px; min-width:658px; }
+.calgrid.head { font-size:12px; color:var(--muted); text-align:center; margin-bottom:6px; }
+.cell { min-width:0; min-height:100px; padding:4px; border:1px solid var(--line); border-radius:8px; }
+.cell.today { border:2px solid var(--green); }
+.cell.dim { background:var(--paper); }
+.day-open { border:0; background:transparent; border-radius:5px; min-height:44px; min-width:44px; font-size:14px; font-weight:600; }
+.ev { display:block; width:100%; text-align:left; margin-top:5px; padding:9px; min-height:44px; border:1px solid var(--line); border-radius:7px; background:#f1f4ef; color:var(--ink); font-size:13px; overflow-wrap:anywhere; }
+.ev.scan { background:#eef3df; }
+.ev.task { background:#e5f0ee; }
+.ev.goal { background:#fff0cf; }
+.ev.actual { background:#e5eaf4; border-left:4px solid #455d88; }
+.ev.task[data-scheduling=proposed] { border-style:dashed; }
+html { scroll-padding-top:90px; }
+section,[tabindex='-1'] { scroll-margin-top:90px; }
+.ev[data-eid]:hover { border-color:var(--green); }
+.ev .t { display:block; font-weight:650; }
+.daylist { display:grid; gap:8px; }
+.daylist .ev { padding:16px; font-size:16px; }
+.entry-kind { font-size:12px; font-weight:650; display:block; color:var(--muted); }
+.plan-diff { width:100%; border-collapse:collapse; font-size:14px; }
+table th,table td { text-align:left; padding:10px; border-bottom:1px solid var(--line); vertical-align:top; }
+table { max-width:100%; }
+.table-scroll { overflow:auto; }
+video { width:100%; max-height:400px; border-radius:12px; background:#14241d; }
+img { max-width:100%; height:auto; }
+.evidence-review { display:grid; grid-template-columns:minmax(240px,.9fr) minmax(0,1.1fr); gap:24px; align-items:start; }
+.evidence-media { position:sticky; top:20px; }
+.evidence-steps { min-width:0; }
+.evidence-steps ol { margin:0; padding-left:22px; }
+.evidence-steps li { padding-bottom:18px; }
+#journeydetail>section { border:1px solid var(--line); background:#fff; border-radius:var(--radius); padding:24px; margin-top:20px; }
+.journey-steps { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
+.journey-steps button[aria-current=step] { background:var(--green); color:white; border-color:var(--green); }
+.journey-stage[hidden] { display:none; }
+.carview { overflow:hidden; border:1px solid var(--line); border-radius:12px; }
+.cartrack { display:flex; transition:transform .2s ease; }
+.carslide { min-width:100%; padding:16px; }
+.carnav { display:flex; gap:12px; align-items:center; justify-content:center; margin-top:10px; }
+.carnav button { min-width:44px; min-height:44px; background:#fff; border:1px solid var(--line); border-radius:8px; }
+pre.result,pre { font:13px/1.5 ui-monospace,monospace; white-space:pre-wrap; overflow-wrap:anywhere; max-height:360px; overflow:auto; background:var(--paper); border-radius:8px; padding:16px; }
+.result-summary ul { padding-left:22px; }
+.result-summary h3 { margin-top:20px; }
+dialog { width:min(640px,calc(100% - 24px)); max-height:calc(100dvh - 32px); padding:24px; border:1px solid var(--line); border-radius:20px; color:var(--ink); background:var(--panel); }
+dialog::backdrop { background:#11271dcc; }
+.dialog-heading,.capture-choices { display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:20px; }
+.capture-choices>* { flex:1; }
+#journeycapture { margin:0; }
+@media(min-width:1400px) { .calendar-layout { grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr); } }
+@media(max-width:1150px) { .calendar-layout { grid-template-columns:1fr; } .calendar-tools { display:grid; grid-template-columns:1fr; } }
+@media(max-width:900px) {
+ .app-header { inset:0 0 auto; width:auto; height:76px; padding:12px 20px; flex-direction:row; align-items:center; justify-content:space-between; border-bottom:1px solid #496354; }
+ .brand small { display:none; } #globalrecordwork { margin:0; }
+ nav.tabs { inset:auto 0 0; width:auto; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; background:#fff; border-top:1px solid var(--line); padding:4px 4px calc(4px + env(safe-area-inset-bottom)); }
+ nav.tabs button { color:var(--muted); flex-direction:column; justify-content:center; gap:2px; padding:8px 2px; font-size:12px; border-radius:8px; }
+ nav.tabs button[aria-selected=true] { color:var(--green); background:var(--soft); }
+ nav.tabs button:hover { background:var(--soft); }
+ nav.tabs svg { width:20px; height:20px; }
+ main { margin:0; padding:100px 20px 110px; }
+ .app-status { position:relative; margin:76px 0 -76px; padding:8px 20px; }
+ .today-grid,.cols,.master-detail { grid-template-columns:1fr; }
+ .detail-panel { position:static; max-height:none; }
+ .detail-panel:has(#planningtaskdetail:empty) { display:none; }
+ .evidence-review { grid-template-columns:1fr; }
+ .evidence-media { position:sticky; top:84px; z-index:2; background:#fff; border-bottom:1px solid var(--line); padding-bottom:8px; }
+ .evidence-media video { max-height:220px; }
+ .evidence-media p { display:none; }
+}
+@media(max-width:480px) {
+ main { padding:96px 14px 108px; } .app-header { padding:12px 14px; } .brand { font-size:18px; } .brand-mark { width:30px; height:32px; }
+ #globalrecordwork { padding:10px 12px; font-size:14px; }
+ .next-action,.today-grid>section,.master-detail>section,.detail-panel,.calendar-tools>section,#view-plan>section,#workflowsection,#areassection,#outcomessection,#updatessection,#journeydetail>section,.calendar-layout>div>section { padding:18px; }
+ .next-action h3 { font-size:24px; } .page-heading { margin-bottom:22px; }
+ .task-buttons>* { flex:1 1 140px; } .planning-fields { grid-template-columns:1fr; } .goals { grid-template-columns:1fr; }
+ .goal-link-row { grid-template-columns:1fr; } .goal-link-row input { grid-column:auto; }
+ .calbar { gap:14px; } .calendar-layout { gap:16px; }
+ dialog { padding:18px; } .capture-choices { flex-wrap:wrap; }
+ .disclosure>summary { padding:14px; } .disclosure-body { padding:0 14px 14px; }
+}
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto !important; transition:none !important; animation:none !important; } }
 </style>
 </head>
 <body>
-<header>
-  <div class="topbar">
-    <h1>Field Ops</h1><button class="ghost" type="button" id="globalrecordwork">Record work</button>
-    <div class="strip" id="strip"><span>loading…</span></div>
-  </div>
-  <nav class="tabs" role="tablist" aria-label="Views">
-    <button role="tab" data-view="today" aria-selected="true">Today</button>
-    <button role="tab" data-view="spots" aria-selected="false">Spots</button>
-    <button role="tab" data-view="run" aria-selected="false">Run</button>
-    <button role="tab" data-view="space" aria-selected="false">Space</button>
-    <button role="tab" data-view="plan" aria-selected="false">Plan</button>
-    <button role="tab" data-view="activity" aria-selected="false">Activity</button>
-    <button role="tab" data-view="cal" aria-selected="false">Calendar</button>
-  </nav>
-</header>
-<span id="status" role="status"></span>
-<main>
-  <div class="view active" id="view-today">
-    <section aria-labelledby="todayheading"><h2 id="todayheading">Today</h2><div id="journeytoday"></div><div class="task-buttons"><button class="btn" type="button" id="recordwork">Record work</button><button class="ghost" type="button" data-journey-plan="newtaskform">Enter future work manually</button></div></section>
-    <section id="journeycapture" aria-labelledby="captureheading"><h2 id="captureheading">Record or upload your work</h2><p>Show the action and surrounding work area. Review what we understood before setting up goals or a calendar. A partial clip is useful; unseen work remains unknown.</p>
-      <form class="run" id="journeycaptureform"><label>Use this clip for<select name="context"><option value="new">New workflow</option></select></label>
-        <label>Record or choose a video<input name="file" type="file" accept="video/mp4,video/webm,video/quicktime" capture="environment" required></label><p class="hint">On supported phones the file picker offers a camera. Otherwise upload an existing clip.</p>
-        <label>Recording time (optional, with UTC offset)<input name="recorded_at" type="text" placeholder="2026-11-04T09:30:00-05:00"></label>
-        <label>Sampled frames<select name="frames"><option>4</option><option>8</option><option>12</option></select></label><button class="btn" type="submit">Upload and review work</button>
-      </form><p id="capturestatus" role="status" aria-live="polite"></p>
-    </section>
-    <section aria-labelledby="workflowheading"><h2 id="workflowheading">Your workflows</h2><div id="journeylist"></div></section>
-    <div id="journeystatus" role="status" aria-live="polite"></div>
-    <div id="journeydetail" tabindex="-1"></div>
-  </div>
-
-  <div class="view" id="view-spots">
-    <div class="cols">
-      <section aria-label="Spots">
-        <h2>Spots</h2>
-        <div id="spots"></div>
-      </section>
-      <section aria-label="Spot detail" id="detail"><h2>Spot detail</h2><p>Select a spot.</p></section>
-    </div>
-  </div>
-  <div class="view" id="view-run">
-    <section aria-label="Analyze a video">
-      <h2>Analyze a video (clip → task list)</h2>
-      <form class="run" id="videoform">
-        <label>Video file (mp4/webm/mov)
-          <input type="file" name="file" accept="video/mp4,video/webm,video/quicktime">
-        </label>
-        <label>Update existing work (optional)<select id="followuptask" name="task_id"><option value="">Initial discovery / new workflow</option></select></label>
-        <label>Recording time, if known (include timezone offset)<input name="recorded_at" type="text" placeholder="2026-11-03T09:00:00-05:00"></label>
-        <label>Frames
-          <select name="frames">
-            <option value="4" selected>4 frames</option>
-            <option value="6">6 frames</option>
-            <option value="8">8 frames</option>
-          </select>
-        </label>
-        <div><button class="btn" type="submit">Get task list</button></div>
-      </form>
-      <div id="videoresult"></div>
-    </section>
-    <section aria-label="Task checklist">
-      <h2>Task checklist (from the clip above)</h2>
-      <div id="videotasks"><p class="hint">Analyze a video first — its next steps land here as checkboxes.</p></div>
-    </section>
-    <section aria-label="Scan a visit">
-      <h2>Scan a visit (photo → task analysis)</h2>
-      <form class="run" id="scanform">
-        <label>Photo
-          <input type="file" name="file" accept="image/png,image/jpeg,image/webp">
-          <span class="hint">…or paste an image URL below. File wins when both are set.</span>
-        </label>
-        <label>Image URL <input type="text" name="url" placeholder="https://…"></label>
-        <div><button class="btn" type="submit">Scan visit</button></div>
-      </form>
-      <div id="scanresult"></div>
-    </section>
-    <section aria-label="Compare two visits">
-      <h2>Compare two visits (diff → spot state)</h2>
-      <form class="run" id="compareform">
-        <label>Spot id <input type="text" name="spot" required placeholder="north-fence" title="letters, numbers, - and _ only"></label>
-        <label>Before photo <input type="file" name="beforefile" accept="image/png,image/jpeg,image/webp"></label>
-        <label>Before URL <input type="text" name="beforeurl" placeholder="https://…"></label>
-        <label>After photo <input type="file" name="afterfile" accept="image/png,image/jpeg,image/webp"></label>
-        <label>After URL <input type="text" name="afterurl" placeholder="https://…"></label>
-        <label>Goal (optional) <input type="text" name="goal" placeholder="what should this advance?"></label>
-        <div><button class="btn" type="submit">Run compare</button></div>
-      </form>
-      <div id="compareresult"></div>
-    </section>
-  </div>
-  <div class="view" id="view-space">
-    <section aria-label="Walkthrough mapping">
-      <h2>Map a work area from a walkthrough</h2>
-      <p class="hint">Record overlapping views of the same stations. Keep moving people separate from the space you want to map.</p>
-      <form class="run" id="walkthroughform">
-        <label>Walkthrough video (up to 2 minutes)<input name="video" type="file" accept="video/mp4,video/webm,video/quicktime"></label>
-        <label>Or overlapping photos (2–36)<input name="images" type="file" accept="image/png,image/jpeg,image/webp" multiple></label>
-        <label>What to find<input name="prompts" value="workbench, tray, container, person" required></label>
-        <label>Selected views<input name="frames" type="number" min="2" max="12" value="6" required></label>
-        <label>Capture option<select name="mode"><option value="capture">Prepare views for review</option><option value="live">Run installed Meta models</option></select></label>
-        <p class="hint">Preparing views does not reconstruct a space. Model inference requires the local models to be installed.</p>
-        <button class="btn" type="submit">Start walkthrough</button>
-      </form>
-      <p id="walkthroughstatus" role="status"></p>
-      <button class="btn" id="reloadwalkthroughs" type="button">Reload saved walkthroughs</button>
-      <div id="walkthroughruns"></div>
-    </section>
-
-    <section aria-label="Build a space from a floor plan">
-      <h2>Floor plan to OpenIndustries space</h2>
-      <form class="run" id="spaceform">
-        <label>Floor-plan image (PNG/JPEG)
-          <input type="file" name="file" accept="image/png,image/jpeg,image/webp">
-          <span class="hint">�or paste an image URL below. File wins when both are set.</span>
-        </label>
-        <label>Image URL <input type="text" name="url" placeholder="https://�"></label>
-        <label>Spot id (optional) <input type="text" name="spot" placeholder="barn-loft"></label>
-        <label>Scene name (optional) <input type="text" name="scene" placeholder="barn-loft-plan"></label>
-        <label>Assumed height, m (optional) <input type="text" name="assumeheight" placeholder="2.7" title="Only when the plan shows no heights: sent as your explicit assumption and recorded in run evidence."></label>
-        <label>Assumed footprint, m (optional) <input type="text" name="assumesize" placeholder="12x9" title="Only when the plan shows no scale: WIDTHxDEPTH sent as your explicit assumption and recorded in run evidence."></label>
-        <div><button class="btn" type="submit">Build space</button></div>
-      </form>
-      <div id="spaceresult"></div>
-    </section>
-    <section aria-label="About spaces">
-      <h2>How it works</h2>
-      <p class="hint">The model reads visible rooms, walls, openings, and equipment; the connector submits grounded observations to OpenIndustries, which validates and builds the space. The preview link opens the OI workbench (2D plan included). Linked spots keep OI references, not geometry.</p>
-    </section>
-  </div>
-  <div class="view" id="view-plan">
-    <section aria-label="Goals">
-      <h2>Goals</h2>
-      <ul class="goals" id="goals"></ul>
-      <form class="addrow" id="goalform">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="app-header"><a href="#today" class="brand" aria-label="Field Ops home"><span class="brand-mark" aria-hidden="true">F</span><span>Field Ops<small>Make room for better work.</small></span></a><button class="btn" type="button" id="globalrecordwork"><span aria-hidden="true">＋</span> Record work</button></header>
+<nav class="tabs" role="tablist" aria-label="Main destinations">
+<button type="button" id="tab-today" role="tab" data-view="today" aria-controls="view-today" aria-selected="true" tabindex="0"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v15H4z M8 2v6 M16 2v6 M4 10h16"></path></svg><span>Today</span></button>
+<button type="button" id="tab-plan" role="tab" data-view="plan" aria-controls="view-plan" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 M12 7a5 5 0 1 0 5 5 M12 12l9-9"></path></svg><span>Goals</span></button>
+<button type="button" id="tab-cal" role="tab" data-view="cal" aria-controls="view-cal" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v16H3z M3 10h18 M8 2v6 M16 2v6 M7 14h2 M12 14h2 M17 14h1"></path></svg><span>Calendar</span></button>
+<button type="button" id="tab-space" role="tab" data-view="space" aria-controls="view-space" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-6 9 6v12H3z M9 21v-8h6v8"></path></svg><span>Workspace</span></button>
+</nav><div id="status" class="app-status" role="status" aria-live="polite"></div><main id="main" tabindex="-1"><div class="view active" id="view-today" role="tabpanel" aria-labelledby="tab-today"><div class="page-heading"><p class="eyebrow">Your working day</p><h1 tabindex="-1">A little clarity. A useful next step.</h1><p>Your goals, your time, and the evidence behind what comes next.</p></div><section class="next-action" aria-label="Next action"><div id="journeytoday"><p>Loading your work…</p></div><div class="task-buttons"><button class="btn" type="button" id="recordwork">Record work</button><button class="ghost" type="button" data-journey-plan="newtaskform">Add a task manually</button></div></section><div class="today-grid"><section id="todayreviews"><h2>Needs your review</h2><div id="reviewinbox"></div></section><section><h2>Your goals</h2><div id="todaygoals"></div></section></div><details class="disclosure"><summary>A briefing for your day</summary><div class="disclosure-body"><section aria-label="Briefing">
+      <h2>Briefing</h2>
+      <div style="margin-bottom:8px"><button class="btn" id="brief" type="button">Brief me</button></div>
+      <div id="briefresult"></div>
+    </section></div></details></div><div class="view" id="view-plan" role="tabpanel" aria-labelledby="tab-plan" hidden><div class="page-heading"><p class="eyebrow">Purpose & progress</p><h1 tabindex="-1">Goals</h1><p>Define the outcome. Give each piece of work a reason.</p></div><section class=""><h2>What are you working toward?</h2><ul class="goals" id="goals"></ul><details class="disclosure"><summary>Add a goal</summary><div class="disclosure-body"><form class="addrow" id="goalform">
         <input type="text" name="text" required placeholder="New goal…" aria-label="Goal text">
         <input type="text" name="success_criteria" placeholder="How will you verify success?" aria-label="Goal success criteria">
-        <select name="weight" aria-label="Weight">
-          <option value="5">weight 5</option>
-          <option value="4">weight 4</option>
-          <option value="3" selected>weight 3</option>
-          <option value="2">weight 2</option>
-          <option value="1">weight 1</option>
+        <select name="weight" aria-label="Priority">
+          <option value="5">Priority 5</option>
+          <option value="4">Priority 4</option>
+          <option value="3" selected>Priority 3</option>
+          <option value="2">Priority 2</option>
+          <option value="1">Priority 1</option>
         </select>
         <input type="date" name="deadline" aria-label="Deadline">
         <button class="btn" type="submit">Add</button>
-      </form>
-      <div id="goalplanningdetail" tabindex="-1"></div>
-    </section>
-    <section aria-label="Tasks and goal contributions">
-      <h2>Work contributing to your goals</h2>
-      <p>Tasks can support several goals. Completing a task does not verify the goal outcome.</p>
-      <label>Show tasks for <select id="taskgoalfilter"><option value="">All goals</option><option value="unassigned">Unassigned</option></select></label>
-      <form class="run" id="newtaskform">
+      </form></div></details><div id="goalplanningdetail" tabindex="-1"></div></section><div class="master-detail"><section><div class="section-heading"><h2>Tasks</h2><button type="button" class="ghost" data-reveal="newtaskentry">Add task</button></div><p>Shared work can support several goals and is scheduled once.</p><label>Show tasks for <select id="taskgoalfilter"><option value="">All goals</option><option value="unassigned">Unassigned</option></select></label><details class="disclosure" id="newtaskentry"><summary>Add future work</summary><div class="disclosure-body"><form class="run" id="newtaskform">
         <label>Task<input name="text" type="text" required placeholder="Stage trays and materials"></label>
         <label>Done when<input name="criteria" type="text" required placeholder="Trays and materials are ready at the bench"></label>
         <button class="btn" type="submit">Add task</button>
-      </form>
-      <section aria-label="Improvement outcomes"><h2>Did the improvement help?</h2><p>Register a baseline before trying a change. Compare measured results for comparable work, then keep, revise or reject the method. Goal completion remains a separate decision.</p><p id="outcomestatus" role="status"></p><div id="outcomelist"></div><div id="outcomedetail" tabindex="-1"></div><details><summary>Start an improvement trial</summary><div id="outcomeregister"></div></details></section>
-      <p id="planningstatus" class="planning-status" role="status"></p>
-      <div id="planningtasks"></div>
-      <div id="planningtaskdetail" tabindex="-1"></div>
-      <section aria-label="Follow-up evidence"><h2>What this changes</h2><p>Follow-up clips and human reports update existing work through review. Accepted calendar blocks remain in place until you review a new plan.</p>
-        <button class="ghost" type="button" id="refreshupdates">Refresh updates</button>
-        <p role="status" id="updatestatus"></p><div id="updatequeue"></div><div id="updatedetail" tabindex="-1"></div>
-        <form class="run" id="manualupdateform"><h3>Report current progress or a correction</h3><label>Task<select name="task_id" required></select></label>
-        <label>What changed?<input name="report" required></label><label>Current status<select name="execution"><option value="">Keep status</option><option value="open">Ready</option><option value="paused">Paused</option><option value="blocked">Blocked</option><option value="done">Completion criteria verified</option></select></label>
-        <label>Remaining quantity (current total, optional)<input name="remaining" type="number" min="0" step="any"></label><label>Remaining active minutes (optional)<input name="minutes" type="number" min="0" step="any"></label>
-        <button class="btn" type="submit">Save my update</button></form>
-      </section>
-    </section>
-    <section aria-label="Work availability and commitments">
+      </form></div></details><div id="planningtasks"></div></section><aside class="detail-panel" aria-label="Task detail"><p id="planningstatus" class="planning-status" role="status"></p><div id="planningtaskdetail" tabindex="-1"></div><p class="detail-placeholder">Select a task to see its purpose, evidence and next step.</p></aside></div></div><div class="view" id="view-cal" role="tabpanel" aria-labelledby="tab-cal" hidden><div class="page-heading"><p class="eyebrow">Time & commitments</p><h1 tabindex="-1">Calendar</h1><p>Make a plan that fits your day. Review changes before accepting them.</p></div><div class="calendar-layout"><div><section aria-label="Calendar">
+      <h2>Calendar</h2>
+      <label>Task goal filter<select id="calgoalfilter"><option value="">All goals</option></select></label>
+      <p class="hint" id="caltimezone">Fixed commitments remain visible with every goal filter.</p>
+      <div class="calbar">
+        <div class="seg" aria-label="Range">
+          <button type="button" data-cal="day">Day</button><button type="button" data-cal="week" class="sel">Week</button><button type="button" data-cal="month">Month</button>
+        </div>
+        <div class="calnav">
+          <button type="button" id="calprev" aria-label="Previous">‹</button><button type="button" id="caltoday">Today</button><button type="button" id="calnext" aria-label="Next">›</button>
+          <span id="caltitle"></span>
+        </div>
+      </div>
+      <div id="cal"><p class="hint">Loading…</p></div>
+    </section><section aria-label="Entry detail" id="caldetailwrap" hidden>
+      <h2>Entry</h2>
+      <div id="caldetail"></div>
+    </section><details class="disclosure"><summary>Add a dated note</summary><div class="disclosure-body"><form class="addrow" id="eventform">
+        <input type="text" name="title" required placeholder="Event title…" aria-label="Event title">
+        <input type="date" name="date" required aria-label="Event date">
+        <button class="btn" type="submit">Add</button>
+      </form></div></details></div><aside class="calendar-tools"><section aria-label="Review day plan">
+      <h2>Review a day plan</h2>
+      <form class="addrow" id="dayplanform"><label>Plan date<input name="day" type="date" required></label><button class="btn" type="submit">Propose day plan</button></form>
+      <p>Proposals need your review. Accepted and pinned work stays reserved until you release it.</p>
+      <div id="humanplan"></div>
+    </section><details class="disclosure" id="availabilityentry"><summary>Working time, resources & fixed commitments</summary><div class="disclosure-body"><section aria-label="Work availability and commitments">
       <h2>Your time and resources</h2>
       <form class="run" id="availabilityform">
         <div class="planning-fields">
@@ -365,63 +279,90 @@
           <button class="btn" type="submit">Save commitment</button>
         </form>
       </details>
-    </section>
-    <section aria-label="Review day plan">
-      <h2>Today and next action</h2>
-      <form class="addrow" id="dayplanform"><label>Plan date<input name="day" type="date" required></label><button class="btn" type="submit">Propose day plan</button></form>
-      <p>Proposals need your review. Accepted and pinned work stays reserved until you release it.</p>
-      <div id="humanplan"></div>
-    </section>
-    <section aria-label="Next actions">
-      <h2>Next actions</h2>
-      <div style="margin-bottom:8px"><button class="btn" id="refresh" type="button">Re-run optimizer</button></div>
-      <div id="actions"><p>No plan yet — run the optimizer.</p></div>
-    </section>
-  </div>
-  <div class="view" id="view-cal">
-    <section aria-label="Calendar">
-      <h2>Calendar</h2>
-      <label>Task goal filter<select id="calgoalfilter"><option value="">All goals</option></select></label>
-      <p class="hint" id="caltimezone">Fixed commitments remain visible with every goal filter.</p>
-      <div class="calbar">
-        <div class="seg" aria-label="Range">
-          <button type="button" data-cal="day">Day</button><button type="button" data-cal="week" class="sel">Week</button><button type="button" data-cal="month">Month</button>
-        </div>
-        <div class="calnav">
-          <button type="button" id="calprev" aria-label="Previous">‹</button><button type="button" id="caltoday">Today</button><button type="button" id="calnext" aria-label="Next">›</button>
-          <span id="caltitle"></span>
-        </div>
-      </div>
-      <div id="cal"><p class="hint">Loading…</p></div>
-    </section>
-    <section aria-label="Entry detail" id="caldetailwrap" hidden>
-      <h2>Entry</h2>
-      <div id="caldetail"></div>
-    </section>
-    <section aria-label="Add event">
-      <h2>Add event</h2>
-      <form class="addrow" id="eventform">
-        <input type="text" name="title" required placeholder="Event title…" aria-label="Event title">
-        <input type="date" name="date" required aria-label="Event date">
-        <button class="btn" type="submit">Add</button>
+    </section></div></details></aside></div></div><div class="view" id="view-space" role="tabpanel" aria-labelledby="tab-space" hidden><div class="page-heading"><p class="eyebrow">Evidence & place</p><h1 tabindex="-1">Workspace</h1><p>Keep the original work in view. Review what changed and decide what to do with it.</p></div><div class="workspace-links"><button class="ghost" type="button" data-reveal="workflowsection">Workflows</button><button class="ghost" type="button" data-reveal="updatessection">Review updates</button><button class="ghost" type="button" data-reveal="areassection">Work areas</button><button class="ghost" type="button" data-reveal="outcomessection">Improvements</button></div><section id="workflowsection" class=""><h2>Your workflows</h2><div id="journeylist"></div></section><div id="journeystatus" role="status" aria-live="polite"></div><div id="journeydetail" tabindex="-1"></div><section id="updatessection" class=""><h2>Review new evidence</h2><section aria-label="Follow-up evidence"><h2>What this changes</h2><p>Follow-up clips and human reports update existing work through review. Accepted calendar blocks remain in place until you review a new plan.</p>
+        <button class="ghost" type="button" id="refreshupdates">Refresh updates</button>
+        <p role="status" id="updatestatus"></p><div id="updatequeue"></div><div id="updatedetail" tabindex="-1"></div>
+        <form class="run" id="manualupdateform"><h3>Report current progress or a correction</h3><label>Task<select name="task_id" required></select></label>
+        <label>What changed?<input name="report" required></label><label>Current status<select name="execution"><option value="">Keep status</option><option value="open">Ready</option><option value="paused">Paused</option><option value="blocked">Blocked</option><option value="done">Completion criteria verified</option></select></label>
+        <label>Remaining quantity (current total, optional)<input name="remaining" type="number" min="0" step="any"></label><label>Remaining active minutes (optional)<input name="minutes" type="number" min="0" step="any"></label>
+        <button class="btn" type="submit">Save my update</button></form>
+      </section></section><section id="areassection" class=""><h2>Work areas</h2><div id="workspacecontext"></div><div class="cols"><section aria-label="Spots">
+        <h3>Named areas</h3>
+        <div id="spots"></div>
+      </section><section aria-label="Spot detail" id="detail"><h3>Work area</h3><p>Select an area to review its history.</p></section></div><details class="disclosure"><summary>Map a work area</summary><div class="disclosure-body"><section aria-label="Walkthrough mapping">
+      <h2>Map a work area from a walkthrough</h2>
+      <p class="hint">Record overlapping views of the same stations. Keep moving people separate from the space you want to map.</p>
+      <form class="run" id="walkthroughform">
+        <label>Walkthrough video (up to 2 minutes)<input name="video" type="file" accept="video/mp4,video/webm,video/quicktime"></label>
+        <label>Or overlapping photos (2–36)<input name="images" type="file" accept="image/png,image/jpeg,image/webp" multiple></label>
+        <label>What to find<input name="prompts" value="workbench, tray, container, person" required></label>
+        <label>Selected views<input name="frames" type="number" min="2" max="12" value="6" required></label>
+        <label>Capture option<select name="mode"><option value="capture">Prepare views for review</option><option value="live">Run installed Meta models</option></select></label>
+        <p class="hint">Preparing views does not reconstruct a space. Model inference requires the local models to be installed.</p>
+        <button class="btn" type="submit">Start walkthrough</button>
       </form>
-    </section>
-  </div>
-  <div class="view" id="view-activity">
-    <section aria-label="Briefing">
-      <h2>Briefing</h2>
-      <div style="margin-bottom:8px"><button class="btn" id="brief" type="button">Brief me</button></div>
-      <div id="briefresult"></div>
-    </section>
-    <section aria-label="Briefing feed">
+      <p id="walkthroughstatus" role="status"></p>
+      <button class="btn" id="reloadwalkthroughs" type="button">Reload saved walkthroughs</button>
+      <div id="walkthroughruns"></div>
+    </section><section aria-label="Build a space from a floor plan">
+      <h2>Floor plan to OpenIndustries space</h2>
+      <form class="run" id="spaceform">
+        <label>Floor-plan image (PNG/JPEG)
+          <input type="file" name="file" accept="image/png,image/jpeg,image/webp">
+          <span class="hint">Or paste an image URL below. File wins when both are set.</span>
+        </label>
+        <label>Image URL <input type="text" name="url" placeholder="https://…"></label>
+        <label>Work area name (optional) <input type="text" name="spot" placeholder="barn-loft"></label>
+        <label>Map name (optional) <input type="text" name="scene" placeholder="barn-loft-plan"></label>
+        <label>Assumed height, m (optional) <input type="text" name="assumeheight" placeholder="2.7" title="Only when the plan shows no heights: sent as your explicit assumption and recorded in run evidence."></label>
+        <label>Assumed footprint, m (optional) <input type="text" name="assumesize" placeholder="12x9" title="Only when the plan shows no scale: WIDTHxDEPTH sent as your explicit assumption and recorded in run evidence."></label>
+        <div><button class="btn" type="submit">Build space</button></div>
+      </form>
+      <div id="spaceresult"></div>
+    </section><section aria-label="About spaces">
+      <h2>How it works</h2>
+      <p class="hint">The model reads visible rooms, walls, openings, and equipment; the connector submits grounded observations to OpenIndustries, which validates and builds the space. The preview link opens the OI workbench (2D plan included). Linked spots keep OI references, not geometry.</p>
+    </section></div></details></section><section id="outcomessection" class=""><h2>Improvements & outcomes</h2><section aria-label="Improvement outcomes"><h2>Did the improvement help?</h2><p>Register a baseline before trying a change. Compare measured results for comparable work, then keep, revise or reject the method. Goal completion remains a separate decision.</p><p id="outcomestatus" role="status"></p><div id="outcomelist"></div><div id="outcomedetail" tabindex="-1"></div><details><summary>Start an improvement trial</summary><div id="outcomeregister"></div></details></section><details class="disclosure"><summary>Compare improvement proposals</summary><div class="disclosure-body"><section aria-label="Next actions">
+      <h2>Next actions</h2>
+      <div style="margin-bottom:8px"><button class="btn" id="refresh" type="button">Review improvement advice</button></div>
+      <div id="actions"><p>No improvement advice yet. Capture and review work first.</p></div>
+    </section></div></details></section><details class="disclosure"><summary>Other ways to observe work</summary><div class="disclosure-body"><section aria-label="Scan a visit">
+      <h2>Scan a visit (photo → task analysis)</h2>
+      <form class="run" id="scanform">
+        <label>Photo
+          <input type="file" name="file" accept="image/png,image/jpeg,image/webp">
+          <span class="hint">…or paste an image URL below. File wins when both are set.</span>
+        </label>
+        <label>Image URL <input type="text" name="url" placeholder="https://…"></label>
+        <div><button class="btn" type="submit">Scan visit</button></div>
+      </form>
+      <div id="scanresult"></div>
+    </section><section aria-label="Compare two visits">
+      <h2>Compare two visits (diff → spot state)</h2>
+      <form class="run" id="compareform">
+        <label>Work area name <input type="text" name="spot" required placeholder="north-fence" title="letters, numbers, - and _ only"></label>
+        <label>Before photo <input type="file" name="beforefile" accept="image/png,image/jpeg,image/webp"></label>
+        <label>Before URL <input type="text" name="beforeurl" placeholder="https://…"></label>
+        <label>After photo <input type="file" name="afterfile" accept="image/png,image/jpeg,image/webp"></label>
+        <label>After URL <input type="text" name="afterurl" placeholder="https://…"></label>
+        <label>Goal (optional) <input type="text" name="goal" placeholder="what should this advance?"></label>
+        <div><button class="btn" type="submit">Run compare</button></div>
+      </form>
+      <div id="compareresult"></div>
+    </section></div></details><details class="disclosure"><summary>Area visit history</summary><div class="disclosure-body"><section aria-label="Briefing feed">
       <h2>Briefing feed</h2>
       <ol id="feed"></ol>
-    </section>
-  </div>
-</main>
+    </section></div></details></div></main><dialog id="capturedialog" aria-labelledby="captureheading"><div class="dialog-heading"><span class="eyebrow">Capture work</span><button class="ghost" id="closecapture" type="button" aria-label="Close capture">Close</button></div><section id="journeycapture" aria-labelledby="captureheading"><h2 id="captureheading">Record or upload your work</h2><p>Show the action and surrounding work area. Review what we understood before setting up goals or a calendar. A partial clip is useful; unseen work remains unknown.</p>
+      <div class="capture-choices"><button class="btn" type="button" id="capturecamera">Record a video</button><button class="ghost" type="button" id="captureupload">Upload a video</button></div><form class="run" id="journeycaptureform"><input type="file" name="camera" accept="video/*" capture="environment" hidden><p id="capturefilename" role="status"></p><label>Use this clip for<select name="context"><option value="new">New workflow</option></select></label>
+        <label>Selected video<input name="file" type="file" accept="video/mp4,video/webm,video/quicktime" required></label><p class="hint">On supported phones the file picker offers a camera. Otherwise upload an existing clip.</p>
+<details class="disclosure"><summary>Recording details (optional)</summary><div class="disclosure-body">        <label>Recording time (optional, with UTC offset)<input name="recorded_at" type="text" placeholder="2026-11-04T09:30:00-05:00"></label>
+        <label>Sampled frames<select name="frames"><option>4</option><option>8</option><option>12</option></select></label></div></details><button class="btn" type="submit">Upload and review work</button>
+      </form><p id="capturestatus" role="status" aria-live="polite"></p>
+    </section></dialog>
 <script>
 const $ = (id) => document.getElementById(id);
 let selected = null;
+let uiState={goal:null,place:null,stage:null,returnFocus:null,routeLoading:false};
 let lastSeen = {};
 let lastJson = '';
 let noticeUntil = 0;
@@ -444,22 +385,16 @@ function setStatus(msg, isErr, stickyMs = 0) {
   if (stickyMs) noticeUntil = Date.now() + stickyMs;
 }
 
-// Tabs
-document.querySelectorAll('nav.tabs button').forEach((b) =>
-  b.addEventListener('click', () => {
-    document.querySelectorAll('nav.tabs button').forEach((x) => x.setAttribute('aria-selected', 'false'));
-    b.setAttribute('aria-selected', 'true');
-    document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
-    $('view-' + b.dataset.view).classList.add('active');
-  }));
-
-function renderStrip(ov) {
-  const eco = ov.eco ? esc(ov.eco.split('. ')[0]) : 'no ecology data';
-  const open = ov.goals.filter((g) => g.status !== 'done').length;
-  $('strip').innerHTML =
-    `<span>eco: <b>${eco}</b></span><span>goals: <b>${open} open / ${ov.goals.length}</b></span>` +
-    `<span>spots: <b>${ov.spots.length}</b></span><span>plan: <b>${ov.plan ? 'fresh' : 'none yet'}</b></span>`;
+// One navigation model for the four product destinations.
+function setDestination(view) {
+  view=({goals:'plan',calendar:'cal',workspace:'space',spots:'space',activity:'space',run:'today'})[view]||view;
+  if(!['today','plan','cal','space'].includes(view))view='today';
+  for(const tab of document.querySelectorAll('nav.tabs button')){const active=tab.dataset.view===view;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;}
+  for(const panel of document.querySelectorAll('main>.view')){const active=panel.id==='view-'+view;panel.hidden=!active;panel.classList.toggle('active',active);}
+  return view;
 }
+document.querySelectorAll('nav.tabs button').forEach(b=>b.addEventListener('click',()=>setDestination(b.dataset.view)));
+function renderStrip() { /* Conditions are shown with relevant work, not a permanent system strip. */ }
 
 function renderSpots(ov) {
   const box = $('spots');
@@ -476,21 +411,21 @@ function renderSpots(ov) {
     b.addEventListener('click', () => { selected = s.id; lastSeen[s.id] = s.updated_at ?? lastSeen[s.id]; tick(false); });
     box.appendChild(b);
   }
-  if (!ov.spots.length) box.innerHTML = '<p>No spots yet — run a compare first.</p>';
+  if (!ov.spots.length) box.innerHTML = '<p>No named work areas yet. You can review videos and plan work without a map.</p>';
 }
 
 function renderDetail(ov) {
   const el = $('detail');
   const s = ov.spots.find((x) => x.id === selected);
-  if (!s) { el.innerHTML = '<h2>Spot detail</h2><p>Select a spot.</p>'; return; }
+  if (!s) { el.innerHTML = '<h3>Work area</h3><p>Select an area to review its history.</p>'; return; }
   const issues = (s.open_issues ?? []).map((i) => `<li>${esc(i)}</li>`).join('') || '<li>none recorded</li>';
   const sessions = (s.recent_sessions ?? []).map((x) => `<li>${esc(x)}</li>`).join('') || '<li>no sessions yet</li>';
-  const oiLinks = (s.oi_links ?? []).map((l) => `<li>${esc(l.role)} ${esc(l.oi_entity_id)} � scene rev ${esc(l.revision)}</li>`).join('');
-  el.innerHTML = `<h2>Spot detail</h2><h3 style="margin:.2em 0">${esc(s.name)} <span class="chip">${esc(s.stage ?? 'unknown')}</span></h3>` +
+  const oiLinks = (s.oi_links ?? []).map((l) => `<li>${esc(l.role)} ${esc(l.oi_entity_id)} · scene rev ${esc(l.revision)}</li>`).join('');
+  el.innerHTML = `<h3>Work area</h3><h3 style="margin:.2em 0">${esc(s.name)} <span class="chip">${esc(s.stage ?? 'unknown')}</span></h3>` +
     `<p>${esc(s.summary ?? '(no standing state)')}</p>` +
     `<h2>Open issues</h2><ul>${issues}</ul>` +
     `<h2>Recent sessions</h2><ul class="sess" style="font-size:13px;color:var(--muted)">${sessions}</ul>` +
-    (oiLinks ? `<h2>OI spaces</h2><ul>${oiLinks}</ul>` : '') +
+    (oiLinks ? `<details><summary>Spatial references</summary><ul>${oiLinks}</ul><p>Open the supported map from its saved mapping result. No separate renderer is created here.</p></details>` : '') +
     `<p style="font-size:13px;color:var(--muted)">${s.session_count ?? 0} sessions · updated ${esc(s.updated_at ?? 'never')}</p>`;
 }
 
@@ -498,7 +433,7 @@ function renderGoals(ov) {
   const el = $('goals');
   el.innerHTML = ov.goals.map((g) =>
     `<li><span class="chip${g.status === 'done' ? ' done' : g.status === 'at-risk' ? ' risk' : ''}">${esc(g.status)}</span>` +
-    `<button class="ghost" type="button" data-goaldetail="${esc(g.id)}">${esc(g.text)}</button><span class="meta">weight ${g.weight}/5${g.deadline ? ` · due ${esc(g.deadline)}` : ''}</span>` +
+    `<button class="ghost" type="button" data-goaldetail="${esc(g.id)}">${esc(g.text)}</button><span class="meta">Priority ${g.weight}/5${g.deadline ? ` · due ${esc(g.deadline)}` : ''}</span>` +
     (g.status !== 'done' ? ` <button type="button" class="ghost" data-goal="${esc(g.id)}">Mark outcome verified</button>` : '') + '</li>'
   ).join('') || '<li>No goals yet — add one below.</li>';
   el.querySelectorAll('button[data-goal]').forEach((b) =>
@@ -519,7 +454,7 @@ function renderActions(ov) {
   const el = $('actions');
   const plan = ov.plan?.plan ?? ov.plan;
   const ranked = plan?.ranked_actions ?? [];
-  if (!ranked.length) { el.innerHTML = '<p>No plan yet — run the optimizer.</p>'; return; }
+  if (!ranked.length) { el.innerHTML = '<p>No improvement advice yet. Review the evidence before requesting advice.</p>'; return; }
   el.innerHTML = '<ol class="actions">' + ranked.map((a, i) =>
     `<li>${esc(a.action)} <span class="why">— ${esc(a.why)}${a.effort ? ` (${esc(a.effort)})` : ''}</span>` +
     ` <button type="button" class="ghost" data-adopt="${i}">Review as task</button></li>`
@@ -544,7 +479,7 @@ async function tick(markSeen = true) {
     const ov = await api('/api/overview');
     const snapshot = JSON.stringify([selected, ov.spots, ov.goals, ov.plan, ov.eco, ov.feed]);
     if (snapshot === lastJson) {
-      if (Date.now() > noticeUntil) setStatus(`updated ${new Date().toLocaleTimeString()}`, false);
+      
       return;
     }
     lastJson = snapshot;
@@ -555,7 +490,7 @@ async function tick(markSeen = true) {
     renderActions(ov);
     renderFeed(ov);
     if (markSeen) for (const s of ov.spots) lastSeen[s.id] = lastSeen[s.id] ?? s.updated_at ?? null;
-    if (Date.now() > noticeUntil) setStatus(`updated ${new Date().toLocaleTimeString()}`, false);
+    
   } catch (e) { setStatus(`load failed: ${e.message}`, true); }
 }
 
@@ -570,23 +505,24 @@ function fileData(input) {
   });
 }
 
-async function busy(btn, fn, doneMsg) {
-  btn.disabled = true;
-  setStatus('working — model calls take a minute or more…', false);
-  try {
-    const out = await fn();
-    setStatus(doneMsg, false, 8000);
-    return out;
-  } catch (e) {
-    setStatus(`failed: ${e.message}`, true, 12000);
-    return null;
-  } finally {
-    btn.disabled = false;
-  }
+function localStatus(anchor) {
+  const host=anchor?.closest('form')||anchor?.closest('section')||document.querySelector('.view.active');
+  let el=host.querySelector(':scope > .status-local');if(!el){el=document.createElement('p');el.className='status-local';el.setAttribute('role','status');el.setAttribute('aria-live','polite');host.appendChild(el);}return el;
 }
-
-function showResult(el, data) {
-  el.innerHTML = `<pre class="result">${esc(JSON.stringify(data, null, 2))}</pre>`;
+async function busy(btn,fn,doneMsg='Saved.') {
+  if(btn.disabled)return;btn.disabled=true;const status=localStatus(btn);status.textContent='Working… This operation may take a minute.';status.classList.remove('error');
+  try{activeDraftKeys.add(draftKey(btn.closest('form')));const result=await fn();clearFormDraft(btn.closest('form'));status.textContent=doneMsg;setStatus(doneMsg);return result;}catch(e){status.textContent=e.message;status.classList.add('error');setStatus(e.message,true);return null;}finally{activeDraftKeys.delete(draftKey(btn.closest('form')));btn.disabled=false;}
+}
+function readableValue(value,depth=0){
+  if(value===null||value===undefined)return '<span class="hint">Unknown</span>';
+  if(typeof value==='string'||typeof value==='number'||typeof value==='boolean')return esc(String(value));
+  if(depth>3)return '<span class="hint">Additional evidence is available in technical details.</span>';
+  if(Array.isArray(value))return value.length?'<ul>'+value.map(v=>'<li>'+readableValue(v,depth+1)+'</li>').join('')+'</ul>':'<p class="hint">None recorded.</p>';
+  return '<dl>'+Object.entries(value).filter(([k])=>!/(^id$|_id$|_ids$|model|prompt|digest|token|schema|revision)/.test(k)).map(([k,v])=>'<dt><strong>'+esc(k.replaceAll('_',' '))+'</strong></dt><dd>'+readableValue(v,depth+1)+'</dd>').join('')+'</dl>';
+}
+function showResult(el,data){
+  const fields=Object.entries(data||{}).filter(([k])=>!/(^id$|_id$|_ids$|model|prompt|digest|token|schema|revision|raw|session|process_basis|input_snapshot)/.test(k));
+  el.innerHTML='<div class="result-summary">'+fields.map(([k,v])=>'<h3>'+esc(k.replaceAll('_',' '))+'</h3>'+readableValue(v)).join('')+'</div><details><summary>Technical details</summary><pre class="result">'+esc(JSON.stringify(data,null,2))+'</pre></details>';
 }
 
 $('scanform').addEventListener('submit', (e) => {
@@ -646,30 +582,11 @@ document.addEventListener('click', (e) => {
   if (counter) counter.textContent = `${i + 1} / ${n}`;
 });
 
-function actionItems(actions, fallbackSteps) {
-  const list = Array.isArray(actions) && actions.length
-    ? actions.map((it) => ({ id: it.id ?? null, text: String(it.text ?? ''), status: it.status ?? 'open' }))
-    : (fallbackSteps ?? []).map((s) => ({ id: null, text: String(s ?? ''), status: 'open' }));
-  if (!list.length) return '';
-  return '<ul class="tasks">' + list.map((it) =>
-    `<li><label><input type="checkbox"${it.id ? ` data-aid="${esc(it.id)}"` : ''}${it.status === 'done' ? ' checked' : ''}${it.id ? '' : ' disabled'}> ${esc(it.text)}</label></li>`
-  ).join('') + '</ul>';
+function actionItems(actions,fallbackSteps){
+  const persisted=Array.isArray(actions)&&actions.length;
+  const list=persisted?actions:(fallbackSteps||[]).map(text=>({text}));
+  return list.length?'<ul class="tasks">'+list.map(a=>`<li>${a.id?`<button type="button" class="ghost" data-opentask="${esc(a.id)}">${esc(a.text)}</button><span class="chip">${esc(a.status||'Needs review')}</span>`:`<p>${esc(a.text)}</p><span class="hint">Suggested future work — review before adding.</span>`}</li>`).join('')+'</ul>':'';
 }
-
-document.addEventListener('change', async (e) => {
-  const box = e.target && e.target.closest ? e.target.closest('input[data-aid]') : null;
-  if (!box) return;
-  const want = box.checked ? 'done' : 'open';
-  try {
-    await api(`/api/actions/${encodeURIComponent(box.dataset.aid)}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: want }),
-    });
-  } catch (err) {
-    box.checked = !box.checked;
-    setStatus(`failed: ${err.message}`, true, 8000);
-  }
-});
 
 function renderTaskList(el, tasksEl, a, actions = null) {
   const seq = linearizeSequence(a);
@@ -695,23 +612,7 @@ function renderTaskList(el, tasksEl, a, actions = null) {
     unknowns;
 }
 
-$('videoform').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const f = e.target;
-  busy(f.querySelector('button'), async () => {
-    const videoData = await fileData(f.file);
-    if (!videoData) throw new Error('Pick a video file first.');
-    if (f.task_id.value) {
-      const { source } = await api('/api/reconcile-video', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({videoData,task_id:f.task_id.value,recorded_at:f.recorded_at.value||null,frames:Number(f.frames.value)||4}) });
-      selectedUpdate = source.id; showPlanningTab(); await loadPlanning(); await loadUpdates(); $('updatedetail').focus();
-      return source;
-    }
-    const { workflow } = await api('/api/journey-video', { method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({videoData,frames:Number(f.frames.value)||4}) });
-    selectedJourney=workflow.id; document.querySelector('[data-view="today"]').click();journeyRoute('today','workflow',selectedJourney);await loadJourneys();$('journeydetail').focus();return workflow;
-  }, 'Clip saved — continue its review.');
-});
-
-let calMode = 'week';
+let calMode = matchMedia('(max-width: 900px)').matches ? 'day' : 'week';
 let calCursor = new Date();
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -725,13 +626,9 @@ function parseDay(s) {
   return new Date(y, m - 1, d);
 }
 
-function evChip(e, clickable = false) {
-  // Every video entry opens its detail panel; entries recorded before
-  // payloads existed simply show less inside it.
-  const click = clickable && ['scan', 'task', 'goal'].includes(e.kind);
-  return `<div class="ev ${esc(e.kind)}${click ? ' clickable' : ''}" title="${esc(e.detail ?? e.kind)}"` +
-    (click ? ` data-eid="${esc(e.id)}"` : '') + '>' +
-    (e.time ? `<span class="t">${esc(e.time)}</span> ` : '') + `${esc(e.title)}</div>`;
+function evChip(e,clickable=false){
+  const kind=e.kind==='task'?(e.scheduling==='accepted'?'Accepted work':'Proposed work'):e.kind==='actual'?'Recorded actual work':e.kind==='goal'?'Goal deadline':e.kind==='scan'?'Past observation':e.timing?.blocking?'Fixed commitment':'Note / commitment';
+  return `<${clickable?'button type="button"':'div'} class="ev ${esc(e.kind)}" data-scheduling="${esc(e.scheduling||'')}" ${clickable?`data-eid="${esc(e.id)}"`:''}><span class="entry-kind">${esc(kind)}</span>${e.time?`<span class="t">${esc(e.time)}</span>`:''}${esc(e.title)}</${clickable?'button':'div'}>`;
 }
 
 async function renderCalDetail(box, e, actions = null) {
@@ -740,7 +637,9 @@ async function renderCalDetail(box, e, actions = null) {
     box.innerHTML = `<h3>${esc(e.title)}</h3><p>${esc(e.scheduling)} · ${esc(e.execution)} · ${esc(formatPlanningTime(e.start))} – ${esc(formatPlanningTime(e.end))}</p>${task ? goalChips(task) : ''}<p><button type="button" class="btn" data-opentask="${esc(e.task_id)}">Open task and record work</button></p>`;
     return;
   }
+  if(e.kind==='actual'){box.innerHTML=`<h3>${esc(e.title)}</h3><p>Recorded actual work · ${esc(formatPlanningTime(e.start))} – ${esc(formatPlanningTime(e.end))}</p><p>${esc(e.detail)}</p><button class="btn" data-opentask="${esc(e.task_id)}">Open task history</button>`;return;}
   if (e.kind === 'goal') { await showPlanningGoal(e.id.slice(5)); return; }
+  if(e.kind!=='scan'){box.innerHTML=`<h3>${esc(e.title)}</h3><p>${esc(e.date)} ${esc(e.time||'')}</p><p>${esc(e.detail||'Saved calendar note or commitment.')}</p>`;return;}
   if ((!actions || !actions.length) && e && e.kind === 'scan' && e.id) {
     box.innerHTML = '<p class="hint">Loading…</p>';
     try {
@@ -766,14 +665,9 @@ async function renderCalDetail(box, e, actions = null) {
     (e.media ? `<video controls preload="metadata" src="/media/${encodeURIComponent(e.media)}"></video>` : '');
 }
 
-function calCell(date, events, opts = {}) {
-  const key = isoDay(date);
-  const list = (events[key] ?? []).slice(0, 3);
-  const more = (events[key] ?? []).length - list.length;
-  const today = isoDay(new Date()) === key ? ' today' : '';
-  return `<div class="cell${opts.dim ? ' dim' : ''}${today}${opts.click ? ' clickable' : ''}"` +
-    (opts.click ? ` data-day="${key}"` : '') + `><div class="d">${date.getDate()}</div>` +
-    list.map((x) => evChip(x, true)).join('') + (more > 0 ? `<div class="ev">+${more} more</div>` : '') + '</div>';
+function calCell(date,events,opts={}){
+  const key=isoDay(date),all=events[key]||[],list=all.slice(0,3),more=all.length-list.length;
+  return `<div class="cell${opts.dim?' dim':''}${isoDay(new Date())===key?' today':''}"><button type="button" class="day-open" data-day="${key}" aria-label="Open ${key}">${date.getDate()}</button>${list.map(e=>evChip(e,true)).join('')}${more?`<button type="button" class="ev" data-day="${key}">+${more} more — open day</button>`:''}</div>`;
 }
 
 function renderCal(box, events) {
@@ -795,8 +689,8 @@ function renderCal(box, events) {
     start.setDate(start.getDate() - start.getDay());
     const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(start); d.setDate(d.getDate() + i); return d; });
     $('caltitle').textContent = `${days[0].toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} – ${days[6].toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
-    box.innerHTML = '<div class="calgrid head">' + DAY_NAMES.map((n) => `<div>${n}</div>`).join('') + '</div>' +
-      '<div class="calgrid">' + days.map((d) => calCell(d, byDay)).join('') + '</div>';
+    box.innerHTML = '<div class="cal-scroll" role="region" aria-label="Calendar grid, scroll horizontally for more days" tabindex="0"><div class="calgrid head">' + DAY_NAMES.map((n) => `<div>${n}</div>`).join('') + '</div>' +
+      '<div class="calgrid">' + days.map((d) => calCell(d, byDay)).join('') + '</div></div>'; 
     return;
   }
   const first = new Date(cur.getFullYear(), cur.getMonth(), 1);
@@ -808,20 +702,22 @@ function renderCal(box, events) {
     cells.push(calCell(new Date(dim), byDay, { click: true }));
     dim.setDate(dim.getDate() + 1);
   }
-  box.innerHTML = '<div class="calgrid head">' + DAY_NAMES.map((n) => `<div>${n}</div>`).join('') + '</div>' +
-    '<div class="calgrid">' + cells.join('') + '</div>';
-  box.querySelectorAll('[data-day]').forEach((c) =>
-    c.addEventListener('click', () => { calCursor = parseDay(c.dataset.day); calMode = 'day'; syncSeg(); loadCal(); }));
+  box.innerHTML = '<div class="cal-scroll" role="region" aria-label="Calendar grid, scroll horizontally for more days" tabindex="0"><div class="calgrid head">' + DAY_NAMES.map((n) => `<div>${n}</div>`).join('') + '</div>' +
+    '<div class="calgrid">' + cells.join('') + '</div></div>'; 
+
 }
 
 let lastCalEvents = [];
 
-function showCalEntry(id) {
+async function showCalEntry(id) {
+  journeyRoute('cal','entry',id);
   const e = lastCalEvents.find((x) => x.id === id);
   if (!e) return;
   const wrap = $('caldetailwrap');
   wrap.hidden = false;
-  renderCalDetail($('caldetail'), e);
+  try{await renderCalDetail($('caldetail'), e);}catch(error){setStatus(error.message,true);return;}
+  if(!document.querySelector('#view-cal.active'))return;
+  $('caldetail').tabIndex=-1;$('caldetail').focus();
   wrap.scrollIntoView({ block: 'nearest' });
 }
 
@@ -829,9 +725,11 @@ async function loadCal() {
   const box = $('cal');
   try {
     const { events } = await api('/api/events');
-    lastCalEvents = events ?? [];
+    lastCalEvents = [...(events ?? []),...actualCalendarEntries(planningState)];
     const goal = $('calgoalfilter').value;
-    renderCal(box, lastCalEvents.filter(e => !goal || e.kind !== 'task' || (e.goal_ids ?? []).includes(goal)));
+    renderCal(box, lastCalEvents.filter(e => !goal || !['task','actual'].includes(e.kind) || (e.goal_ids ?? []).includes(goal)));
+    box.querySelectorAll('[data-day]').forEach(b=>b.addEventListener('click',()=>{calCursor=parseDay(b.dataset.day);calMode='day';syncSeg();journeyRoute('cal','day',b.dataset.day);loadCal();}));
+    syncSeg();
     box.querySelectorAll('[data-eid]').forEach((c) =>
       c.addEventListener('click', (ev) => { ev.stopPropagation(); showCalEntry(c.dataset.eid); }));
   } catch (e) { box.innerHTML = `<p>calendar failed: ${esc(e.message)}</p>`; }
@@ -845,24 +743,25 @@ function shiftCal(dir) {
   const d = new Date(calCursor);
   if (calMode === 'month') d.setMonth(d.getMonth() + dir);
   else d.setDate(d.getDate() + dir * (calMode === 'week' ? 7 : 1));
-  calCursor = d;
+  calCursor = d;journeyRoute('cal',calMode,isoDay(calCursor));
   loadCal();
 }
 
 document.querySelectorAll('[data-cal]').forEach((b) =>
-  b.addEventListener('click', () => { calMode = b.dataset.cal; syncSeg(); loadCal(); }));
+  b.addEventListener('click', () => { calMode = b.dataset.cal; syncSeg();journeyRoute('cal',calMode,isoDay(calCursor)); loadCal(); }));
 $('calprev').addEventListener('click', () => shiftCal(-1));
 $('calnext').addEventListener('click', () => shiftCal(1));
-$('caltoday').addEventListener('click', () => { calCursor = new Date(); loadCal(); });
+$('caltoday').addEventListener('click', () => { calCursor = new Date();journeyRoute('cal',calMode,isoDay(calCursor)); loadCal(); });
 document.querySelector('nav.tabs button[data-view="cal"]').addEventListener('click', loadCal);
 
 $('eventform').addEventListener('submit', (e) => {
   e.preventDefault();
   const f = e.target;
   busy(f.querySelector('button'), async () => {
+    f.dataset.requestId ||= crypto.randomUUID();saveFormDraft(f);
     await api('/api/events', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: f.title.value.trim(), date: f.date.value }),
+      body: JSON.stringify({request_id:(f.dataset.requestId ||= crypto.randomUUID()), title: f.title.value.trim(), date: f.date.value }),
     });
     f.reset();
     loadCal();
@@ -893,14 +792,13 @@ $('compareform').addEventListener('submit', (e) => {
 
 function renderSpaceResult(el, r) {
   if (!r || r.ok !== true) { el.innerHTML = '<p>Space build failed.</p>'; return; }
-  const diags = (r.diagnostics ?? []).map((d) => `<li><span class="chip">${esc(d.code)}</span> ${esc(d.entity_id)} � ${esc(d.message)}</li>`).join('') || '<li>none</li>';
+  const diags = (r.diagnostics ?? []).map((d) => `<li><span class="chip">${esc(d.code)}</span> ${esc(d.entity_id)} · ${esc(d.message)}</li>`).join('') || '<li>none</li>';
   const findings = (r.findings ?? []).filter((f) => f.severity === 'unresolved').map((f) => `<li>${esc(f.message)} <span class="hint">(${esc(f.code)})</span></li>`).join('');
   el.innerHTML =
     `<h3 style="margin:.4em 0">${esc(r.name ?? 'space')} <span class="chip">rev ${esc(r.revision)}</span>` +
     (r.mock ? ' <span class="chip risk">mock OI</span>' : '') + '</h3>' +
     `<p><a href="${esc(r.revision_url)}" target="_blank" rel="noopener">Open in OI workbench</a> <span class="hint">2D plan + 3D stay in OpenIndustries</span></p>` +
-    `<p class="hint">${(r.bindings ?? []).length} compiled instances � scene ${esc(r.scene_id)}</p>` +
-    `<h2>OI diagnostics</h2><ul>${diags}</ul>` +
+    `<p>${(r.bindings ?? []).length} mapped objects. Return to this Workspace to continue the task.</p><details><summary>Technical details</summary><p>Scene ${esc(r.scene_id)}</p><ul>${diags}</ul></details>` +
     (findings ? `<h2>Open uncertainty</h2><ul>${findings}</ul>` : '');
 }
 
@@ -922,14 +820,15 @@ $('spaceform').addEventListener('submit', (e) => {
     renderSpaceResult($('spaceresult'), out.result);
     tick(false);
     return out;
-  }, 'space built � preview link below');
+  }, 'space built · preview link below');
 });
 
 $('goalform').addEventListener('submit', (e) => {
   e.preventDefault();
   const f = e.target;
   busy(f.querySelector('button'), async () => {
-    const payload = { text: f.text.value.trim(), weight: Number(f.weight.value), success_criteria: f.success_criteria.value.trim() };
+    f.dataset.requestId ||= crypto.randomUUID();saveFormDraft(f);
+    const payload = { request_id:f.dataset.requestId,text: f.text.value.trim(), weight: Number(f.weight.value), success_criteria: f.success_criteria.value.trim() };
     if (f.deadline.value) payload.deadline = f.deadline.value;
     await api('/api/goals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     f.reset();
@@ -1023,10 +922,7 @@ let planningState = null, selectedPlanningTask = null;
 const selectedValues = select => [...select.selectedOptions].map(o => o.value);
 const commaList = value => [...new Set(value.split(',').map(s => s.trim()).filter(Boolean))];
 function planningPost(body) { return api('/api/task-planning', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
-async function planningAction(fn) {
-  try { await fn(); $('planningstatus').textContent = 'Saved. Review the updated task and day plan.'; }
-  catch (error) { $('planningstatus').textContent = error.message; }
-}
+async function planningAction(fn){return operation(fn,'planningstatus');}
 function formatPlanningTime(value) { return new Date(value).toLocaleString(undefined, { timeZone: planningState?.schedule.config.timezone || 'UTC', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 function planningLocalInput(value) { if(!value)return ''; const parts=new Intl.DateTimeFormat('en-CA',{timeZone:planningState.schedule.config.timezone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(value)); const p=Object.fromEntries(parts.map(x=>[x.type,x.value])); return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`; }
 function goalChips(task) {
@@ -1046,12 +942,11 @@ async function loadPlanning() {
   $('savedavailability').innerHTML = '<p>Saved working intervals:</p><ul>' + config.availability.map(w => `<li>${esc(formatPlanningTime(w.start))} – ${esc(formatPlanningTime(w.end))}</li>`).join('') + '</ul>';
   $('commitmentform').existing.innerHTML = '<option value="">New commitment</option>' + planningState.events.filter(e => e.timing).map(e => `<option value="${esc(e.id.replace(/^commitment-/, ''))}">${esc(e.title)}</option>`).join('');
   $('caltimezone').textContent = `Task times use ${config.timezone}. Fixed commitments remain visible with every goal filter.`;
-  const followup = $('followuptask'), previousFollowup = followup.value;
-  followup.innerHTML = '<option value="">Initial discovery / new workflow</option>' + planningState.tasks.map(t => `<option value="${esc(t.id)}">${esc(t.text)}</option>`).join(''); followup.value = previousFollowup;
   const manualTask = $('manualupdateform').task_id, previousManual = manualTask.value;
   manualTask.innerHTML = planningState.tasks.map(t => `<option value="${esc(t.id)}">${esc(t.text)}</option>`).join(''); if(previousManual)manualTask.value=previousManual;
-  renderPlanningTasks(); renderHumanPlan(); await loadUpdates(); await loadOutcomes();
+  renderGoals({goals:planningState.goals});renderPlanningTasks(); renderHumanPlan(); await loadUpdates(); await loadOutcomes();
   if (selectedPlanningTask) renderTaskDetail(selectedPlanningTask);
+  restoreFormDrafts();refreshWorkspaceContext();
 }
 function renderPlanningTasks() {
   if (!planningState) return;
@@ -1064,13 +959,14 @@ function renderPlanningTasks() {
     <div class="task-buttons"><button class="ghost" type="button" data-opentask="${esc(t.id)}">Assign goals / edit task</button><button class="ghost" type="button" data-taskcalendar="${esc(t.id)}">Calendar</button></div></article>`).join('') || '<p>No matching tasks. Add work or analyze a video.</p>';
 }
 async function showPlanningGoal(id) {
+  uiState.goal=id;
   showPlanningTab(); journeyRoute('plan','goal',id);
   if (!planningState) await loadPlanning();
   const goal = planningState.goals.find(g => g.id === id); if (!goal) return;
   const count = planningState.goal_progress.find(g => g.goal_id === id);
   $('taskgoalfilter').value = id; renderPlanningTasks();
   const linked = planningState.tasks.filter(t => t.links.some(l => l.goal_id === id && l.review === 'confirmed'));
-  $('goalplanningdetail').innerHTML = `<h3>${esc(goal.text)}</h3><p>Success: ${esc(goal.success_criteria || 'Define how you will verify this outcome.')}</p><p>${count.completed} of ${count.total} linked tasks completed · ${esc(count.outcome)}.</p><form class="run" id="editgoalform" data-id="${esc(id)}"><label>Success criteria<input name="criteria" type="text" value="${esc(goal.success_criteria)}" required></label><label>Due date<input name="deadline" type="date" value="${goal.deadline ?? ''}"></label><label>Priority (1–5)<input name="weight" type="number" min="1" max="5" value="${goal.weight}" required></label><label>Reason<input name="reason" type="text" required></label><button class="btn" type="submit">Update goal</button></form>` +
+  $('goalplanningdetail').innerHTML = `<h3>${esc(goal.text)}</h3><p>Success: ${esc(goal.success_criteria || 'Define how you will verify this outcome.')}</p><p>${count.completed} of ${count.total} linked tasks completed · ${esc(count.outcome)}.</p><details><summary>Edit goal criteria, priority & deadline</summary><form class="run" id="editgoalform" data-id="${esc(id)}"><label>Success criteria<input name="criteria" type="text" value="${esc(goal.success_criteria)}" required></label><label>Due date<input name="deadline" type="date" value="${goal.deadline ?? ''}"></label><label>Priority (1–5)<input name="weight" type="number" min="1" max="5" value="${goal.weight}" required></label><label>Reason<input name="reason" type="text" required></label><button class="btn" type="submit">Update goal</button></form></details>` +
     ['open','in_progress','paused','blocked','done','cancelled'].filter(state => linked.some(t => t.execution === state)).map(state => `<h4>${esc(state)}</h4><ul>${linked.filter(t => t.execution === state).map(t => `<li><button class="ghost" type="button" data-opentask="${esc(t.id)}">${esc(t.text)}</button> ${planningState.schedule.blocks.some(b => b.status === 'accepted' && b.task_id === t.id) ? 'scheduled' : 'unscheduled'}</li>`).join('')}</ul>`).join('') + '<p>Add a task below or open an existing task to assign this goal. Task counts do not measure goal achievement.</p>';
   showPlanningTab(); $('goalplanningdetail').focus();
 }
@@ -1119,47 +1015,50 @@ function renderTaskDetail(id) {
       <label>What happened / result<input name="outcome" type="text" required></label><label><input name="done" type="checkbox"> Completion criteria met</label>
       <button class="btn" type="submit">Record work</button></form></details>
     <details><summary>Work history (${t.actuals.length}) and corrections (${t.history.length})</summary><ul>${t.actuals.map(a=>`<li>${esc(formatPlanningTime(a.start))} – ${esc(formatPlanningTime(a.end))}: ${esc(a.outcome)}</li>`).join('')}${t.history.map(h=>`<li>${esc(h.reason)}</li>`).join('')}</ul></details></article>`;
+  presentTaskDetail(t);
 }
-function showPlanningTab() { document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.view==='plan'))); document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-plan')); }
-async function openTask(id) { selectedPlanningTask = id; showPlanningTab(); journeyRoute('plan','task',id); await loadPlanning(); $('planningtaskdetail').focus(); }
+function showPlanningTab() { setDestination('plan'); }
+async function openTask(id) { selectedPlanningTask = id;uiState.goal=null; showPlanningTab(); journeyRoute('plan','task',id); await loadPlanning(); $('planningtaskdetail').focus(); }
 function renderHumanPlan() {
   const p = planningState.latest_plan, s = planningState.schedule;
+  const decision=s.decisions.findLast(d=>d.plan_id===p?.id&&['accepted','rejected'].includes(d.decision));
   const label = id => planningState.tasks.find(t => t.id === id)?.text ?? id;
-  $('humanplan').innerHTML = (p ? `<p><strong>${esc(p.next.action)}: ${esc(p.next.reason)}</strong></p><p>${p.stale ? 'Inputs changed: regenerate before accepting.' : 'Current proposal'} · ${p.scheduled_minutes} proposed operator minutes · ${p.available_minutes} free minutes before proposals</p>
+  $('humanplan').innerHTML = planDiff(decision?null:p,s,label)+(p ? `<p><strong>${esc(p.next.action)}: ${esc(p.next.reason)}</strong></p><p>${decision ? 'Proposal '+esc(decision.decision)+'. Generate a new proposal to plan further changes.' : p.stale ? 'Inputs changed: regenerate before accepting.' : 'Current proposal'} · ${p.scheduled_minutes} proposed operator minutes · ${p.available_minutes} free minutes before proposals</p>
     ${p.explanations.map(e=>`<p><button class="ghost" type="button" data-opentask="${esc(e.task_id)}">${esc(label(e.task_id))}</button>: ${esc(e.reason)}</p>`).join('')}
-    <ul>${p.blocks.map(b=>`<li>${esc(label(b.task_id))}: ${esc(formatPlanningTime(b.start))} – ${esc(formatPlanningTime(b.end))} (proposed)</li>`).join('')}</ul>
+    <ul>${p.blocks.map(b=>`<li>${esc(label(b.task_id))}: ${esc(formatPlanningTime(b.start))} – ${esc(formatPlanningTime(b.end))} (${decision?esc(decision.decision):'proposed'})</li>`).join('')}</ul>
     ${p.conflicts.map(c=>`<p class="err">${esc(c)}</p>`).join('')}
     <h4>Unscheduled / needs review</h4><ul>${p.deferred.map(d=>`<li><button class="ghost" type="button" data-opentask="${esc(d.task_id)}">${esc(label(d.task_id))}</button>: ${esc(d.reason)}</li>`).join('')}</ul>
-    <form class="run" id="plandecisionform"><label>Decision reason<input name="reason" type="text" required></label><div class="task-buttons"><button class="btn" name="decision" value="accepted" ${p.stale || p.conflicts.length || !p.blocks.length ? 'disabled' : ''}>Accept proposed blocks</button><button class="btn" name="decision" value="rejected" ${p.stale ? 'disabled' : ''}>Reject proposal</button></div></form>` : '<p>Add working hours and task estimates, then propose a plan.</p>') +
+    <form class="run" id="plandecisionform"><label>Decision reason<input name="reason" type="text" required></label><div class="task-buttons"><button class="btn" name="decision" value="accepted" ${decision || p.stale || p.conflicts.length || !p.blocks.length ? 'disabled' : ''}>Accept proposed blocks</button><button class="btn" name="decision" value="rejected" ${decision || p.stale ? 'disabled' : ''}>Reject proposal</button></div></form>` : '<p>Add working hours and task estimates, then propose a plan.</p>') +
     '<h4>Accepted reservations</h4>' + s.blocks.filter(b=>b.status==='accepted').map(b=>`<div class="task-card"><button class="ghost" type="button" data-opentask="${esc(b.task_id)}">${esc(label(b.task_id))}</button><p>${esc(formatPlanningTime(b.start))} – ${esc(formatPlanningTime(b.end))} · ${b.pinned ? 'Pinned' : 'Accepted'}</p><form class="run blockform" data-id="${esc(b.id)}"><label>Reason<input name="reason" type="text" required></label><div class="task-buttons"><button class="ghost" name="action" value="pin" ${b.pinned ? 'disabled' : ''}>Pin time</button><button class="ghost" name="action" value="release">Release to replan</button></div></form></div>`).join('');
 }
 async function localPlanningTime(local) { return (await planningPost({ command: 'time', local, timezone: $('availabilityform').timezone.value || planningState.schedule.config.timezone, fold: $('availabilityform').fold.value || undefined })).instant; }
-document.querySelector('[data-view="plan"]').addEventListener('click', () => planningAction(loadPlanning));
-document.querySelector('[data-view="cal"]').addEventListener('click', () => planningAction(async () => { await loadPlanning(); await loadCal(); }));
+document.querySelector('[data-view="plan"]').addEventListener('click', () => readAction(loadPlanning));
+document.querySelector('[data-view="cal"]').addEventListener('click', () => readAction(async () => { await loadPlanning(); await loadCal(); }));
 $('taskgoalfilter').addEventListener('change', renderPlanningTasks);
 $('goalplanningdetail').addEventListener('submit', e => { e.preventDefault(); const f=e.target; if(f.id!=='editgoalform')return; planningAction(async () => { const goal=planningState.goals.find(g=>g.id===f.dataset.id); await planningPost({command:'goal',id:goal.id,expected:goal,reason:f.reason.value,patch:{success_criteria:f.criteria.value,deadline:f.deadline.value||null,weight:Number(f.weight.value)}}); await loadPlanning(); await showPlanningGoal(goal.id); tick(false); }); });
 $('calgoalfilter').addEventListener('change', loadCal);
 document.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  if (b.dataset.goaldetail) planningAction(() => showPlanningGoal(b.dataset.goaldetail));
-  if (b.dataset.opentask) planningAction(() => openTask(b.dataset.opentask));
-  if (b.dataset.taskcalendar) planningAction(async () => { await loadPlanning(); const id=b.dataset.taskcalendar; const block = planningState.schedule.blocks.find(b=>b.task_id===id && b.status==='accepted') ?? planningState.latest_plan?.blocks.find(b=>b.task_id===id); if(block) { const date = new Intl.DateTimeFormat('en-CA', { timeZone: planningState.schedule.config.timezone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(block.start)); calCursor=parseDay(date); } document.querySelector('[data-view="cal"]').click(); await loadCal(); });
-  if (b.dataset.taskevidence) planningAction(async () => { const linked=journeyState?.workflows.find(w=>w.tasks.some(t=>t.event_id===b.dataset.taskevidence)); if(linked){selectedJourney=linked.workflow.id;document.querySelector('[data-view="today"]').click();journeyRoute('today','workflow',selectedJourney);await loadJourneys();$('journeydetail').focus();return;} const detail=await api(`/api/events/${encodeURIComponent(b.dataset.taskevidence)}`); document.querySelector('[data-view="cal"]').click(); $('caldetailwrap').hidden=false; await renderCalDetail($('caldetail'),detail.event,detail.actions); });
+  if (b.dataset.goaldetail) readAction(() => showPlanningGoal(b.dataset.goaldetail));
+  if (b.dataset.opentask) readAction(() => openTask(b.dataset.opentask));
+  if (b.dataset.taskcalendar) readAction(async () => { await loadPlanning(); const id=b.dataset.taskcalendar; const block = planningState.schedule.blocks.find(b=>b.task_id===id && b.status==='accepted') ?? planningState.latest_plan?.blocks.find(b=>b.task_id===id); if(block) { const date = new Intl.DateTimeFormat('en-CA', { timeZone: planningState.schedule.config.timezone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(block.start)); calCursor=parseDay(date); } document.querySelector('[data-view="cal"]').click(); await loadCal(); });
+  if (b.dataset.taskevidence) readAction(async () => { const linked=journeyState?.workflows.find(w=>w.tasks.some(t=>t.event_id===b.dataset.taskevidence)); if(linked){selectedJourney=linked.workflow.id;setDestination('space');journeyRoute('space','workflow',selectedJourney);await loadJourneys();$('journeydetail').focus();return;} const detail=await api(`/api/events/${encodeURIComponent(b.dataset.taskevidence)}`); document.querySelector('[data-view="cal"]').click(); $('caldetailwrap').hidden=false; await renderCalDetail($('caldetail'),detail.event,detail.actions); });
 });
-$('newtaskform').addEventListener('submit', e => { e.preventDefault(); const f=e.currentTarget; planningAction(async () => { const goal=$('taskgoalfilter').value; f.dataset.requestId ||= crypto.randomUUID(); const task=await planningPost({ command:'create', request_id:f.dataset.requestId, task:{ text:f.text.value,completion_criteria:f.criteria.value,links:goal && goal!=='unassigned' ? [{goal_id:goal,origin:'human',review:'proposed',explanation:'Confirm the contribution when reviewing this task'}] : [] } }); f.reset(); delete f.dataset.requestId; selectedPlanningTask=task.id; await loadPlanning(); }); });
+$('newtaskform').addEventListener('submit', e => { e.preventDefault(); const f=e.currentTarget; planningAction(async () => { const goal=$('taskgoalfilter').value; f.dataset.requestId ||= crypto.randomUUID();saveFormDraft(f); const task=await planningPost({ command:'create', request_id:f.dataset.requestId, task:{ text:f.text.value,completion_criteria:f.criteria.value,links:goal && goal!=='unassigned' ? [{goal_id:goal,origin:'human',review:'proposed',explanation:'Confirm the contribution when reviewing this task'}] : [] } }); f.reset(); delete f.dataset.requestId; selectedPlanningTask=task.id; await loadPlanning(); }); });
 $('availabilityform').addEventListener('submit', e => { e.preventDefault(); const f=e.currentTarget; planningAction(async () => { const resources={}; for(const line of f.resources.value.split('\n').filter(x=>x.trim())) { const [name,status]=line.split('=').map(s=>s.trim()); resources[name]=status; } const window={ start:await localPlanningTime(f.start.value),end:await localPlanningTime(f.end.value) }; await planningPost({command:'configure',revision:planningState.schedule.revision,config:{timezone:f.timezone.value,person:f.person.value,max_minutes:Number(f.limit.value),resources,availability:f.replace.checked?[window]:[...planningState.schedule.config.availability,window]}}); await loadPlanning(); }); });
-$('commitmentform').addEventListener('submit', e => { e.preventDefault(); const f=e.currentTarget; planningAction(async () => { await planningPost({command:'commitment',event:{id:f.existing.value||crypto.randomUUID(),title:f.title.value,start:await localPlanningTime(f.start.value),end:await localPlanningTime(f.end.value),blocking:f.blocking.checked,resources:commaList(f.resources.value)}}); await loadPlanning(); }); });
+$('commitmentform').addEventListener('submit', e => { e.preventDefault(); const f=e.currentTarget; planningAction(async () => { await planningPost({command:'commitment',event:{id:f.existing.value||(f.dataset.requestId ||= crypto.randomUUID()),title:f.title.value,start:await localPlanningTime(f.start.value),end:await localPlanningTime(f.end.value),blocking:f.blocking.checked,resources:commaList(f.resources.value)}}); await loadPlanning(); }); });
 $('dayplanform').day.value = new Date().toLocaleDateString('en-CA');
 $('dayplanform').addEventListener('submit', e => { e.preventDefault(); planningAction(async () => { await planningPost({command:'propose',day:e.target.day.value,now:new Date(Math.ceil((Date.now()+60000)/60000)*60000).toISOString()}); await loadPlanning(); }); });
 $('planningtaskdetail').addEventListener('submit', e => {
   e.preventDefault(); const f=e.target, task=planningState.tasks.find(t=>t.id===f.dataset.id); if(!task)return;
   planningAction(async () => {
-    if(f.id==='taskeditform') {
+    if(f.id==='worklogform'){f.dataset.workId ||= crypto.randomUUID();saveFormDraft(f);}
+    if(f.id==='quickworkform'){if(f.execution.value==='done'&&!f.verified.checked)throw new Error('Confirm the completion criteria before marking work complete.');f.dataset.requestId ||= crypto.randomUUID();saveFormDraft(f);const patch={execution:f.execution.value};if(f.execution.value==='done'){patch.remaining_minutes=0;if(task.quantity)patch.quantity={...task.quantity,remaining:0};}await updatePost({command:'manual',request_id:f.dataset.requestId,task_id:task.id,task_revision:Number(f.dataset.revision),report:f.report.value,patch});delete f.dataset.requestId;}else if(f.id==='taskeditform') {
       const links=[...f.querySelectorAll('[data-linkgoal]')].filter(row=>row.querySelector('select').value!=='unassigned').map(row=>({goal_id:row.dataset.linkgoal,explanation:row.querySelector('input').value,origin:task.links.find(l=>l.goal_id===row.dataset.linkgoal)?.origin ?? 'human',review:row.querySelector('select').value}));
       const preconditions=task.preconditions.map((p,i)=>({...p,status:f.querySelector(`[data-condition="${i}"]`).value})); if(f.condition.value.trim())preconditions.push({text:f.condition.value.trim(),status:'unknown'});
       if(!!f.windowstart.value!==!!f.windowend.value)throw new Error('Set both allowed start and finish, or leave both empty.');
       await planningPost({command:'edit',id:task.id,revision:Number(f.dataset.revision),reason:f.reason.value,patch:{text:f.text.value,completion_criteria:f.criteria.value,execution:f.execution.value,review:f.review.value,active_minutes:f.active.value===''?null:Number(f.active.value),remaining_minutes:f.remaining.value===''?null:Number(f.remaining.value),setup_minutes:Number(f.setup.value),travel_minutes:Number(f.travel.value),passive_minutes:Number(f.passive.value),estimate_source:f.source.value,process:f.process_ref.value?JSON.parse(f.process_ref.value):null,splittable:f.split.checked,resources:commaList(f.resources.value),dependencies:selectedValues(f.dependencies),person:f.person.value,location:f.location.value,deadline:f.deadline.value||null,window:f.windowstart.value?{start:await localPlanningTime(f.windowstart.value),end:await localPlanningTime(f.windowend.value)}:null,defer_until:f.defer.value?await localPlanningTime(f.defer.value):null,quantity:f.totalquantity.value?{total:Number(f.totalquantity.value),remaining:Number(f.remainingquantity.value),unit:f.quantityunit.value}:null,links,preconditions}});
-    } else if(f.id==='worklogform') await planningPost({command:'work',id:task.id,revision:Number(f.dataset.revision),work:{id:crypto.randomUUID(),start:await localPlanningTime(f.start.value),end:await localPlanningTime(f.end.value),remaining_minutes:Number(f.remaining.value),outcome:f.outcome.value,done:f.done.checked,...(f.quantity.value===''?{}:{quantity:Number(f.quantity.value)})}});
+    } else if(f.id==='worklogform') await planningPost({command:'work',id:task.id,revision:Number(f.dataset.revision),work:{id:(f.dataset.workId ||= crypto.randomUUID()),start:await localPlanningTime(f.start.value),end:await localPlanningTime(f.end.value),remaining_minutes:Number(f.remaining.value),outcome:f.outcome.value,done:f.done.checked,...(f.quantity.value===''?{}:{quantity:Number(f.quantity.value)})}});
     await loadPlanning();
   });
 });
@@ -1167,7 +1066,7 @@ $('humanplan').addEventListener('submit', e => { e.preventDefault(); const f=e.t
 
 let updateState = {sources:[]}, selectedUpdate = null;
 function updatePost(body) { return api('/api/reconciliation', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); }
-async function updateAction(fn) { try { $('updatestatus').textContent='Saving…'; await fn(); $('updatestatus').textContent='Saved. Evidence review and schedule acceptance are separate.'; } catch(e) { $('updatestatus').textContent=e.message; } }
+async function updateAction(fn){return operation(fn,'updatestatus');}
 async function loadUpdates() {
   updateState = await api('/api/reconciliation');
   $('updatequeue').innerHTML = updateState.sources.map(s=>`<article class="task-card"><button class="ghost" data-update="${esc(s.id)}">${esc(s.kind==='video'?'Follow-up video':'Human progress report')} · ${esc(s.stage.replaceAll('_',' '))}</button><p>${esc(s.next_action)}</p><small>Received ${esc(formatPlanningTime(s.uploaded_at))}</small></article>`).join('')||'<p>No follow-up evidence yet. Open a task to record work, or save a progress report below.</p>';
@@ -1197,10 +1096,9 @@ function renderUpdate(id) {
     <button type="button" class="ghost" id="previewupdateplan">Preview effects on today’s plan</button><div id="updateplanpreview"></div>
     <details><summary>Evidence history</summary>${s.history.map(h=>`<p>${esc(h.at)} · ${esc(h.action)}: ${esc(h.reason)}</p>`).join('')}</details></article>`;
 }
-$('refreshupdates').addEventListener('click',()=>updateAction(loadUpdates));
-$('updatequeue').addEventListener('click',e=>{const b=e.target.closest('[data-update]');if(b){selectedUpdate=b.dataset.update;renderUpdate(selectedUpdate);$('updatedetail').focus();}});
-document.addEventListener('click',e=>{const b=e.target.closest('[data-followup]');if(b) { $('followuptask').value=b.dataset.followup; document.querySelector('[data-view="run"]').click(); $('videoform').file.focus(); }});
-document.querySelector('[data-view="run"]').addEventListener('click',()=>planningAction(loadPlanning));
+$('refreshupdates').addEventListener('click',()=>readAction(loadUpdates));
+$('updatequeue').addEventListener('click',e=>{const b=e.target.closest('[data-update]');if(b){setDestination('space');selectedUpdate=b.dataset.update;journeyRoute('space','update',selectedUpdate);renderUpdate(selectedUpdate);$('updatedetail').focus();}});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-followup]');if(b)openCaptureForTask(b.dataset.followup);});
 $('updatedetail').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.retryupdate) updateAction(async()=>{const s=updateState.sources.find(s=>s.id===selectedUpdate);b.disabled=true;try{await api('/api/reconcile-video',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source_id:s.id,revision:s.revision,retry:true})});await loadUpdates();}finally{b.disabled=false;}});
   if(b.id==='previewupdateplan') updateAction(async()=>{const zone=planningState.schedule.config.timezone, day=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());const result=await updatePost({command:'plan',day,now:new Date().toISOString()});$('updateplanpreview').innerHTML=`<p>${esc(result.next_action.reason)}</p><p>${result.comparison.preserved.length} accepted blocks preserved; ${result.plan.blocks.length} new proposed blocks. Nothing has been moved or accepted.</p><ul>${[...result.comparison.conflicts,...result.plan.deferred.map(d=>(planningState.tasks.find(t=>t.id===d.task_id)?.text||'Task')+': '+d.reason)].map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p>Use the day-plan controls to review/release conflicting blocks and propose a revised schedule.</p>`;});
@@ -1227,7 +1125,7 @@ $('manualupdateform').addEventListener('submit',e=>{e.preventDefault();const f=e
 
 let outcomeState={trials:[]},outcomeEvidence={sessions:[],evidence:[],processes:[]},outcomeCandidates=[],selectedOutcome=null;
 function outcomePost(body){return api('/api/outcomes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});}
-async function outcomeAction(fn){try{$('outcomestatus').textContent='Saving…';await fn();$('outcomestatus').textContent='Saved. Measurements, predictions and farmer decisions remain separate.';}catch(e){$('outcomestatus').textContent=e.message;}}
+async function outcomeAction(fn){return operation(fn,'outcomestatus');}
 function outcomeSourceOptions(){return '<option value="">Choose retained evidence</option>'+outcomeEvidence.sessions.flatMap(s=>['after','before'].map(side=>`<option value="${esc(JSON.stringify({kind:'session',spot_id:s.spot_id,session_id:s.sid,side}))}">${esc(s.spot_name||s.spot_id)} · ${esc(formatPlanningTime(s.created))} · ${side} images</option>`)).join('')+outcomeEvidence.evidence.map(e=>`<option value="${esc(JSON.stringify({kind:'evidence',source_id:e.source_id,interpretation_id:e.interpretation_id}))}">Follow-up ${esc(e.origin)} · ${esc(formatPlanningTime(e.recorded_at||e.uploaded_at))}</option>`).join('');}
 function outcomeVisitFields(){return `<label>Stored evidence<select name="source_ref" required>${outcomeSourceOptions()}</select></label><label>When this work was observed (${esc(planningState.schedule.config.timezone)})<input type="datetime-local" name="observed" required></label><label>Procedure version<select name="process_ref" required>${outcomeEvidence.processes.map(p=>`<option value="${esc(JSON.stringify({id:p.id,revision:p.rev}))}">${esc(p.title)} · revision ${p.rev}</option>`).join('')}</select></label><label>Workload amount (blank if unknown)<input type="number" name="amount" min="0.000001" step="any"></label><label>Comparable workload description<input name="workload_context" placeholder="72-cell trays, same soil and fill depth" required></label><label>Was the selected improvement used in this work?<select name="implementation"><option value="unknown">Not verified</option><option value="used">Confirmed used</option><option value="not_used">Not used (baseline / other method)</option></select></label><label>How was use of the method verified?<input name="implementation_note"></label><label>Number of people (blank if unknown)<input type="number" name="staffing" min="1" step="1"></label><label>Equipment (blank if unknown)<input name="equipment"></label><label>Other conditions (blank if unknown)<input name="conditions"></label><label>Quality criteria<input name="quality_criteria" required></label><label>Quality result<select name="quality"><option value="unknown">Not verified</option><option value="passed">Passed</option><option value="failed">Failed</option></select></label><label>Observation coverage<select name="coverage"><option value="unknown">Unknown</option><option value="partial">Partial / occluded</option><option value="full">Complete measured workload</option></select></label><label>How was coverage established?<input name="coverage_note" required placeholder="A stopwatch covered the whole batch; sampled images provide context only"></label><div data-outcome-measurements></div><label>Notes<input name="notes"></label>`;}
 function outcomeMetricFields(metrics){return metrics.map(m=>`<fieldset data-measure="${esc(m.id)}"><legend>${esc(m.label)} — total ${esc(m.unit)} for this workload</legend><label>Total value (blank if unknown)<input name="value" type="number" min="0" step="any"></label><label>Evidence kind<select name="kind"><option value="unknown">Unknown</option><option value="measured">Measured</option><option value="estimated">Estimated</option></select></label><label>Method<select name="method"><option value="operator">Operator measurement</option><option value="instrument">Instrument</option><option value="continuous_video">Verified continuous video</option><option value="sparse_frames">Sparse frames (cannot establish measured totals)</option></select></label><label>Measurement source<input name="source" required placeholder="Stopwatch log or instrument record"></label></fieldset>`).join('');}
@@ -1255,18 +1153,109 @@ $('outcomedetail').addEventListener('click',e=>{const b=e.target.closest('[data-
 $('outcomedetail').addEventListener('change',e=>{if(e.target.name==='visit_id'){const t=outcomeState.trials.find(x=>x.trial.id===selectedOutcome).trial;const f=e.target.form;if(e.target.value==='new'){f.reset();f.process_ref.value=JSON.stringify({id:t.assessment.candidate.process_id,revision:outcomeEvidence.processes.find(p=>p.id===t.assessment.candidate.process_id)?.rev||t.assessment.candidate.process_rev});return;}fillOutcomeVisit(f,e.target.value==='baseline'?t.baseline:t.followups.find(v=>v.id===e.target.value));}});
 $('outcomedetail').addEventListener('submit',e=>{e.preventDefault();const f=e.target,decision=e.submitter?.value;outcomeAction(async()=>{const {trial:t,result:r}=outcomeState.trials.find(x=>x.trial.id===selectedOutcome);f.dataset.requestId ||= crypto.randomUUID();if(f.id==='outcomedecisionform')await outcomePost({command:'decide',request_id:f.dataset.requestId,id:t.id,revision:t.revision,evidence_digest:r.evidence_digest,followup_id:r.followup_id,decision,reason:f.reason.value,revision_plan:f.revision_plan.value});else if(f.id==='outcomevisitform')await outcomePost({command:'visit',request_id:f.dataset.requestId,id:t.id,revision:t.revision,role:f.visit_id.value==='baseline'?'baseline':'followup',visit_id:['new','baseline'].includes(f.visit_id.value)?undefined:f.visit_id.value,visit:await readOutcomeVisit(f,t.metrics,t.workload_unit),reason:f.reason.value});delete f.dataset.requestId;await loadOutcomes();});});
 
+/** Product summaries resolve canonical records without calculating new scheduling policy. */
+function renderToday(){
+  const v=journeyState,t=v.today,task=t.task,open=v.planning.goals.filter(g=>g.status!=='done');
+  const existing=v.workflows.length||v.planning.tasks.length;
+  $('view-today').querySelector('.page-heading h1').textContent=existing?'Your day, with a clear next step.':'Start with the work you already do.';
+  $('journeytoday').innerHTML=task?`<p class="eyebrow">${t.accepted?'Next accepted work':'Plan needs your review'}</p><h3>${esc(task.text)}</h3><p>${esc(t.next.reason)}</p><p>${t.goals.map(g=>`<button class="goal-chip" data-goaldetail="${esc(g.id)}">${esc(g.text)}</button>`).join('')||'Goal contribution is unassigned.'}</p><p>${esc(task.location||'Work area not specified')} · ${task.remaining_minutes??'Unknown'} minutes remaining · ${esc(task.execution.replaceAll('_',' '))}</p>${t.block?`<p>${esc(formatPlanningTime(t.block.start))} – ${esc(formatPlanningTime(t.block.end))} <span class="chip">${t.accepted?'Accepted':'Proposed'}</span></p>`:''}<button class="btn" type="button" ${t.accepted?`data-opentask="${esc(task.id)}"`:'data-journey-plan="humanplan"'}>${t.accepted?'Open task & record progress':'Review calendar plan'}</button>`:`<p class="eyebrow">${existing?'Next useful step':'Show your work'}</p><h3>${existing?'Make room for the next action.':'Record it. Understand it. Improve it.'}</h3><p>${esc(existing?t.next.reason:'Upload a short video. Review what happened, decide what matters, and turn it into a plan that fits your day.')}</p>${existing?'<button class="ghost" data-journey-plan="humanplan">Review remaining work and calendar</button>':''}`;
+  if(t.conflicts.length)$('journeytoday').innerHTML+='<div class="task-card"><h4>Review before acting</h4><ul>'+t.conflicts.map(c=>`<li>${esc(c)}</li>`).join('')+'</ul></div>';
+  if(t.agenda.length||t.commitments.length)$('journeytoday').innerHTML+='<div class="task-card"><h4>Today’s accepted agenda</h4>'+t.agenda.map(b=>`<p><button class="ghost" data-opentask="${esc(b.task_id)}">${esc(v.planning.tasks.find(x=>x.id===b.task_id)?.text||'Task')}</button> ${esc(formatPlanningTime(b.start))} – ${esc(formatPlanningTime(b.end))}</p>`).join('')+t.commitments.map(e=>`<p><span class="chip">Fixed</span> ${esc(e.title)} · ${esc(formatPlanningTime(e.timing.start))}</p>`).join('')+'</div>';
+  const pending=v.workflows.filter(w=>!['today','schedule'].includes(w.stage));
+  $('todayreviews').hidden=!pending.length;
+  $('reviewinbox').innerHTML=pending.map(w=>`<article class="task-card"><h3>${esc(w.workflow.title)}</h3><p>${esc(w.next)}</p><button class="ghost" type="button" data-journey="${esc(w.workflow.id)}">Resume review</button></article>`).join('');
+  $('todaygoals').innerHTML=open.map(g=>{const count=v.planning.goal_progress.find(p=>p.goal_id===g.id);return `<article class="task-card"><button class="ghost" data-goaldetail="${esc(g.id)}">${esc(g.text)}</button><p>${g.deadline?'Due '+esc(g.deadline)+' · ':''}${esc(g.status==='at-risk'?'At risk':'Outcome not verified')}</p><p>${count?.completed||0} of ${count?.total||0} linked tasks complete. ${esc(g.success_criteria||'Success criteria need clarification.')}</p></article>`;}).join('')||'<p>Goals come after understanding the work. You can also add one directly in Goals.</p>';
+}
+function revealTarget(id,route=true){
+  const target=$(id);if(!target)return;const view=target.closest('.view');if(view){setDestination(view.id.slice(5));if(route)journeyRoute(view.id.slice(5),'section',id);}
+  for(let node=target;node;node=node.parentElement)if(node.tagName==='DETAILS')node.open=true;
+  target.scrollIntoView({block:'start'});target.tabIndex=-1;target.focus();
+}
+function refreshWorkspaceContext(){
+  const t=planningState?.tasks.find(t=>t.id===selectedPlanningTask);
+  $('workspacecontext').innerHTML=t?`<p>Work area for <button class="ghost" data-opentask="${esc(t.id)}">${esc(t.text)}</button> · ${esc(t.location||'Location not yet confirmed')}</p>${goalChips(t)}`:'<p>Maps enrich the work when spatial evidence is useful. They are optional for planning. Linking task locations to individual map objects is not available yet.</p>';
+}
+function presentJourneyStages(w){
+  const root=$('journeydetail'),sections=[...root.children].filter(x=>x.tagName==='SECTION');if(!sections.length)return;
+  const names={review:'Review work',goals:'Confirm purpose',improvements:'Choose method',tasks:'Organize tasks',adapt:'Review outcomes'};
+  for(const [index,section]of sections.entries()){
+    const heading=section.querySelector('h2')?.textContent||'';
+    const stage=index===0?'review':heading.startsWith('What are')?'goals':heading.startsWith('Choose how')?'improvements':heading.startsWith('Organize')?'tasks':'adapt';
+    section.dataset.stage=stage;section.classList.add('journey-stage');
+  }
+  const wanted=uiState.stage||({today:'adapt',followup:'adapt',schedule:'tasks'})[w.stage]||w.stage;
+  const stage=sections.some(s=>s.dataset.stage===wanted)?wanted:'review';
+  const nav=document.createElement('div');nav.className='journey-steps';nav.setAttribute('role','group');nav.setAttribute('aria-label','Workflow review steps');
+  nav.innerHTML=Object.entries(names).map(([key,label])=>`<button class="ghost" type="button" data-stage="${key}" ${sections.some(s=>s.dataset.stage===key)?'':'disabled'} ${stage===key?'aria-current="step"':''}>${label}</button>`).join('');
+  root.prepend(nav);for(const section of sections)section.hidden=section.dataset.stage!==stage;
+  for(const article of sections[0].querySelectorAll(':scope > article')){
+    const video=article.querySelector(':scope > video');if(!video)continue;
+    const grid=document.createElement('div');grid.className='evidence-review';const media=document.createElement('div');media.className='evidence-media';const steps=document.createElement('div');steps.className='evidence-steps';
+    const heading=article.querySelector(':scope > h3');media.appendChild(video);
+    for(const child of [...article.children])if(child!==heading)steps.appendChild(child);
+    grid.append(media,steps);article.appendChild(grid);
+    const items=[...steps.querySelectorAll(':scope > ol > li')];if(items.length>1){const label=document.createElement('label');label.textContent='Jump to an observation';const select=document.createElement('select');items.forEach((li,i)=>{li.id=`review-${w.workflow.id}-${article.parentElement.children.length}-${i}-${Math.random().toString(36).slice(2,6)}`;li.tabIndex=-1;const option=document.createElement('option');option.value=li.id;option.textContent=`${i+1}. ${li.querySelector('strong')?.textContent||'Observation'}`;select.appendChild(option);});select.addEventListener('change',()=>{const target=$(select.value);target.scrollIntoView({block:'center'});target.focus();});label.appendChild(select);steps.prepend(label);}
+  }
+  const purpose=root.querySelector('[data-jcommand=goal]');if(purpose&&!purpose.text.value){const proposed=w.clips.find(c=>c.process)?.process.title;if(proposed){const b=document.createElement('button');b.type='button';b.className='ghost';b.textContent='Use observed work as a starting point: '+proposed;b.addEventListener('click',()=>{purpose.text.value=proposed;saveJourneyDraft(purpose);purpose.criteria.focus();});purpose.prepend(b);}}
+}
+function presentTaskDetail(t){
+  const root=$('planningtaskdetail'),article=root.querySelector('article'),form=$('taskeditform');if(!article||!form)return;
+  const summary=document.createElement('div');summary.className='task-summary';summary.innerHTML=`${goalChips(t)}<p>${esc(t.completion_criteria||'Completion criteria need review.')}</p><p>${esc(t.location||'Work area not specified')} · ${t.remaining_minutes??'Unknown'} minutes remaining · <span class="chip">${esc(t.execution.replaceAll('_',' '))}</span></p><button class="ghost" type="button" data-taskplace="${esc(t.id)}">Open work area & evidence</button>`;
+  article.insertBefore(summary,form);
+  const editor=document.createElement('details');editor.innerHTML='<summary>Edit task, goals & constraints</summary>';form.before(editor);editor.appendChild(form);
+  const control=document.createElement('form');control.id='quickworkform';control.className='run';control.dataset.id=t.id;control.dataset.revision=t.revision;
+  control.innerHTML=`<label>Update status<select name="execution"><option value="in_progress">Start / resume</option><option value="paused">Pause</option><option value="blocked">Blocked</option><option value="done">Complete</option></select></label><label>What happened?<input name="report" required></label><label><input name="verified" type="checkbox"> Completion criteria are met (required for Complete).</label><button class="btn" type="submit">Save progress</button><p class="hint">This records your status. Log actual work below to record time or a partial quantity.</p>`;
+  editor.before(control);
+}
+function planDiff(p,s,label){
+  if(!p)return '';
+  const accepted=s.blocks.filter(b=>b.status==='accepted');
+  const rows=[...accepted.map(b=>({name:label(b.task_id),before:formatPlanningTime(b.start)+' – '+formatPlanningTime(b.end),after:'Preserved'+(b.pinned?' · pinned':''),reason:'Accepted reservations stay until explicitly released.'})),...p.blocks.filter(b=>!accepted.some(a=>a.id===b.id)).map(b=>({name:label(b.task_id),before:'Unscheduled remaining work',after:formatPlanningTime(b.start)+' – '+formatPlanningTime(b.end),reason:p.explanations.find(e=>e.task_id===b.task_id)?.reason||'Proposed allocation'}))];
+  return `<h3>What this proposal changes</h3><div class="table-scroll"><table class="plan-diff"><thead><tr><th>Work</th><th>Current</th><th>Proposed</th><th>Why</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.before)}</td><td>${esc(r.after)}</td><td>${esc(r.reason)}</td></tr>`).join('')}</tbody></table></div><p>Nothing moves until you accept. Release a reservation explicitly if it needs to change.</p>`;
+}
+// Native buttons/dialogs provide Enter/Space/Escape behavior; arrow keys move through primary tabs.
+document.querySelector('nav.tabs').addEventListener('keydown',e=>{
+  if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(e.key))return;
+  const tabs=[...document.querySelectorAll('nav.tabs button')],index=tabs.indexOf(document.activeElement);if(index<0)return;e.preventDefault();
+  const next=e.key==='Home'?0:e.key==='End'?tabs.length-1:(index+(['ArrowRight','ArrowDown'].includes(e.key)?1:-1)+tabs.length)%tabs.length;tabs[next].click();tabs[next].focus();
+});
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.reveal)revealTarget(b.dataset.reveal);
+  if(b.dataset.stage){uiState.stage=b.dataset.stage;renderJourney();const panel=$('journeydetail').querySelector('.journey-stage[data-stage="'+uiState.stage+'"]');panel.tabIndex=-1;panel.focus();}
+  if(b.dataset.taskplace){selectedPlanningTask=b.dataset.taskplace;refreshWorkspaceContext();revealTarget('areassection');}
+});
+
+// Per-tab drafts contain operator text only. Files must be reselected after reload.
+let submittedForm=null;
+const activeForms=new WeakSet(), activeDraftKeys=new Set();
+function draftKey(form){return form&&!form.matches('#journeydetail form')&&(form.id||form.dataset.id)?'fieldops:form:'+location.pathname+':'+(form.id||form.className)+':'+(form.dataset.id||''):null;}
+function draftVersion(form){if(form.dataset.revision)return form.dataset.revision;if(form.id==='editgoalform')return JSON.stringify(planningState?.goals.find(g=>g.id===form.dataset.id));if(['availabilityform','plandecisionform'].includes(form.id))return String(planningState?.schedule.revision);return '';}
+function draftFields(form){return [...form.elements].filter(e=>e.name&&!['file','submit','button','password','hidden'].includes(e.type));}
+function saveFormDraft(form){const key=draftKey(form);if(!key)return;const values=draftFields(form).map(e=>({name:e.name,value:e.type==='checkbox'?e.checked:e.multiple?[...e.selectedOptions].map(o=>o.value):e.value}));try{sessionStorage.setItem(key,JSON.stringify({version:draftVersion(form),values,request:form.dataset.requestId,work:form.dataset.workId}));}catch{}}
+function clearFormDraft(form){const key=draftKey(form);if(form){delete form.dataset.requestId;delete form.dataset.workId;}if(key)try{sessionStorage.removeItem(key);}catch{}}
+function restoreFormDrafts(){for(const form of document.forms){const key=draftKey(form);if(!key||activeForms.has(form)||activeDraftKeys.has(key))continue;try{const d=JSON.parse(sessionStorage.getItem(key)||'null');if(!d)continue;if(d.version!==draftVersion(form)){clearFormDraft(form);setStatus('Saved data changed. Review the latest values before editing.',true);continue;}const fields=draftFields(form);d.values.forEach((v,i)=>{const e=fields[i];if(!e||e.name!==v.name)return;if(e.type==='checkbox')e.checked=v.value;else if(e.multiple)for(const o of e.options)o.selected=v.value.includes(o.value);else e.value=v.value;});if(d.request)form.dataset.requestId=d.request;if(d.work)form.dataset.workId=d.work;}catch{}}}
+async function readAction(fn){try{await fn();}catch(e){setStatus(e.message,true);}}
+async function operation(fn,statusId){const form=submittedForm,anchor=form||document.activeElement;submittedForm=null;if(form&&(activeForms.has(form)||(draftKey(form)&&activeDraftKeys.has(draftKey(form)))))return;if(form){activeForms.add(form);activeDraftKeys.add(draftKey(form));}const local=localStatus(anchor),status=$(statusId);local.textContent='Saving…';status.textContent='Saving…';try{await fn();clearFormDraft(form);status.textContent='Saved.';local.textContent='Saved.';setStatus('Saved.');}catch(e){saveFormDraft(form);local.textContent=e.message;status.textContent=e.message;setStatus(e.message,true);}finally{if(form){activeForms.delete(form);activeDraftKeys.delete(draftKey(form));}}}
+function actualCalendarEntries(state){if(!state)return [];const zone=state.schedule.config.timezone;return state.tasks.flatMap(t=>t.actuals.map(a=>({id:'actual-'+t.id+'-'+a.id,kind:'actual',task_id:t.id,goal_ids:t.links.filter(l=>l.review==='confirmed').map(l=>l.goal_id),title:t.text,date:new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(a.start)),time:new Intl.DateTimeFormat('en-GB',{timeZone:zone,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(a.start)),start:a.start,end:a.end,detail:a.outcome})));}
+document.addEventListener('submit',e=>{submittedForm=e.target;saveFormDraft(e.target);queueMicrotask(()=>{if(submittedForm===e.target)submittedForm=null;});},true);
+for(const event of ['input','change'])document.addEventListener(event,e=>saveFormDraft(e.target.form));
+const draftObserver=new MutationObserver(records=>{if(records.some(r=>[...r.addedNodes].some(n=>n.nodeType===1&&(n.matches('form')||n.querySelector('form')))))restoreFormDrafts();});
+draftObserver.observe(document.querySelector('main'),{childList:true,subtree:true});
+
 // Guided journey: persisted references, explicit future intent, and resumable routes.
 let journeyState=null, selectedJourney=null, journeyLoading=null;
 const journeyPost=body=>api('/api/journeys',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
 function journeyEntry(){return journeyState?.workflows.find(w=>w.workflow.id===selectedJourney);}
 function journeyRoute(view='today',kind='',id='',replace=false){
+  view=({plan:'goals',cal:'calendar',space:'workspace',spots:'workspace',activity:'workspace',run:'today'})[view]||view;
   const hash='#'+[view,kind,id].filter(Boolean).map(encodeURIComponent).join('/');
+  if(uiState.routeLoading)return;
   if(location.hash!==hash) history[replace?'replaceState':'pushState'](null,'',hash);
 }
 function journeyFormKey(f){return 'fieldops:journey:'+location.pathname+':'+(selectedJourney||'none')+':'+(f.dataset.draft||f.id||f.dataset.jcommand)+':'+(f.dataset.source||'');}
 function saveJourneyDraft(f){if(!f?.matches('#journeydetail form'))return; const values={}; for(const e of f.elements){if(e.name&&e.type!=='file'&&e.type!=='submit')values[e.name]=e.type==='checkbox'?e.checked:e.multiple?[...e.selectedOptions].map(o=>o.value):e.value;}try{sessionStorage.setItem(journeyFormKey(f),JSON.stringify({values,request:f.dataset.requestId,pending:f.dataset.pending,stepId:f.dataset.stepId}));}catch{}}
 function restoreJourneyDrafts(){for(const f of $('journeydetail').querySelectorAll('form')){try{const d=JSON.parse(sessionStorage.getItem(journeyFormKey(f))||'null');if(!d)continue;if(d.request)f.dataset.requestId=d.request;if(d.pending)f.dataset.pending=d.pending;if(d.stepId)f.dataset.stepId=d.stepId;for(const e of f.elements){if(e.name in d.values){if(e.type==='checkbox')e.checked=d.values[e.name];else if(e.multiple)for(const o of e.options)o.selected=d.values[e.name].includes(o.value);else e.value=d.values[e.name];}}}catch{}}}
-async function journeyAction(fn){try{$('journeystatus').textContent='Saving…';await fn();$('journeystatus').textContent='Saved.';}catch(e){$('journeystatus').textContent=e.message;}}
+async function journeyAction(fn){return operation(fn,'journeystatus');}
 async function journeySend(f,command){
   const j=journeyEntry().workflow;let pending;
   try{pending=JSON.parse(f.dataset.pending||'null');}catch{}
@@ -1274,20 +1263,18 @@ async function journeySend(f,command){
   const payload=pending&&semantic(pending.command)===semantic(command)?pending.payload:{id:j.id,revision:j.revision,request_id:crypto.randomUUID(),...command};
   f.dataset.pending=JSON.stringify({command,payload});saveJourneyDraft(f);
   try{await journeyPost(payload);}catch(e){if(/Stale/.test(e.message)){delete f.dataset.pending;saveJourneyDraft(f);}throw e;}
-  sessionStorage.removeItem(journeyFormKey(f));delete f.dataset.pending;await loadJourneys();
+  sessionStorage.removeItem(journeyFormKey(f));delete f.dataset.pending;uiState.stage=null;await loadJourneys();
 }
 
 async function loadJourneys(){
   while(journeyLoading)await journeyLoading;
   journeyLoading=(async()=>{try{journeyState=await api('/api/journeys');planningState=journeyState.planning;
     const w=journeyEntry();if(!w)selectedJourney=journeyState.workflows[0]?.workflow.id||null;
-    const t=journeyState.today, task=t.task;
-    $('journeytoday').innerHTML=task?`<h3>${esc(task.text)}</h3><p>${esc(t.next.reason)} ${t.accepted?'Accepted work.':'Proposed work — review the calendar before starting.'}</p><p>${t.goals.map(g=>esc(g.text)).join(' · ')||'No confirmed goal'} · ${esc(task.location||'Place not specified')} · ${task.remaining_minutes??'Unknown'} minutes remaining</p>${t.block?`<p>${esc(formatPlanningTime(t.block.start))} – ${esc(formatPlanningTime(t.block.end))}</p>`:''}<button class="btn" type="button" data-opentask="${esc(task.id)}">Open task / record progress</button>`:`<p>${esc(journeyState.workflows.length?t.next.reason:'Start with a video of your work. We’ll help you review the process and decide what to do next.')}</p>`;
-    $('journeytoday').innerHTML+=t.conflicts.map(c=>`<p>${esc(c)}</p>`).join('')+(t.agenda.length?'<h3>Accepted agenda</h3>'+t.agenda.map(b=>`<p><button class="ghost" data-opentask="${esc(b.task_id)}">${esc(planningState.tasks.find(x=>x.id===b.task_id)?.text||'Task')}</button> ${esc(formatPlanningTime(b.start))} – ${esc(formatPlanningTime(b.end))}</p>`).join(''):'')+t.commitments.map(e=>`<p>Fixed commitment: ${esc(e.title)} · ${esc(formatPlanningTime(e.timing.start))}</p>`).join('');
-    $('journeylist').innerHTML=journeyState.workflows.map(w=>`<article class="task-card"><button class="ghost" data-journey="${esc(w.workflow.id)}">${esc(w.workflow.title)}</button><p>${esc(w.next)}</p><small>${w.pending_reviews} follow-up reviews · ${w.tasks.length} future tasks</small></article>`).join('')||'<p>No captured workflows yet. Manual planning is also available.</p>';
+    renderToday();
+    $('journeylist').innerHTML=journeyState.workflows.map(w=>`<article class="task-card"><button class="ghost" type="button" data-journey="${esc(w.workflow.id)}">${esc(w.workflow.title)}</button><p>${esc(w.next)}</p><small>${w.pending_reviews} follow-up reviews · ${w.tasks.length} future tasks</small></article>`).join('')||'<p>No captured workflows yet. Manual planning is also available.</p>';
     const f=$('journeycaptureform'),old=f.context.value;
-    f.context.innerHTML='<option value="new">New workflow</option>'+journeyState.workflows.map(w=>`<option value="${esc(JSON.stringify({workflow_id:w.workflow.id,role:'additional'}))}">Add another clip to ${esc(w.workflow.title)}</option>`+w.tasks.map(t=>`<option value="${esc(JSON.stringify({workflow_id:w.workflow.id,role:'followup',task_id:t.id}))}">Follow up: ${esc(t.text)}</option>`).join('')).join('');if([...f.context.options].some(o=>o.value===old))f.context.value=old;
-    renderJourney();
+    f.context.innerHTML='<option value="new">New workflow</option>'+journeyState.workflows.map(w=>`<option value="${esc(JSON.stringify({workflow_id:w.workflow.id,role:'additional'}))}">Add another clip to ${esc(w.workflow.title)}</option>`+w.tasks.map(t=>`<option value="${esc(JSON.stringify({workflow_id:w.workflow.id,role:'followup',task_id:t.id}))}">Follow up: ${esc(t.text)}</option>`).join('')).join('')+planningState.tasks.filter(t=>!journeyState.workflows.some(w=>w.workflow.task_ids.includes(t.id))).map(t=>`<option value="${esc(JSON.stringify({task_id:t.id,standalone:true}))}">Follow up: ${esc(t.text)}</option>`).join('');if([...f.context.options].some(o=>o.value===old))f.context.value=old;
+    renderJourney();refreshWorkspaceContext();
   }finally{journeyLoading=null;}})();
   await journeyLoading;
 }
@@ -1326,7 +1313,7 @@ function renderJourney(){
       ${w.outcomes.map(o=>`<p>${esc(o.result.status)}: ${esc(o.result.next_action)}</p>`).join('')||`<p>${esc(w.outcome_status)}</p>`}
       <button class="ghost" type="button" data-journey-plan="outcomes">Review improvement outcomes</button><button class="ghost" type="button" data-journey-plan="humanplan">Review / replan remaining work</button>
       <details><summary>Workflow history</summary><ul>${j.history.map(h=>`<li>${esc(h.at)} · ${esc(h.action)}: ${esc(h.reason)}</li>`).join('')}</ul></details></section>`;
-  restoreJourneyDrafts();
+  restoreJourneyDrafts();presentJourneyStages(w);
 }
 $('journeydetail').addEventListener('input',e=>saveJourneyDraft(e.target.form));
 $('journeydetail').addEventListener('change',e=>saveJourneyDraft(e.target.form));
@@ -1342,36 +1329,53 @@ $('journeydetail').addEventListener('submit',e=>{e.preventDefault();const f=e.ta
   else if(command==='task'){input.future_confirmed=f.future.checked;input.task={text:f.text.value,completion_criteria:f.criteria.value,process:f.step.value?JSON.parse(f.step.value):null,links:selectedValues(f.goals).map(id=>({goal_id:id,origin:'human',review:'confirmed',explanation:f.contribution.value})),active_minutes:f.minutes.value===''?null:Number(f.minutes.value),estimate_source:f.estimate.value,location:f.place.value,quantity:f.quantity.value?{total:Number(f.quantity.value),remaining:Number(f.quantity.value),unit:f.unit.value}:null};}
   await journeySend(f,input);
 });});
-$('journeycaptureform').addEventListener('submit',e=>{e.preventDefault();const f=e.target,b=f.querySelector('button');journeyAction(async()=>{b.disabled=true;try{
+$('journeycaptureform').addEventListener('submit',e=>{e.preventDefault();const f=e.target,b=f.querySelector('button[type=submit]');journeyAction(async()=>{b.disabled=true;try{
   const context=f.context.value==='new'?{}:JSON.parse(f.context.value), workflow=journeyState?.workflows.find(w=>w.workflow.id===context.workflow_id)?.workflow;
   $('capturestatus').textContent='Uploading and interpreting. The source is retained before analysis; you can resume its review if interrupted.';
-  const result=await api('/api/journey-video',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...context,revision:workflow?.revision,videoData:await fileData(f.file),frames:Number(f.frames.value),recorded_at:f.recorded_at.value||null})});
-  selectedJourney=result.workflow.id;journeyRoute('today','workflow',selectedJourney);await loadJourneys();$('capturestatus').textContent=journeyEntry()?.clips.some(c=>c.source.stage==='failed_retryable')?'Clip saved; analysis failed. Retry the retained clip below.':'Clip saved. Review what was understood below.';f.file.value='';$('journeydetail').focus();
- }finally{b.disabled=false;await loadJourneys();}});});
-function chooseJourneyCapture(value){document.querySelector('[data-view="today"]').click();$('journeycaptureform').context.value=value;$('journeycapture').scrollIntoView({block:'start'});$('journeycaptureform').file.focus();}
-$('globalrecordwork').addEventListener('click',()=>{const task=planningState?.tasks.find(t=>t.id===selectedPlanningTask);const w=journeyState?.workflows.find(w=>w.workflow.task_ids.includes(task?.id));if(w){selectedJourney=w.workflow.id;chooseJourneyCapture(JSON.stringify({workflow_id:w.workflow.id,role:'followup',task_id:task.id}));}else $('recordwork').click();});
-$('recordwork').addEventListener('click',()=>{const w=journeyEntry();const t=journeyState?.today.task;chooseJourneyCapture(t&&w?.tasks.some(x=>x.id===t.id)?JSON.stringify({workflow_id:w.workflow.id,role:'followup',task_id:t.id}):w?JSON.stringify({workflow_id:w.workflow.id,role:'additional'}):'new');});
+  const result=await api(context.standalone?'/api/reconcile-video':'/api/journey-video',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...context,revision:workflow?.revision,videoData:await fileData(f.file),frames:Number(f.frames.value),recorded_at:f.recorded_at.value||null})});
+  if(context.standalone){selectedUpdate=result.source.id;setDestination('space');journeyRoute('space','update',selectedUpdate);await loadPlanning();$('capturedialog').close();$('updatedetail').focus();return;}
+  selectedJourney=result.workflow.id;uiState.stage=null;setDestination('space');journeyRoute('space','workflow',selectedJourney);await loadJourneys();$('capturedialog').close();$('capturestatus').textContent=journeyEntry()?.clips.some(c=>c.source.stage==='failed_retryable')?'Clip saved; analysis failed. Retry the retained clip below.':'Clip saved. Review what was understood below.';f.file.value='';$('journeydetail').focus();
+ }catch(error){$('capturestatus').textContent=error.message;throw error;}finally{b.disabled=false;await loadJourneys();}});});
+async function chooseJourneyCapture(value='new'){
+  uiState.returnFocus=document.activeElement;try{await loadJourneys();}catch(e){setStatus(e.message,true);return;}$('journeycaptureform').context.value=value;
+  if(!$('capturedialog').open)$('capturedialog').showModal();$('captureupload').focus();
+}
+async function openCaptureForTask(id){const w=journeyState?.workflows.find(w=>w.workflow.task_ids.includes(id));if(w)selectedJourney=w.workflow.id;return chooseJourneyCapture(JSON.stringify(w?{workflow_id:w.workflow.id,role:'followup',task_id:id}:{task_id:id,standalone:true}));}
+$('globalrecordwork').addEventListener('click',()=>{if(selectedPlanningTask&&document.querySelector('.view.active')?.id==='view-plan')openCaptureForTask(selectedPlanningTask);else{const w=uiState.goal?journeyState?.workflows.find(w=>w.workflow.goal_ids.includes(uiState.goal)):journeyEntry();chooseJourneyCapture(w?JSON.stringify({workflow_id:w.workflow.id,role:'additional'}):'new');}});
+$('recordwork').addEventListener('click',()=>{const task=journeyState?.today.task;if(task)openCaptureForTask(task.id);else chooseJourneyCapture('new');});
+$('closecapture').addEventListener('click',()=>$('capturedialog').close());
+$('capturedialog').addEventListener('close',()=>uiState.returnFocus?.focus());
+$('capturecamera').addEventListener('click',()=>$('journeycaptureform').camera.click());
+$('captureupload').addEventListener('click',()=>$('journeycaptureform').file.click());
+$('journeycaptureform').camera.addEventListener('change',e=>{if(e.target.files.length){$('journeycaptureform').file.files=e.target.files;$('capturefilename').textContent=e.target.files[0].name;}});
+$('journeycaptureform').file.addEventListener('change',e=>$('capturefilename').textContent=e.target.files[0]?.name||'No video selected.');
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.journeyRefresh)journeyAction(loadJourneys);
-  if(b.dataset.journey){selectedJourney=b.dataset.journey;journeyRoute('today','workflow',selectedJourney);renderJourney();$('journeydetail').focus();}
+  if(b.dataset.journeyRefresh)readAction(loadJourneys);
+  if(b.dataset.journey){selectedJourney=b.dataset.journey;uiState.stage=null;setDestination('space');journeyRoute('space','workflow',selectedJourney);renderJourney();$('journeydetail').focus();}
   if(b.dataset.journeyAdd)chooseJourneyCapture(JSON.stringify({workflow_id:b.dataset.journeyAdd,role:'additional'}));
   if(b.dataset.journeyFollowup)chooseJourneyCapture(JSON.stringify({workflow_id:selectedJourney,role:'followup',task_id:b.dataset.journeyFollowup}));
   if(b.dataset.seek){const v=b.closest('article').querySelector('video');if(v){v.currentTime=Number(b.dataset.seek);v.focus();}}
   if(b.dataset.journeyRetry)journeyAction(async()=>{const w=journeyEntry(),c=w.clips.find(c=>c.source_id===b.dataset.journeyRetry);await api('/api/journey-video',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source_id:c.source_id,workflow_id:w.workflow.id,retry:!!c.source.processing||c.source.stage==='failed_retryable',source_revision:c.source.revision})});await loadJourneys();});
-  if(b.dataset.journeyPlan)journeyAction(async()=>{showPlanningTab();journeyRoute('plan','workflow',selectedJourney||'');await loadPlanning();const target=$(b.dataset.journeyPlan)||$('outcomelist');for(let parent=target.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;if(b.dataset.journeyCandidate){const f=$('outcomeregisterform');f.candidate.value=b.dataset.journeyCandidate;f.candidate.dispatchEvent(new Event('change',{bubbles:true}));const c=journeyEntry()?.clips.find(c=>c.process_id===outcomeCandidates.find(x=>x.key===b.dataset.journeyCandidate)?.assessment.candidate.process_id);if(c){f.source_ref.value=JSON.stringify({kind:'evidence',source_id:c.source_id,interpretation_id:c.interpretation_id});}}target.scrollIntoView({block:'start'});target.querySelector('input,button,select')?.focus();});
-  if(b.dataset.journeyUpdate)journeyAction(async()=>{showPlanningTab();selectedUpdate=b.dataset.journeyUpdate;journeyRoute('plan','update',selectedUpdate);await loadPlanning();$('updatedetail').focus();});
+  if(b.dataset.journeyPlan)readAction(async()=>{await loadPlanning();const target=$(b.dataset.journeyPlan)||$('outcomelist');setDestination(target.closest('.view').id.slice(5));journeyRoute(target.closest('.view').id.slice(5),'section',target.id);for(let parent=target.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;if(b.dataset.journeyCandidate){const f=$('outcomeregisterform');f.candidate.value=b.dataset.journeyCandidate;f.candidate.dispatchEvent(new Event('change',{bubbles:true}));const c=journeyEntry()?.clips.find(c=>c.process_id===outcomeCandidates.find(x=>x.key===b.dataset.journeyCandidate)?.assessment.candidate.process_id);if(c){f.source_ref.value=JSON.stringify({kind:'evidence',source_id:c.source_id,interpretation_id:c.interpretation_id});}}target.scrollIntoView({block:'start'});target.querySelector('input,button,select')?.focus();});
+  if(b.dataset.journeyUpdate)readAction(async()=>{setDestination('space');selectedUpdate=b.dataset.journeyUpdate;journeyRoute('space','update',selectedUpdate);await loadPlanning();$('updatedetail').focus();});
 });
-document.querySelector('[data-view="today"]').addEventListener('click',()=>journeyAction(loadJourneys));
-document.querySelectorAll('nav.tabs button').forEach(b=>b.addEventListener('click',()=>journeyRoute(b.dataset.view,'workflow',selectedJourney||'')));
-async function restoreJourneyRoute(){try{const [view='today',kind,id]=location.hash.slice(1).split('/').map(decodeURIComponent);if(kind==='workflow'&&id)selectedJourney=id;
-  const tab=document.querySelector(`nav.tabs button[data-view="${['today','spots','run','space','plan','activity','cal'].includes(view)?view:'today'}"]`);
-  document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b===tab)));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+tab.dataset.view));
-  await loadJourneys();if(['plan','cal','run'].includes(view))await loadPlanning();if(view==='cal')await loadCal();if(view==='space')await loadWalkthroughs();
-  if(kind==='task'&&id){selectedPlanningTask=id;renderTaskDetail(id);}if(kind==='update'&&id){selectedUpdate=id;renderUpdate(id);}if(kind==='goal'&&id)await showPlanningGoal(id);
- }catch(e){$('journeystatus').textContent=e.message;}}
+document.querySelector('[data-view="today"]').addEventListener('click',()=>readAction(loadJourneys));
+document.querySelectorAll('nav.tabs button').forEach(b=>b.addEventListener('click',()=>journeyRoute(b.dataset.view)));
+async function restoreJourneyRoute(){
+  try{uiState.routeLoading=true;const [raw='today',kind,id]=location.hash.slice(1).split('/').map(decodeURIComponent);
+    let view=({goals:'plan',calendar:'cal',workspace:'space',spots:'space',activity:'space',run:'today'})[raw]||raw;
+    if(kind==='workflow'&&id){selectedJourney=id;view='space';}if(kind==='update')view='space';if(kind==='task'||kind==='goal')view='plan';
+    setDestination(view);await loadJourneys();await loadPlanning();
+    if(view==='cal'){if(['day','week','month'].includes(kind)&&/^\d{4}-\d{2}-\d{2}$/.test(id||'')){calMode=kind;calCursor=parseDay(id);}await loadCal();if(kind==='entry'&&id)await showCalEntry(id);}
+    if(view==='space')await loadWalkthroughs();
+    if(kind==='task'&&id){uiState.goal=null;selectedPlanningTask=id;renderTaskDetail(id);$('planningtaskdetail').focus();}
+    if(kind==='update'&&id){selectedUpdate=id;renderUpdate(id);$('updatedetail').focus();}
+    if(kind==='goal'&&id)await showPlanningGoal(id);
+    if(kind==='section'&&id)revealTarget(id,false);
+  }catch(e){setStatus(e.message,true);}finally{uiState.routeLoading=false;}
+}
 window.addEventListener('popstate',restoreJourneyRoute);
 restoreJourneyRoute();
-
 </script>
 </body>
 </html>

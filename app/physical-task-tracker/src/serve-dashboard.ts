@@ -442,8 +442,8 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
         return;
       }
       if (req.method === 'POST' && url.pathname === '/api/goals') {
-        const { text, deadline = null, weight = 3, success_criteria = '' } = await readBody(req);
-        const goal = await addGoal(root, { text, deadline, weight, success_criteria });
+        const { text, deadline = null, weight = 3, success_criteria = '', request_id } = await readBody(req);
+        const goal = await addGoal(root, { text, deadline, weight, success_criteria }, request_id);
         json(200, { ok: true, goal });
         return;
       }
@@ -585,8 +585,8 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
         return;
       }
       if (req.method === 'POST' && url.pathname === '/api/events') {
-        const { title, date, time = null } = await readBody(req);
-        const event = await addEvent(root, { title, date, time, kind: 'note' });
+        const { title, date, time = null, request_id } = await readBody(req);
+        const event = await addEvent(root, { title, date, time, kind: 'note' }, request_id);
         json(200, { ok: true, event });
         return;
       }

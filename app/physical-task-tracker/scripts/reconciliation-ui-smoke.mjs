@@ -19,13 +19,13 @@ try {
   const page=await browser.newPage({viewport:{width:390,height:844}}), errors=[];page.on('pageerror',e=>errors.push(e.message));
   const handler=createServer(root).listeners('request')[0],html=await readFile(new URL('../dist/dashboard/index.html',import.meta.url),'utf8');
   await page.route('**/*',async route=>{const req=route.request(),url=new URL(req.url());if(url.pathname==='/')return route.fulfill({status:200,contentType:'text/html',body:html});let status=500,headers={},body='';await handler({method:req.method(),url:url.pathname+url.search,async *[Symbol.asyncIterator](){const data=req.postDataBuffer();if(data)yield data;}},{writeHead(c,h){status=c;headers=h;},end(b=''){body=b;}});await route.fulfill({status,headers,body});});
-  await page.goto('http://localhost/');await page.getByRole('tab',{name:'Plan',exact:true}).click();await page.locator('[data-update]').first().click();
+  await page.goto('http://localhost/');await page.getByRole('tab',{name:'Workspace',exact:true}).click();await page.locator('[data-update]').first().click();
   const form=page.locator('[data-review]').first();await form.locator('[name=reason]').fill('Synthetic operator verifies remaining total');await form.locator('[name=current]').check();await form.locator('[name=remaining]').fill('28');
   const saved=page.waitForResponse(r=>r.url().endsWith('/api/reconciliation')&&r.request().method()==='POST');await form.locator('[value=corrected]').click();assert.equal((await saved).status(),200);
   await page.locator('#updatestatus').filter({hasText:'Saved.'}).waitFor();assert.equal(planningView(root).tasks[0].quantity.remaining,28);
-  await page.reload();await page.getByRole('tab',{name:'Plan',exact:true}).click();await page.locator('[data-update]').first().click();await page.getByText('Applied; goal outcome and accepted schedule remain separate.',{exact:true}).waitFor();
+  await page.reload();await page.getByRole('tab',{name:'Workspace',exact:true}).click();await page.locator('[data-update]').first().click();await page.getByText('Applied; goal outcome and accepted schedule remain separate.',{exact:true}).waitFor();
   assert.equal(reconciliationView(root).sources.length,1);assert.equal(planningView(root).tasks.length,1);
   for(const [width,height] of [[390,844],[1440,900],[320,844]]){await page.setViewportSize({width,height});await page.locator('#updatedetail').scrollIntoViewIfNeeded();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.screenshot({path:join(out,`reconciliation-${width}.png`),fullPage:true});}
-  await page.locator('#refreshupdates').focus();await page.keyboard.press('Enter');await page.locator('#updatestatus').filter({hasText:'Saved.'}).waitFor();assert.deepEqual(errors,[]);
+  await page.locator('#refreshupdates').focus();await page.keyboard.press('Enter');await page.locator('#updatequeue [data-update]').first().waitFor();assert.deepEqual(errors,[]);
   console.log(JSON.stringify({passed:true,checks:['correct and apply','reload','no duplicate tasks','keyboard refresh','390/1440/320 bounds'],screenshots:out}));
 }finally{await browser?.close();await rm(root,{recursive:true,force:true});}

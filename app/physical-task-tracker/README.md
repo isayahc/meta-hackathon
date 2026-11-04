@@ -2,7 +2,8 @@
 
 Phone-first farm operations: record work, review the evidence, confirm goals,
 organize future tasks, accept a calendar plan, and reconcile follow-up results.
-The existing comparison, spatial, briefing and ecology tools remain available.
+Navigate **Today**, **Goals**, **Calendar**, and **Workspace**; **Record work** is available throughout. The existing comparison, spatial, briefing and ecology tools remain available.
+See [the screen/state inventory and UI verification guide](../../doc/field-ops-ui.md).
 Node scripts and the dashboard share one SQLite project (one runtime dependency:
 the SAM parser).
 
