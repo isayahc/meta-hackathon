@@ -123,3 +123,25 @@ test('explicit source reanalysis invalidates prior plans and requires relinking 
  editTask(root,currentTask.id,currentTask.revision,{process:{id:p.id,revision:p.rev,step_id:p.steps[0].id}},'Operator links reviewed interpretation');
  assert.equal(proposePlan(root,'2030-01-10','2030-01-10T08:00:00Z').blocks.length,1);assert.equal(planningView(root).tasks.length,1);
 });
+
+
+test('save-only requires review, survives reload, creates no future work and can resume', async t => {
+ const root=project(t);let j=await captured(root);
+ assert.throws(()=>send(root,j,{command:'save_observation'}),/Review all/);
+ j=review(root,j);j=send(root,j,{command:'save_observation'});
+ let view=journeyView(root);assert.equal(view.workflows[0].stage,'saved');
+ assert.equal(view.planning.tasks.length,0);assert.equal(view.planning.goals.length,0);assert.equal(view.planning.schedule.blocks.length,0);
+ j=send(root,j,{command:'resume_planning'});assert.equal(journeyView(root).workflows[0].stage,'goals');
+ j=goal(root,j);j=retain(root,j);j=task(root,j);
+ assert.throws(()=>send(root,j,{command:'save_observation'}),/Existing future work/);
+});
+
+test('summary corrections preserve original inference and invalidate saved review', async t => {
+ const root=project(t);let j=await captured(root);const clip=journeyView(root).workflows[0].clips[0];
+ j=review(root,j);j=send(root,j,{command:'save_observation'});
+ j=send(root,j,{command:'correct',source_id:clip.source_id,process_revision:clip.process!.rev,patch:{title:'Inspect spray bottle',stage:'Spraying observed; full functionality unknown'}});
+ assert.equal(journeyView(root).workflows[0].stage,'review');assert.equal(journeyView(root).workflows[0].workflow.title,'Inspect spray bottle');
+ assert.equal((await readProcess(root,clip.process!.id,1)).title,'Prepare trays');
+ assert.equal((await readProcess(root,clip.process!.id)).stage,'Spraying observed; full functionality unknown');
+ j=review(root,j);assert.equal(journeyView(root).workflows[0].stage,'saved');
+});
