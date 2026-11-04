@@ -7,9 +7,10 @@
 // stdin:  { op: 'validate'|'compile'|'commit'|'head', payload: {...} }
 // stdout: { ok: true, result } or { ok: false, code, message, details?, upstream? }
 //
-// Every spatial verdict comes from OI modules (space-ir validator, scene
-// compiler, local backend, scene links). This file only wires stdin/stdout
-// to those entry points; it contains no spatial logic of its own.
+// This file wires stdin/stdout to OI validation, compilation, persistence and
+// scene links. The provider-neutral reconstruction module adds the missing
+// reviewed-transform/lineage seam while reusing upstream mutation validation.
+import { reconstructionOperation } from './oi-reconstruction.mjs';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { join } from 'node:path';
@@ -154,7 +155,8 @@ async function main() {
   }
   try {
     const { op, payload } = request;
-    if (op === 'validate') console.log(JSON.stringify({ ok: true, result: await opValidate(payload) }));
+    if (op === 'reconstruction') console.log(JSON.stringify({ ok: true, result: await reconstructionOperation(ROOT, payload.action, payload) }));
+    else if (op === 'validate') console.log(JSON.stringify({ ok: true, result: await opValidate(payload) }));
     else if (op === 'compile') console.log(JSON.stringify({ ok: true, result: await opCompile(payload) }));
     else if (op === 'commit') console.log(JSON.stringify({ ok: true, result: await opCommit(payload) }));
     else if (op === 'inspect') console.log(JSON.stringify({ ok: true, result: await opInspect(payload) }));
@@ -167,7 +169,7 @@ async function main() {
     }
     const code = errCode(error);
     const details = error?.details ?? error?.findings ?? null;
-    console.log(JSON.stringify(fail(code, errMessage(error, `OI ${request?.op} failed.`), details, true)));
+    console.log(JSON.stringify(fail(code, errMessage(error, `OI ${request?.op} failed.`), details, error?.upstream ?? true)));
   }
 }
 

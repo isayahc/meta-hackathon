@@ -1,4 +1,6 @@
 /** Headless capability scenarios using the same persisted services and CLIs as the app. */
+import { existsSync } from 'node:fs';
+import { readOiIdentity, resolveOiRoot } from './oi-connector.js';
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -13,6 +15,7 @@ const execute = promisify(execFile);
 const dist = fileURLToPath(new URL('../', import.meta.url));
 const scripts = fileURLToPath(new URL('../../scripts/', import.meta.url));
 export const CAPABILITIES = [
+  { id: 'reconstruction', mode: 'deterministic fixture with real pinned OI', requires: ['Node 22+', 'OI_ROOT at pinned revision with dependencies'], checks: ['preview before commit', 'metric transforms and independent holdout', 'retry deduplicates', 'correction preserves identity and evidence'], limitation: 'Existing immutable OI assets only; no live inference or raw reconstruction mesh import.' },
   { id: 'spatial', mode: 'synthetic source/location association replay', requires: ['Node 22+'], checks: ['timestamp and identity persist', 'human identity review', 'process/scene changes stay stale', 'missing entities never relink'], limitation: 'Mock OI responses do not prove real scene resolution or scale.' },
   { id: 'journey', mode: 'synthetic video-first journey replay', requires: ['Node 22+'], checks: ['capture before setup', 'correction and goal confirmation persist', 'future task and accepted calendar share identity', 'partial work and follow-up revise remaining work without duplicating tasks'] },
   { id: 'outcomes', mode: 'synthetic intervention outcome replay', requires: ['Node 22+'], checks: ['baseline and follow-up evidence retained', 'unequal workloads normalized', 'predictions separate from measurements', 'corrections invalidate decisions; rejection changes briefing without completing work'] },
@@ -129,8 +132,8 @@ async function walkthroughScenario(s: Scenario): Promise<void> {
   const dynamic = await s.cli<{ stderr: string }>('task-walkthrough', ['review', '--root', root, '--id', replay.id, '--revision', '2', '--patch', person], 'reject-dynamic', true);
   assert.match(dynamic.stderr, /Dynamic/); s.checks.push('Person cannot become a station');
   const handoff = await s.cli<{ status: string; scale_status: string; stations: unknown[] }>('task-walkthrough', ['handoff', '--root', root, '--id', replay.id], 'handoff');
-  assert.equal(handoff.status, 'awaiting_oi_contract'); assert.equal(handoff.scale_status, 'unverified'); assert.equal(handoff.stations.length, 1);
-  s.checks.push('Handoff keeps scale unverified and OI integration pending');
+  assert.equal(handoff.status, 'requires_reviewed_import_plan'); assert.equal(handoff.scale_status, 'unverified'); assert.equal(handoff.stations.length, 1);
+  s.checks.push('Handoff keeps scale unverified and requires an explicit reviewed import plan');
 }
 
 /** Run selected scenarios in a new artifact directory; never overwrite user projects. */
@@ -140,7 +143,15 @@ export async function testCapabilities(selection: string, directory: string): Pr
   if (!isAbsolute(directory)) throw new Error('--out must be an absolute path to a new directory.');
   await mkdir(directory); // Deliberately refuse an existing directory, even if empty.
   const report: CapabilityReport = { schema: 'fieldops-capability-test/1', status: 'passed', started_at: new Date().toISOString(), node: process.version, directory, live_inference: false, results: [] };
-  const scenarios = { spatial: async (s: Scenario): Promise<void> => {
+  const scenarios = { reconstruction: async (s: Scenario): Promise<void> => {
+    let oiRoot: string;
+    try { oiRoot = resolveOiRoot(); } catch (error) { throw new Blocked((error as Error).message); }
+    if (!(await readOiIdentity(oiRoot)).pinned || !existsSync(join(oiRoot, 'node_modules/tsx/dist/esm/index.mjs')) || ['tsx','three','ajv'].some(dep => !existsSync(join(oiRoot,'node_modules',dep,'package.json'))))
+      throw new Blocked('Use the pinned OI checkout with its dependencies installed.');
+    const result = await s.command<{status:string}>(process.execPath, ['--import',join(oiRoot,'node_modules/tsx/dist/esm/index.mjs'),
+      join(dist,'samples/reconstruction-fixture.mjs'),oiRoot,join(s.directory,'oi-data'),join(dist,'lib/oi-reconstruction.mjs')], 'real-oi-fixture');
+    assert.equal(result.status,'passed'); s.checks.push('Real OI preview, commit, retry and correction preserve stable identity, raw evidence and separate calibration/holdout results');
+  }, spatial: async (s: Scenario): Promise<void> => {
     const root=join(s.directory,'project');
     const result=await s.command<{passed:boolean;canonical_associations:number;automatic_relinks:number;oi_mutations:number}>(process.execPath,[join(scripts,'replay-spatial.mjs'),root],'spatial-replay');
     assert.equal(result.passed,true);assert.equal(result.canonical_associations,1);assert.equal(result.automatic_relinks,0);assert.equal(result.oi_mutations,0);

@@ -26,7 +26,7 @@ test('headless command lists capabilities, refuses existing directories, and ret
   const root = await mkdtemp(join(tmpdir(), 'capabilities-errors-')); t.after(() => rm(root, { recursive: true, force: true }));
   const cli = fileURLToPath(new URL('./task-capabilities.js', import.meta.url));
   const listed = await execute(process.execPath, [cli, 'list']);
-  assert.equal(JSON.parse(listed.stdout).capabilities.length, 9);
+  assert.equal(JSON.parse(listed.stdout).capabilities.length, 10);
   await writeFile(join(root, 'keep.txt'), 'keep');
   await assert.rejects(() => testCapabilities('process', root), /EEXIST/);
   assert.equal(await readFile(join(root, 'keep.txt'), 'utf8'), 'keep');

@@ -109,3 +109,13 @@ explicit `--assume-height` value, which is labeled as a user assumption in
 the SpaceIR `unresolved` notes and the run evidence. Fully unscaled plans
 fail fast the same way (`OBS_MISSING_SIZE`) unless `--assume-size <WIDTHxDEPTH>`
 supplies an explicit footprint; observed sites always win over either flag.
+
+
+## Reviewed reconstruction seam (#53)
+
+The same pinned runtime now accepts `oi-reviewed-reconstruction/1` through a
+standalone provider-neutral adapter. It reuses immutable local assets and upstream
+scene mutation/persistence, adds preview-token gating and revisioned evidence
+lineage, and explicitly reports unsupported raw meshes/point clouds/regions.
+See [reconstruction-import.md](reconstruction-import.md) for the audited interface,
+known metadata/export limitations, scale semantics and headless commands.

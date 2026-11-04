@@ -2,8 +2,10 @@
 
 This increment implements capture, an optional local model worker, raw evidence
 storage, operator review, and a provisional evidence export. **#45 remains open.**
-Fresh inference on a real walkthrough, OI integration (#53/#54), process links
-(#41), and the mapped #42 comparison are still acceptance gates.
+Fresh inference on a real walkthrough, route assessment (#54), and end-to-end
+proof through scene import, process links and mapped comparison remain acceptance
+gates. #53 now provides a reviewed immutable-asset placement/import seam; see
+[reconstruction-import.md](reconstruction-import.md) for its supported subset.
 
 ## Capture setup
 
@@ -121,9 +123,11 @@ automatically and must be avoided by the operator.
 
 The `fieldops-walkthrough-handoff/1` export contains reviewed stations, source
 coordinates, measurements, frame/artifact references, and run revision. Its
-status is `awaiting_oi_contract`; it is **not an OI import request** and has no
-authoritative scene/entity bindings. #53 must translate through the pinned OI
-interface; #54 owns route/clearance assessment. No existing scene is mutated.
+status is `requires_reviewed_import_plan`; it is **not an OI import request** and
+has no authoritative scene/entity bindings. Use `task-reconstruction prepare-walkthrough`
+with explicit reviewed asset correspondences, poses, source-to-OI transform and
+3D measurement anchors, then preview and explicitly commit. The handoff itself
+never mutates a scene; #54 owns route/clearance assessment.
 
 HTTP endpoints: `GET/POST /api/walkthroughs`, `GET /api/walkthroughs/:id`,
 `POST /api/walkthroughs/:id/review` with `{revision,patch}`, `GET
@@ -170,5 +174,6 @@ fixture, not the real walkthrough benchmark required by #45.
 
 Before closing #45, run the fresh measured walkthrough, preserve its actual
 model/version/artifact metadata, measure reconstruction/semantic/scale errors
-separately, complete #53/#54/#41 integration, and visually verify capture through
+separately, exercise the reviewed import and process-link paths on that evidence,
+complete #54 route assessment, and visually verify capture through
 OI view and #42 comparison. Publish unknown and failed results alongside success.
