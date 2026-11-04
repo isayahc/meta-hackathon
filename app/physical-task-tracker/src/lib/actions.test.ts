@@ -40,8 +40,8 @@ test('setActionStatus flips open/done and rejects bad ids and statuses', async (
   const id = `${event.id}-a0`;
   assert.equal((await setActionStatus(root, id, 'done')).status, 'done');
   assert.equal((await setActionStatus(root, id, 'open')).status, 'open');
-  await assert.rejects(setActionStatus(root, id, 'finished'), /Bad status/);
-  await assert.rejects(setActionStatus(root, 'nope-a0', 'done'), /No action/);
+  await assert.rejects((setActionStatus(root, id, 'finished')), /Bad status/);
+  await assert.rejects((setActionStatus(root, 'nope-a0', 'done')), /No action/);
 });
 
 test('toggling actions never touches goals (action/goal split)', async (t: TestContext) => {
@@ -50,3 +50,4 @@ test('toggling actions never touches goals (action/goal split)', async (t: TestC
   await setActionStatus(root, `${event.id}-a0`, 'done');
   assert.deepEqual(await listGoals(root), []);
 });
+

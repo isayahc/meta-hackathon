@@ -24,6 +24,7 @@ try {
     result = await captureJourney(root,{...command,media},async(name,argv)=> {
       const { stdout } = await execute(process.execPath,[fileURLToPath(new URL(name,import.meta.url)),...argv],{maxBuffer:16*1024*1024}); return JSON.parse(stdout);
     });
-  } else result = journeyCommand(root,command);
+  } else result = (await journeyCommand(root,command));
   console.log(JSON.stringify(result,null,2));
 } catch(error) { console.error(`JOURNEY_FAILED: ${(error as Error).message}`); process.exitCode=1; }
+

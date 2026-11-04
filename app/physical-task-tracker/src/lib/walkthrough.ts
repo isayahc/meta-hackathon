@@ -5,7 +5,7 @@ import { promisify } from 'node:util';
 import { readFile, writeFile, mkdir, copyFile, lstat } from 'node:fs/promises';
 import { basename, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { withDb } from './db.js';
+import { withRecords } from './records.js';
 
 const execute = promisify(execFile);
 export class WalkthroughError extends Error {}
@@ -103,9 +103,9 @@ async function verifyArtifacts(dir: string, report: CaptureReport): Promise<void
     const hash = createHash('sha256').update(await readFile(path)).digest('hex'); check(hash === a.sha256, `Artifact digest mismatch: ${a.file}.`);
   }
 }
-function persist(root: string, id: string, report: CaptureReport): WalkthroughRun {
+async function persist(root: string, id: string, report: CaptureReport): Promise<WalkthroughRun> {
   const run: WalkthroughRun = { id, revision: 1, created_at: new Date().toISOString(), report, reviews: [], measurements: null };
-  withDb(root, (db) => db.prepare('INSERT INTO docs(key, body, updated_at) VALUES (?, ?, ?)').run(`walkthrough:${id}`, JSON.stringify(run), run.created_at));
+  await withRecords(root, (db) => db.insert('docs', { key: `walkthrough:${id}`, body: JSON.stringify(run), updated_at: run.created_at }));
   return run;
 }
 
@@ -122,7 +122,7 @@ export async function captureWalkthrough(root: string, input: CaptureRequest): P
   } catch { throw new WalkthroughError('Walkthrough worker failed. Check Python/Pillow/NumPy and ffmpeg setup; no model results were saved.'); }
   const report = parseCaptureReport(JSON.parse(await readFile(join(dir, 'run.json'), 'utf8')));
   await verifyArtifacts(dir, report);
-  return persist(root, id, report);
+  return await persist(root, id, report);
 }
 
 /** Import an offline bundle only as replay, even if its original source says live. */
@@ -134,29 +134,29 @@ export async function replayWalkthrough(root: string, manifest: string): Promise
   for (const a of report.artifacts) await copyFile(join(dirname(manifest), a.file), join(dir, a.file));
   await verifyArtifacts(dir, report);
   await writeFile(join(dir, 'run.json'), JSON.stringify(report));
-  return persist(root, id, report);
+  return await persist(root, id, report);
 }
 
 /** Read persisted evidence and operator revision history. */
-export function readWalkthrough(root: string, id: string): WalkthroughRun {
+export async function readWalkthrough(root: string, id: string): Promise<WalkthroughRun> {
   directory(root, id);
-  return withDb(root, (db) => {
-    const row = db.prepare('SELECT body FROM docs WHERE key = ?').get(`walkthrough:${id}`) as { body: string } | undefined;
+  return await withRecords(root, (db) => {
+    const row = db.first('docs', { where: { key: `walkthrough:${id}` }, fields: ["body"] }) as { body: string } | undefined;
     check(row, 'Walkthrough not found.'); return JSON.parse(row.body) as WalkthroughRun;
   });
 }
-export function listWalkthroughs(root: string): WalkthroughRun[] {
-  const keys = withDb(root, (db) => db.prepare("SELECT key FROM docs WHERE key LIKE 'walkthrough:%' ORDER BY updated_at DESC").all() as Array<{ key: string }>);
-  return keys.map(({ key }) => readWalkthrough(root, key.slice('walkthrough:'.length)));
+export async function listWalkthroughs(root: string): Promise<WalkthroughRun[]> {
+  const keys = await withRecords(root, (db) => db.select('docs', { prefix: { key: "walkthrough:" }, order: ["-updated_at"], fields: ["key"] }) as Array<{ key: string }>);
+  return await Promise.all(keys.map(async ({ key }) => (await readWalkthrough(root, key.slice('walkthrough:'.length)))));
 }
 
 /** Apply a revision-checked operator review without mutating raw model artifacts. */
-export function reviewWalkthrough(root: string, id: string, expectedRevision: number, raw: unknown): WalkthroughRun {
+export async function reviewWalkthrough(root: string, id: string, expectedRevision: number, raw: unknown): Promise<WalkthroughRun> {
   directory(root, id); const patch = record(raw);
-  return withDb(root, (db) => {
-    db.exec('BEGIN IMMEDIATE');
+  return await withRecords(root, (db) => {
+    
     try {
-      const row = db.prepare('SELECT body FROM docs WHERE key = ?').get(`walkthrough:${id}`) as { body: string } | undefined;
+      const row = db.first('docs', { where: { key: `walkthrough:${id}` }, fields: ["body"] }) as { body: string } | undefined;
       check(row, 'Walkthrough not found.'); const run = JSON.parse(row.body) as WalkthroughRun;
       check(run.revision === expectedRevision, 'Stale review revision; reload before saving.');
       if (patch.observation_id !== undefined) {
@@ -182,23 +182,23 @@ export function reviewWalkthrough(root: string, id: string, expectedRevision: nu
         run.measurements = measurements as unknown as WalkthroughRun['measurements'];
       } else throw new WalkthroughError('Review or measurements required.');
       run.revision++;
-      db.prepare('UPDATE docs SET body = ?, updated_at = ? WHERE key = ?').run(JSON.stringify(run), new Date().toISOString(), `walkthrough:${id}`);
-      db.exec('COMMIT'); return run;
-    } catch (error) { db.exec('ROLLBACK'); throw error; }
+      db.update('docs', { key: `walkthrough:${id}` }, { body: JSON.stringify(run), updated_at: new Date().toISOString() });
+       return run;
+    } catch (error) {  throw error; }
   });
 }
 
 /** Read a current reviewed run and recheck retained artifact bytes before handoff. */
 export async function verifiedWalkthrough(root: string, id: string): Promise<WalkthroughRun> {
-  const run = readWalkthrough(root, id);
+  const run = await readWalkthrough(root, id);
   await verifyArtifacts(directory(root, id), run.report);
-  check(readWalkthrough(root, id).revision === run.revision, 'Walkthrough changed during evidence verification.');
+  check((await readWalkthrough(root, id)).revision === run.revision, 'Walkthrough changed during evidence verification.');
   return run;
 }
 
 /** Export consumer evidence for #53; no import, transform or feasibility claim is made. */
-export function walkthroughHandoff(root: string, id: string): Record<string, unknown> {
-  const run = readWalkthrough(root, id);
+export async function walkthroughHandoff(root: string, id: string): Promise<Record<string, unknown>> {
+  const run = await readWalkthrough(root, id);
   const latest = new Map(run.reviews.map((r) => [r.observation_id, r]));
   return { schema: 'fieldops-walkthrough-handoff/1', run_id: id, run_revision: run.revision, source: run.report.source,
     status: 'requires_reviewed_import_plan', import_contract: 'oi-reviewed-reconstruction/1', coordinates: run.report.coordinates, scale_status: 'unverified', measurements: run.measurements,
@@ -210,10 +210,11 @@ export function walkthroughHandoff(root: string, id: string): Record<string, unk
 
 /** Return only manifest-listed PNG evidence; arbitrary project paths are never served. */
 export async function walkthroughImage(root: string, id: string, name: string): Promise<Buffer> {
-  safeName(name); const run = readWalkthrough(root, id);
+  safeName(name); const run = await readWalkthrough(root, id);
   check(name.endsWith('.png') && run.report.artifacts.some((a) => a.file === name), 'Image artifact not found.');
   const path = join(directory(root, id), name); check((await lstat(path)).isFile() && !(await lstat(path)).isSymbolicLink(), 'Invalid image artifact.');
   const bytes = await readFile(path);
   check(createHash('sha256').update(bytes).digest('hex') === run.report.artifacts.find((a) => a.file === name)!.sha256, 'Image evidence has changed on disk.');
   return bytes;
 }
+

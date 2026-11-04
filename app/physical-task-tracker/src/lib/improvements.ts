@@ -1,11 +1,11 @@
 import { readRouteAssessment, type RouteAssessment, type RouteAssessmentRequest } from './route-assessment.js';
-import type { DatabaseSync } from 'node:sqlite';
+import type { RecordTransaction } from './record-model.js';
 /** Evidence-backed workflow proposals. Model narrative never decides feasibility. */
 import { outcomeView } from './outcomes.js';
 import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { basename, join } from 'node:path';
-import { getDoc, setDoc, withDb } from './db.js';
+import { getDoc, setDoc, withRecords } from './records.js';
 import { readProcess, type ProcessDoc, type TimeSpan } from './processes.js';
 import type { Goal } from './goals.js';
 import type { OiSpaceIrDoc, OiTransport, OiValidation } from './oi-connector.js';
@@ -179,15 +179,15 @@ export function parseWorkflowContext(value: unknown): WorkflowContext {
 }
 
 /** Operator constraints and measurements persist across optimizer refreshes. */
-export function readWorkflowContext(root: string): WorkflowContext {
-  const saved = getDoc(root, 'workflow-context');
+export async function readWorkflowContext(root: string): Promise<WorkflowContext> {
+  const saved = await getDoc(root, 'workflow-context');
   return saved === null ? emptyWorkflowContext() : parseWorkflowContext(saved);
 }
 
 /** Explicit context updates invalidate reviews built from different constraints/evidence. */
-export function writeWorkflowContext(root: string, value: unknown): WorkflowContext {
+export async function writeWorkflowContext(root: string, value: unknown): Promise<WorkflowContext> {
   const context = parseWorkflowContext(value);
-  setDoc(root, 'workflow-context', context);
+  await setDoc(root, 'workflow-context', context);
   return context;
 }
 
@@ -373,30 +373,30 @@ export async function assessImprovements(root: string, processes: ProcessDoc[], 
 /** Persist immutable proposal/evidence snapshots; decisions are appended separately. */
 export async function saveImprovementReview(root: string, processes: ProcessDoc[], goals: Goal[], context: unknown,
   candidates: unknown, source: ImprovementReview['source'], transport?: OiTransport): Promise<ImprovementReview> {
-  if (getDoc(root, 'workflow-context') === null) writeWorkflowContext(root, context);
+  if ((await getDoc(root, 'workflow-context')) === null) await writeWorkflowContext(root, context);
   const assessments = await assessImprovements(root, processes, goals, context, candidates, transport);
   const review: ImprovementReview = { schema: 'workflow-improvements/1', id: randomUUID(), created_at: new Date().toISOString(), source,
     context: parseWorkflowContext(context), process_basis: processes.map((p) => ({ process_id: p.id, rev: p.rev })), assessments,
     stale: false, stale_reasons: [], ranking: 'Eligible before deferred before blocked; then descending open-goal weight; then candidate ID. Cost, quality, effort and metric comparisons remain separate tradeoffs.' };
-  withDb(root, (db) => db.prepare('INSERT INTO docs(key, body, updated_at) VALUES (?, ?, ?)').run(`improvements:${review.id}`, JSON.stringify(review), review.created_at));
-  return readImprovementReview(root, review.id);
+  await withRecords(root, (db) => db.insert('docs', { key: `improvements:${review.id}`, body: JSON.stringify(review), updated_at: review.created_at }));
+  return await readImprovementReview(root, review.id);
 }
 
 /** Read-time freshness checks include corrections written by other processes. */
-export function readImprovementReview(root: string, id: string): ImprovementReview {
-  return withDb(root, db => readImprovementReviewInDb(db, id));
+export async function readImprovementReview(root: string, id: string): Promise<ImprovementReview> {
+  return await withRecords(root, db => readImprovementReviewInDb(db, id));
 }
 /** Read current review validity inside a caller's workflow transaction. */
-export function readImprovementReviewInDb(db: DatabaseSync, id: string): ImprovementReview {
-  const row = db.prepare('SELECT body FROM docs WHERE key = ?').get(`improvements:${id}`) as { body: string } | undefined;
+export function readImprovementReviewInDb(db: RecordTransaction, id: string): ImprovementReview {
+  const row = db.first('docs', { where: { key: `improvements:${id}` }, fields: ["body"] }) as { body: string } | undefined;
   requireValue(row, 'No improvement review with that ID.');
   const review = JSON.parse(row.body) as ImprovementReview;
   review.stale_reasons = review.process_basis.flatMap((b) => {
-    const current = db.prepare('SELECT MAX(rev) AS rev FROM processes WHERE id = ?').get(b.process_id) as { rev: number | null };
-    if (db.prepare('SELECT key FROM docs WHERE key=?').get(`superseded-process:${b.process_id}`)) return [`Process ${b.process_id} was superseded by a new interpretation; review the new evidence.`];
+    const current = ({ rev: db.first('processes', { where: { id: b.process_id }, order: ["-rev"] })?.rev ?? null }) as { rev: number | null };
+    if (db.first('docs', { where: { key: `superseded-process:${b.process_id}` }, fields: ["key"] })) return [`Process ${b.process_id} was superseded by a new interpretation; review the new evidence.`];
     return current.rev === b.rev ? [] : [`Process ${b.process_id} changed from revision ${b.rev} to ${current.rev ?? 'missing'}.`];
   });
-  const currentContext = db.prepare('SELECT body FROM docs WHERE key = ?').get('workflow-context') as { body: string } | undefined;
+  const currentContext = db.first('docs', { where: { key: 'workflow-context' }, fields: ["body"] }) as { body: string } | undefined;
   if (!currentContext || currentContext.body !== JSON.stringify(review.context)) review.stale_reasons.push('Farmer constraints or evidence inputs changed; regenerate the review.');
   review.stale = review.stale_reasons.length > 0;
   for (const a of review.assessments) a.actionable = !review.stale && a.feasibility === 'eligible' && a.decision === 'accepted';
@@ -404,45 +404,45 @@ export function readImprovementReviewInDb(db: DatabaseSync, id: string): Improve
 }
 
 /** Return saved reviews with current process freshness, preserving all decisions. */
-export function listImprovementReviews(root: string): ImprovementReview[] {
-  const keys = withDb(root, (db) => db.prepare("SELECT key FROM docs WHERE key LIKE 'improvements:%' ORDER BY updated_at DESC, key").all() as Array<{ key: string }>);
-  return keys.map(({ key }) => readImprovementReview(root, key.slice('improvements:'.length)));
+export async function listImprovementReviews(root: string): Promise<ImprovementReview[]> {
+  const keys = await withRecords(root, (db) => db.select('docs', { prefix: { key: "improvements:" }, order: ["-updated_at","key"], fields: ["key"] }) as Array<{ key: string }>);
+  return await Promise.all(keys.map(async ({ key }) => (await readImprovementReview(root, key.slice('improvements:'.length)))));
 }
 
 /** A farmer decision cannot override infeasibility or silently approve stale advice. */
-export function decideImprovement(root: string, reviewId: string, candidateId: string, status: unknown, rationale: unknown): ImprovementReview {
+export async function decideImprovement(root: string, reviewId: string, candidateId: string, status: unknown, rationale: unknown): Promise<ImprovementReview> {
   requireValue(status === 'accepted' || status === 'rejected' || status === 'deferred', 'Decision must be accepted, rejected, or deferred.');
   text(rationale);
-  withDb(root, (db) => {
-    db.exec('BEGIN IMMEDIATE');
+  await withRecords(root, (db) => {
+    
     try {
-      const row = db.prepare('SELECT body FROM docs WHERE key = ?').get(`improvements:${reviewId}`) as { body: string } | undefined;
+      const row = db.first('docs', { where: { key: `improvements:${reviewId}` }, fields: ["body"] }) as { body: string } | undefined;
       requireValue(row, 'No improvement review with that ID.');
       const review = JSON.parse(row.body) as ImprovementReview;
       const assessment = review.assessments.find((a) => a.candidate.id === candidateId);
       requireValue(assessment, 'No improvement candidate with that ID.');
       if (status === 'accepted') {
         requireValue(assessment.feasibility === 'eligible', 'Blocked or unvalidated improvements cannot be accepted; update the evidence and regenerate.');
-        const currentContext = db.prepare('SELECT body FROM docs WHERE key = ?').get('workflow-context') as { body: string } | undefined;
+        const currentContext = db.first('docs', { where: { key: 'workflow-context' }, fields: ["body"] }) as { body: string } | undefined;
         requireValue(currentContext?.body === JSON.stringify(review.context), 'Stale improvement: farmer constraints or evidence changed.');
         for (const b of review.process_basis) {
-          const current = db.prepare('SELECT MAX(rev) AS rev FROM processes WHERE id = ?').get(b.process_id) as { rev: number | null };
-          requireValue(!db.prepare('SELECT key FROM docs WHERE key=?').get(`superseded-process:${b.process_id}`), 'Stale improvement: process was superseded by new source analysis.');
+          const current = ({ rev: db.first('processes', { where: { id: b.process_id }, order: ["-rev"] })?.rev ?? null }) as { rev: number | null };
+          requireValue(!db.first('docs', { where: { key: `superseded-process:${b.process_id}` }, fields: ["key"] }), 'Stale improvement: process was superseded by new source analysis.');
           requireValue(current.rev === b.rev, 'Stale improvement: regenerate against the corrected process.');
         }
       }
       assessment.decision = status;
       assessment.decisions.push({ status, rationale: rationale.trim(), at: new Date().toISOString() });
-      db.prepare('UPDATE docs SET body = ?, updated_at = ? WHERE key = ?').run(JSON.stringify(review), new Date().toISOString(), `improvements:${reviewId}`);
-      db.exec('COMMIT');
-    } catch (error) { db.exec('ROLLBACK'); throw error; }
+      db.update('docs', { key: `improvements:${reviewId}` }, { body: JSON.stringify(review), updated_at: new Date().toISOString() });
+      
+    } catch (error) {  throw error; }
   });
-  return readImprovementReview(root, reviewId);
+  return await readImprovementReview(root, reviewId);
 }
 
 /** Load the exact current revisions before model generation or offline replay. */
 export async function loadReviewProcesses(root: string, basis: Array<{ process_id: string; rev: number }>): Promise<ProcessDoc[]> {
-  return Promise.all(basis.map((b) => readProcess(root, b.process_id, b.rev)));
+  return await Promise.all(basis.map(async (b) => (await readProcess(root, b.process_id, b.rev))));
 }
 
 /** Append a proposal contract to the existing goal optimizer, not a second planning engine. */
@@ -462,14 +462,14 @@ export function buildImprovementPrompt(context: WorkflowContext): string {
 }
 
 /** Only checked proposals enter ranked actions; unresolved alternatives remain deferred. */
-export function improvementPlan(review: ImprovementReview, root?: string): {
+export async function improvementPlan(review: ImprovementReview, root?: string): Promise<{
   ranked_actions: Array<{ action: string; why: string; effort: string; do_first_if: string }>;
   deferred: Array<{ action: string; why: string }>;
   goal_effects: unknown[];
-} {
+}> {
   const ranked_actions: Array<{ action: string; why: string; effort: string; do_first_if: string }> = [];
   const deferred: Array<{ action: string; why: string }> = [];
-  const outcomes = root ? outcomeView(root).trials.sort((a, b) => b.trial.created_at.localeCompare(a.trial.created_at)) : [];
+  const outcomes = root ? (await outcomeView(root)).trials.sort((a, b) => b.trial.created_at.localeCompare(a.trial.created_at)) : [];
   for (const a of review.assessments) {
     const p = a.candidate;
     const trial = outcomes.find(t => t.trial.candidate_id === p.id && (t.trial.review_id === review.id || t.trial.assessment.candidate.process_id === p.process_id && t.trial.assessment.candidate.change === p.change));
@@ -485,3 +485,4 @@ export function improvementPlan(review: ImprovementReview, root?: string): {
   if (!review.assessments.length) deferred.push({ action: 'Review workflow evidence', why: 'No structured improvement proposals were returned. Inspect the model narrative, supply missing evidence, and regenerate.' });
   return { ranked_actions, deferred, goal_effects: [] };
 }
+

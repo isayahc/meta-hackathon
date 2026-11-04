@@ -14,10 +14,10 @@ let browser;
 try {
   const goal = await addGoal(root, { text: 'Prepare 50 trays', success_criteria: '50 trays pass inspection', deadline: '2030-01-10' });
   const other = await addGoal(root, { text: 'Prepare delivery' });
-  const task = createTask(root, { text: 'Stage materials', completion_criteria: 'Supplies ready', active_minutes: 30, estimate_source: 'Synthetic operator estimate', links: [{ goal_id: goal.id, origin: 'human', review: 'confirmed', explanation: 'Materials required before filling' }] }, 'ui');
-  configurePlanning(root, 1, { timezone: 'America/New_York', person: 'operator', max_minutes: 180, resources: {}, availability: [{ start: '2030-01-10T09:00:00-05:00', end: '2030-01-10T12:00:00-05:00' }] });
-  saveCommitment(root, { id: 'lunch', title: 'Lunch remains visible', start: '2030-01-10T11:00:00-05:00', end: '2030-01-10T11:30:00-05:00', blocking: true, resources: [] });
-  const p = proposePlan(root, '2030-01-10', '2030-01-10T08:00:00-05:00'); decidePlan(root, p.id, 'accepted', 'Synthetic acceptance', '2030-01-10T08:00:00-05:00');
+  const task = await createTask(root, { text: 'Stage materials', completion_criteria: 'Supplies ready', active_minutes: 30, estimate_source: 'Synthetic operator estimate', links: [{ goal_id: goal.id, origin: 'human', review: 'confirmed', explanation: 'Materials required before filling' }] }, 'ui');
+  await configurePlanning(root, 1, { timezone: 'America/New_York', person: 'operator', max_minutes: 180, resources: {}, availability: [{ start: '2030-01-10T09:00:00-05:00', end: '2030-01-10T12:00:00-05:00' }] });
+  await saveCommitment(root, { id: 'lunch', title: 'Lunch remains visible', start: '2030-01-10T11:00:00-05:00', end: '2030-01-10T11:30:00-05:00', blocking: true, resources: [] });
+  const p = await proposePlan(root, '2030-01-10', '2030-01-10T08:00:00-05:00'); await decidePlan(root, p.id, 'accepted', 'Synthetic acceptance', '2030-01-10T08:00:00-05:00');
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || undefined });
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   const errors = []; page.on('pageerror', e => errors.push(e.message));
@@ -39,7 +39,7 @@ try {
   await page.locator('#taskeditform [name=reason]').fill('Synthetic second-goal assignment');
   await page.locator('#taskeditform button[type=submit]').click();
   await page.locator('#planningstatus').filter({hasText:'Saved.'}).waitFor();
-  assert.equal(planningView(root).tasks[0].links.length, 2);
+  assert.equal((await planningView(root)).tasks[0].links.length, 2);
   await page.reload(); await page.getByRole('tab', { name: 'Goals', exact: true }).click();
   await page.locator('#planningtasks [data-goaldetail]').first().waitFor();
   assert.equal(await page.locator('#planningtasks [data-goaldetail]').count(), 2);
@@ -54,9 +54,10 @@ try {
   await page.locator('#taskeditform [name=reason]').fill('Synthetic completion');
   await page.locator('#taskeditform button[type=submit]').click();
   await page.locator('#planningstatus').filter({hasText:'Saved.'}).waitFor();
-  assert.equal(planningView(root).tasks.find(t => t.id === task.id).execution, 'done');
-  assert.ok(planningView(root).goals.every(g => g.status === 'open'));
+  assert.equal((await planningView(root)).tasks.find(t => t.id === task.id).execution, 'done');
+  assert.ok((await planningView(root)).goals.every(g => g.status === 'open'));
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
   assert.deepEqual(errors, []);
   console.log(JSON.stringify({ passed: ['goal assignment', 'reload persistence', 'calendar goal filter retains commitments', 'task/calendar navigation', 'task completion preserves goal outcome', 'mobile bounds'], screenshots: out }));
 } finally { await browser?.close(); await rm(root, { recursive: true, force: true }); }
+

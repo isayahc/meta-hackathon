@@ -40,7 +40,7 @@ try {
   await station.locator('[name=rationale]').fill('Synthetic review: the fixture depicts the intended station.');
   await station.getByRole('button', { name: 'Confirm station' }).click();
   await page.getByText('Review saved.', { exact: false }).waitFor();
-  assert.equal(readWalkthrough(root, replay.id).reviews[0].decision, 'confirmed');
+  assert.equal((await readWalkthrough(root, replay.id)).reviews[0].decision, 'confirmed');
   assert.equal(await page.locator('.stationreview').nth(1).getByRole('button', { name: 'Confirm station' }).isDisabled(), true);
   await page.locator('#walkthroughruns').screenshot({ path: join(output, 'review-mobile.png') });
   await page.reload(); await page.getByRole('tab', { name: 'Workspace', exact: true }).click();
@@ -56,3 +56,4 @@ try {
   assert.deepEqual(errors, []);
   console.log(JSON.stringify({ passed: ['review save', 'dynamic rejection', 'reload persistence', 'real image upload/capture', 'replay label', 'mobile bounds'], screenshots: output }));
 } finally { await browser.close(); await rm(root, { recursive: true, force: true }); }
+

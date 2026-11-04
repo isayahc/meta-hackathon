@@ -62,3 +62,10 @@ See [doc/potential-projects](doc/potential-projects) for candidate problem state
 
 MIT
 
+
+### Live MongoDB records (optional)
+
+Goals, tasks, workflow reviews, process revisions and calendar decisions can now
+use MongoDB as their sole record authority. See [setup and explicit import](doc/mongo-records.md)
+for the authenticated Docker replica set, `npm start` settings and recovery limits.
+Existing projects remain on SQLite until explicitly imported; videos/GIFs remain local.

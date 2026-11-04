@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { addGoal } from './lib/goals.js';
-import { getDoc } from './lib/db.js';
+import { getDoc } from './lib/records.js';
 import { applyCorrection, buildProcessFromScan, readProcess, saveRevision } from './lib/processes.js';
 
 const CLI = fileURLToPath(new URL('./task-optimize.js', import.meta.url));
@@ -67,7 +67,7 @@ test('optimizer request contains the complete corrected process at its exact rev
   assert.match(prompt, /CORRECTED spread the run by hand/);
   assert.match(prompt, /\(rev 2\)/);
   assert.match(prompt, /\[p-s0\].*requires=unknown/);
-  const plan = getDoc(root, 'plan') as { process_basis: Array<{ process_id: string; rev: number }>; stale: boolean };
+  const plan = (await getDoc(root, 'plan')) as { process_basis: Array<{ process_id: string; rev: number }>; stale: boolean };
   assert.deepEqual(plan.process_basis, [{ process_id: 'p', rev: 2 }]);
   assert.equal(plan.stale, false);
 });
@@ -77,8 +77,9 @@ test('a correction landing mid-generation saves stale, never current', async (t:
   t.after(() => rm(root, { recursive: true, force: true }));
   await seedProcess(root);
   await runCli(root, true);
-  const plan = getDoc(root, 'plan') as { process_basis: Array<{ process_id: string; rev: number }>; stale: boolean; stale_reason: string };
+  const plan = (await getDoc(root, 'plan')) as { process_basis: Array<{ process_id: string; rev: number }>; stale: boolean; stale_reason: string };
   assert.deepEqual(plan.process_basis, [{ process_id: 'p', rev: 2 }]);
   assert.equal(plan.stale, true);
   assert.match(plan.stale_reason, /changed during generation/);
 });
+

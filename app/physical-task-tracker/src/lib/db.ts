@@ -180,6 +180,7 @@ export const DATABASE_VERSION = 1;
 
 /** Upgrade legacy stores atomically; refuse stores from a newer application. */
 export function openDb(root: string): DatabaseSync {
+  if (existsSync(join(root, 'record-store.json')) || process.env.FIELDOPS_RECORD_BACKEND === 'mongodb') throw new Error('SQLite access refused: MongoDB owns this project or is explicitly selected.');
   mkdirSync(root, { recursive: true });
   const db = new DatabaseSync(dbPath(root));
   try {

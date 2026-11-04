@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import { createServer, loadSpots, buildFeed, waitForOk, fetchRemote, primaryError } from './serve-dashboard.js';
 import { addGoal, listGoals } from './lib/goals.js';
 import { initSpot, appendSession } from './lib/spot-state.js';
-import { setDoc } from './lib/db.js';
+import { setDoc } from './lib/records.js';
 import { applyCorrection, buildProcessFromScan, saveRevision, type BuildProcessInput } from './lib/processes.js';
 import { saveImprovementReview, type WorkflowContext, type ImprovementCandidate } from './lib/improvements.js';
 
@@ -129,8 +129,8 @@ test('serves the dashboard page', async (t: TestContext) => {
 
 test('overview exposes spots, goals, plan, eco, feed', async (t: TestContext) => {
   const root = await scratch(t);
-  setDoc(root, 'plan', { plan: { ranked_actions: [] } });
-  setDoc(root, 'eco', { summary: 'Site (38.5, -98). Now: test.' });
+  await setDoc(root, 'plan', { plan: { ranked_actions: [] } });
+  await setDoc(root, 'eco', { summary: 'Site (38.5, -98). Now: test.' });
   const r = await call(root, 'GET', '/api/overview');
   assert.equal(r.status, 200);
   assert.equal(r.json.spots.length, 1);
@@ -437,7 +437,7 @@ test('improvement API persists decisions, validates context, and refreshes plan 
   assert.equal((await call(root, 'POST', '/api/improvement-context', { context: fixture.context })).status, 200);
   assert.equal((await call(root, 'GET', '/api/improvement-context')).json.context.constraints.budget_usd, 25);
   const review = await saveImprovementReview(root, [doc], [], fixture.context, fixture.candidates, 'replay');
-  setDoc(root, 'plan', { improvement_review_id: review.id, stale: false });
+  await setDoc(root, 'plan', { improvement_review_id: review.id, stale: false });
   assert.equal((await call(root, 'GET', '/api/improvements')).json.reviews.length, 1);
   const url = `/api/improvements/${review.id}`;
   const candidate_id = fixture.candidates[0].id;
@@ -466,3 +466,4 @@ test('goal and dated-note HTTP retries create one canonical record each', async 
   assert.equal((await listGoals(root)).filter(g=>g.text===goal.text).length,1);
   const events=await call(root,'GET','/api/events');assert.equal(events.json.events.filter((e:{title:string})=>e.title===note.title).length,1);
 });
+

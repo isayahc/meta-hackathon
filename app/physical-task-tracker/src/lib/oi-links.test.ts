@@ -65,9 +65,10 @@ describe('oi-links', () => {
 
   it('rejects bad kinds and empty references', async () => {
     await withRoot(async (root) => {
-      await assert.rejects(() => linkOiEntities(root, 'event' as never, 'e1', [LINK]), /Bad OI link kind/);
-      await assert.rejects(() => linkOiEntities(root, 'spot', 's1', [{ ...LINK, scene_id: '' }]), /scene_id/);
-      await assert.rejects(() => linkOiEntities(root, 'spot', 's1', [{ ...LINK, revision: 0 }]), /revision/);
+      await assert.rejects(async () => (await linkOiEntities(root, 'event' as never, 'e1', [LINK])), /Bad OI link kind/);
+      await assert.rejects(async () => (await linkOiEntities(root, 'spot', 's1', [{ ...LINK, scene_id: '' }])), /scene_id/);
+      await assert.rejects(async () => (await linkOiEntities(root, 'spot', 's1', [{ ...LINK, revision: 0 }])), /revision/);
     });
   });
 });
+

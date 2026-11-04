@@ -202,8 +202,8 @@ if (isMain) {
       ? (process.argv[process.argv.indexOf('--root') + 1] ?? null)
       : null;
     if (rootFlag && !rootFlag.startsWith('--')) {
-      const { setDoc } = await import('./db.js');
-      setDoc(rootFlag, 'eco', { summary: eco.summary, location: eco.location, fetched_at: eco.fetched_at });
+      const { setDoc } = await import('./records.js');
+      await setDoc(rootFlag, 'eco', { summary: eco.summary, location: eco.location, fetched_at: eco.fetched_at });
       console.error(`stored eco doc in ${rootFlag}`);
     }
     console.log(text);
@@ -212,3 +212,4 @@ if (isMain) {
     process.exit(1);
   }
 }
+

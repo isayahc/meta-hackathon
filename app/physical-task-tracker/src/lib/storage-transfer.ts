@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 /** Offline, immutable migration generations. This does not switch the live application backend. */
 import { createHash } from 'node:crypto';
 import { createReadStream, createWriteStream } from 'node:fs';
@@ -35,6 +36,7 @@ async function fileHash(file: string): Promise<string> {
 /** Read a stopped versioned project without opening it through the migration layer. */
 export async function inspectTransfer(rootArg: string, projectId: string): Promise<TransferManifest> {
   const root=resolve(rootArg),project=scope(projectId),tables: TransferManifest['tables']={};
+  if (existsSync(join(root,'record-store.json'))) throw new Error('MongoDB owns this project; SQLite transfer would export stale records.');
   const db=new DatabaseSync(join(root,'fieldops.db'),{readOnly:true} as any);
   try {
     const version=(db.prepare('PRAGMA user_version').get() as any).user_version;

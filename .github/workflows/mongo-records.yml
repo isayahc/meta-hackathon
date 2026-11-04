@@ -1,0 +1,20 @@
+name: Live MongoDB records
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  mongo-records:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    env:
+      FIELDOPS_MONGO_PASSWORD: isolated-ci-password-only
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose -f compose.mongo.yaml --profile test build
+      - run: docker compose -f compose.mongo.yaml run --rm mongo-tests
+      - if: failure()
+        run: docker compose -f compose.mongo.yaml logs --tail 120 mongo
+      - if: always()
+        run: docker compose -f compose.mongo.yaml down -v

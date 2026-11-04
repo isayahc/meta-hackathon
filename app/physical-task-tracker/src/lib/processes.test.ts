@@ -6,7 +6,7 @@ import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { openDb } from './db.js';
-import { getDoc, setDoc } from './db.js';
+import { getDoc, setDoc } from './records.js';
 import {
   buildProcessFromScan,
   validateProcess,
@@ -99,10 +99,10 @@ test('unsupported details stay unknown and partial footage caps completion', asy
   // Hand-asserted completion without evidence is rejected, not stored.
   const bad = structuredClone(doc);
   bad.steps[0]!.execution = 'complete';
-  await assertProcError(() => saveRevision(root, bad), 'PROC_UNEVIDENCED_COMPLETION');
+  await assertProcError(async () => (await saveRevision(root, bad)), 'PROC_UNEVIDENCED_COMPLETION');
   const badGoal = structuredClone(doc);
   badGoal.goals[0]!.execution = 'complete';
-  await assertProcError(() => saveRevision(root, badGoal), 'PROC_UNEVIDENCED_COMPLETION');
+  await assertProcError(async () => (await saveRevision(root, badGoal)), 'PROC_UNEVIDENCED_COMPLETION');
   // What survived on disk is still rev 1, nothing complete.
   assert.equal((await readProcess(root, 'proc-1')).rev, 1);
 });
@@ -185,7 +185,7 @@ test('farmer corrections persist as revisions with originals retained', async (t
   assert.equal(origById.get('p-s0')?.label, 'Finish spreading the remaining run');
   assert.equal(origById.get('p-s0')?.claim, 'unknown');
   // Correction without rationale is refused.
-  await assertProcError(() => applyCorrection(root, 'p', { title: 'x' }, '  '), 'PROC_CORRECTION');
+  await assertProcError(async () => (await applyCorrection(root, 'p', { title: 'x' }, '  ')), 'PROC_CORRECTION');
 });
 
 test('corrections persist across reopen and read back current', async (t: TestContext) => {
@@ -207,7 +207,7 @@ test('a contradicting correction that cycles is rejected and rev is unchanged', 
   await saveRevision(root, buildProcessFromScan({ id: 'p', analysis: { suggested_next_steps: ['A', 'B'] } }));
   await applyCorrection(root, 'p', { steps: { 'p-s1': { requires: ['p-s0'], requires_unknown: false } } }, 'B needs A first.');
   await assertProcError(
-    () => applyCorrection(root, 'p', { steps: { 'p-s0': { requires: ['p-s1'], requires_unknown: false } } }, 'Actually A needs B.'),
+    async () => (await applyCorrection(root, 'p', { steps: { 'p-s0': { requires: ['p-s1'], requires_unknown: false } } }, 'Actually A needs B.')),
     'PROC_CYCLE'
   );
   assert.equal((await readProcess(root, 'p')).rev, 2);
@@ -225,20 +225,20 @@ test('a contradicting correction that cycles is rejected and rev is unchanged', 
 test('downstream analysis uses the corrected version; older recommendations go stale', async (t: TestContext) => {
   const root = await freshRoot(t);
   await saveRevision(root, buildProcessFromScan({ id: 'p', analysis: SCAN }));
-  setDoc(root, 'plan', { plan: { ranked_actions: ['old advice'] }, process_basis: [{ process_id: 'p', rev: 1 }], stale: false });
+  await setDoc(root, 'plan', { plan: { ranked_actions: ['old advice'] }, process_basis: [{ process_id: 'p', rev: 1 }], stale: false });
   const { doc, staleDocs } = await applyCorrection(root, 'p', { title: 'Corrected title' }, 'Title fix.');
   assert.equal(doc.title, 'Corrected title');
   assert.deepEqual(staleDocs, ['plan']);
-  const plan = getDoc(root, 'plan') as { stale: boolean; stale_reason: string };
+  const plan = (await getDoc(root, 'plan')) as { stale: boolean; stale_reason: string };
   assert.equal(plan.stale, true);
   assert.match(plan.stale_reason, /rev 2/);
   // Current reads always serve the corrected revision.
   assert.equal((await readProcess(root, 'p')).title, 'Corrected title');
   // Docs already built from the new rev, or with no basis, are left alone.
-  setDoc(root, 'plan', { plan: {}, process_basis: [{ process_id: 'p', rev: 2 }], stale: false });
+  await setDoc(root, 'plan', { plan: {}, process_basis: [{ process_id: 'p', rev: 2 }], stale: false });
   assert.deepEqual(await markDependentStale(root, 'p', 2), []);
-  assert.equal((getDoc(root, 'plan') as { stale: boolean }).stale, false);
-  setDoc(root, 'plan', { plan: {} });
+  assert.equal(((await getDoc(root, 'plan')) as { stale: boolean }).stale, false);
+  await setDoc(root, 'plan', { plan: {} });
   assert.deepEqual(await markDependentStale(root, 'p', 3), []);
 });
 
@@ -318,7 +318,7 @@ test('completion requires resolvable media and covered spans', async (t: TestCon
     const { doc, step } = base();
     step.evidence.media = null;
     step.criteria_evidence = { done: [{ start_s: 15, end_s: 15, frame: 1 }] };
-    const err = await assertProcError(() => saveRevision(root, doc), 'PROC_UNEVIDENCED_COMPLETION');
+    const err = await assertProcError(async () => (await saveRevision(root, doc)), 'PROC_UNEVIDENCED_COMPLETION');
     assert.match(err.message, /media/);
   }
   // Named but missing media file: rejected.
@@ -326,25 +326,25 @@ test('completion requires resolvable media and covered spans', async (t: TestCon
     const { doc, step } = base();
     step.evidence.media = 'gone.mp4';
     step.criteria_evidence = { done: [{ start_s: 15, end_s: 15, frame: 1 }] };
-    await assertProcError(() => saveRevision(root, doc), 'PROC_UNEVIDENCED_COMPLETION');
+    await assertProcError(async () => (await saveRevision(root, doc)), 'PROC_UNEVIDENCED_COMPLETION');
   }
   // Instant outside sampled coverage: rejected (999s-style fabrication).
   {
     const { doc, step } = base();
     step.criteria_evidence = { done: [{ start_s: 29, end_s: 29 }] };
-    await assertProcError(() => saveRevision(root, doc), 'PROC_UNEVIDENCED_COMPLETION');
+    await assertProcError(async () => (await saveRevision(root, doc)), 'PROC_UNEVIDENCED_COMPLETION');
   }
   // Unknown frame identity: rejected.
   {
     const { doc, step } = base();
     step.criteria_evidence = { done: [{ start_s: 15, end_s: 15, frame: 9 }] };
-    await assertProcError(() => saveRevision(root, doc), 'PROC_UNEVIDENCED_COMPLETION');
+    await assertProcError(async () => (await saveRevision(root, doc)), 'PROC_UNEVIDENCED_COMPLETION');
   }
   // Interval criterion with only isolated instants: partial, insufficient.
   {
     const { doc, step } = base();
     step.criteria_evidence = { done: [{ start_s: 5, end_s: 25 }] };
-    await assertProcError(() => saveRevision(root, doc), 'PROC_UNEVIDENCED_COMPLETION');
+    await assertProcError(async () => (await saveRevision(root, doc)), 'PROC_UNEVIDENCED_COMPLETION');
   }
   // Continuous coverage over the interval: accepted.
   {
@@ -379,10 +379,10 @@ test('completion binds each frame to its own timestamp, including through correc
     id: 'p', media: 'clip.mp4', duration_s: 30,
     analysis: { suggested_next_steps: ['Water'], frame_times_s: [5, 15, 25] },
   }));
-  await assertProcError(() => applyCorrection(root, 'p', { steps: { 'p-s0': {
+  await assertProcError(async () => (await applyCorrection(root, 'p', { steps: { 'p-s0': {
     execution: 'complete', completion_criteria: ['wet soil'],
     criteria_evidence: { 'wet soil': [{ start_s: 25, end_s: 25, frame: 0 }] },
-  } } }, 'Claimed complete.'), 'PROC_UNEVIDENCED_COMPLETION');
+  } } }, 'Claimed complete.')), 'PROC_UNEVIDENCED_COMPLETION');
   assert.equal((await readProcess(root, 'p')).rev, 1);
   for (const [frame, time] of [[0, 5], [2, 25]] as const) {
     const { doc } = await applyCorrection(root, 'p', { steps: { 'p-s0': {
@@ -407,7 +407,8 @@ test('frame-specific interval evidence cannot borrow another frame or unframed c
   doc.steps[0]!.execution = 'complete';
   doc.steps[0]!.completion_criteria = ['wet soil'];
   doc.steps[0]!.criteria_evidence = { 'wet soil': [{ start_s: 5, end_s: 25, frame: 0 }] };
-  await assertProcError(() => saveRevision(root, doc), 'PROC_UNEVIDENCED_COMPLETION');
+  await assertProcError(async () => (await saveRevision(root, doc)), 'PROC_UNEVIDENCED_COMPLETION');
   doc.steps[0]!.criteria_evidence = { 'wet soil': [{ start_s: 5, end_s: 10, frame: 0 }] };
   assert.equal((await saveRevision(root, doc)).steps[0]?.execution, 'complete');
 });
+

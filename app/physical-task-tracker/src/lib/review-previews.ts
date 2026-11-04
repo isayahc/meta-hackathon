@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { stat } from 'node:fs/promises';
 import { join, basename, resolve } from 'node:path';
-import { getDoc, setDoc } from './db.js';
+import { getDoc, setDoc } from './records.js';
 import { reconciliationView } from './reconciliation.js';
 import { generateSegmentGifs, type VideoSegment } from './video-segments.js';
 const pending = new Map<string, Promise<VideoSegment[]>>();
@@ -15,7 +15,7 @@ async function usable(root: string, value: unknown, count: number): Promise<Vide
 }
 /** Backfill previews for one immutable interpretation without changing evidence or human review. */
 export async function ensureReviewPreviews(root: string, sourceId: string, interpretationId: string): Promise<VideoSegment[]> {
-  const source = reconciliationView(root).sources.find(s=>s.id===sourceId);
+  const source = (await reconciliationView(root)).sources.find(s=>s.id===sourceId);
   const interpretation = source?.interpretations.find(i=>i.id===interpretationId);
   if (!source?.media || !interpretation || basename(source.media)!==source.media || source.media.includes('\\')) throw new Error('Retained recording or interpretation not found.');
   const raw = (interpretation.raw || {}) as Record<string, unknown>;
@@ -26,11 +26,11 @@ export async function ensureReviewPreviews(root: string, sourceId: string, inter
   const key=`review-previews:${digest}`, requestKey=resolve(root)+':'+key;
   const active=pending.get(requestKey);if(active)return active;
   const work=(async()=>{
-    const cached=await usable(root,getDoc(root,key),count) || await usable(root,raw.gif_segments,count);
+    const cached=await usable(root,await getDoc(root,key),count) || await usable(root,raw.gif_segments,count);
     if(cached)return cached;
     const segments=await generateSegmentGifs(join(root,'media',source.media!),join(root,'media'),`preview-${digest}`,count,duration);
     if(!segments.length)throw new Error('Could not generate segment GIFs. Check FFmpeg and the retained recording, then retry previews.');
-    setDoc(root,key,segments);return segments;
+    await setDoc(root,key,segments);return segments;
   })();
   pending.set(requestKey,work);
   try{return await work;}finally{pending.delete(requestKey);}

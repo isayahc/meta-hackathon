@@ -10,10 +10,10 @@
 // readable. Downstream docs (optimizer plan) stamp the process revisions
 // they were built from and go stale when a correction lands.
 // No dependencies beyond node:sqlite (via lib/db).
-import type { DatabaseSync } from 'node:sqlite';
+import type { RecordTransaction } from './record-model.js';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { withDb, getDoc, setDoc } from './db.js';
+import { withRecords, getDoc, setDoc } from './records.js';
 
 export const PROCESS_SCHEMA = 'farm-process/1';
 
@@ -561,28 +561,22 @@ interface ProcessRow {
 export async function saveRevision(root: string, doc: ProcessDoc, author = 'model'): Promise<ProcessDoc> {
   const clean = normalizeProcess(validateProcess(doc));
   validateCompletion(clean, { mediaPresent: (m) => mediaFilePresent(root, m) });
-  return withDb(root, (db) => {
-    const prior = db.prepare('SELECT rev FROM processes WHERE id = ? AND rev = ?').get(clean.id, clean.rev) as
+  return await withRecords(root, (db) => {
+    const prior = db.first('processes', { where: { id: clean.id, rev: clean.rev }, fields: ["rev"] }) as
       | { rev: number }
       | undefined;
     if (prior) throw new ProcessError('PROC_REV_EXISTS', `Revision ${clean.rev} of "${clean.id}" already exists.`);
-    db.prepare('INSERT INTO processes(id, rev, body, author, created) VALUES(?, ?, ?, ?, ?)').run(
-      clean.id,
-      clean.rev,
-      JSON.stringify(clean),
-      author,
-      new Date().toISOString()
-    );
+    db.insert('processes', { id: clean.id, rev: clean.rev, body: JSON.stringify(clean), author: author, created: new Date().toISOString() });
     return clean;
   });
 }
 
 export async function readProcess(root: string, id: string, rev: number | null = null): Promise<ProcessDoc> {
-  return withDb(root, (db) => {
+  return await withRecords(root, (db) => {
     const row = (
       rev === null
-        ? db.prepare('SELECT body FROM processes WHERE id = ? ORDER BY rev DESC LIMIT 1').get(id)
-        : db.prepare('SELECT body FROM processes WHERE id = ? AND rev = ?').get(id, rev)
+        ? db.first('processes', { where: { id: id }, order: ["-rev"], fields: ["body"] })
+        : db.first('processes', { where: { id: id, rev: rev }, fields: ["body"] })
     ) as { body: string } | undefined;
     if (!row) throw new Error(rev === null ? `No process "${id}".` : `No process "${id}" rev ${rev}.`);
     return JSON.parse(row.body) as ProcessDoc;
@@ -597,10 +591,8 @@ export interface ProcessCurrent {
 }
 
 export async function listProcesses(root: string): Promise<ProcessCurrent[]> {
-  return withDb(root, (db) => {
-    const rows = db.prepare(
-      'SELECT p1.id AS process_id, p1.rev AS rev, p1.body AS body FROM processes p1 WHERE p1.rev = (SELECT MAX(p2.rev) FROM processes p2 WHERE p2.id = p1.id) ORDER BY p1.id'
-    ).all() as Array<{ process_id: string; rev: number; body: string }>;
+  return await withRecords(root, (db) => {
+    const rows = db.latestProcesses().map(r => ({ process_id: r.id, rev: r.rev, body: r.body })) as Array<{ process_id: string; rev: number; body: string }>;
     return rows.map((r) => {
       const body = JSON.parse(r.body) as ProcessDoc;
       return { process_id: r.process_id, rev: r.rev, title: body.title, updated_at: body.updated_at };
@@ -629,16 +621,16 @@ export async function applyCorrection(
   rationale: string,
   author = 'farmer'
 ): Promise<{ doc: ProcessDoc; staleDocs: string[] }> {
-  return withDb(root, db => {
-    db.exec('BEGIN IMMEDIATE');
-    try { const result = correctProcessInDb(db, root, id, patch, rationale, author); db.exec('COMMIT'); return result; }
-    catch (error) { db.exec('ROLLBACK'); throw error; }
+  return await withRecords(root, db => {
+    
+    try { const result = correctProcessInDb(db, root, id, patch, rationale, author);  return result; }
+    catch (error) {  throw error; }
   });
 }
 /** Append a validated correction atomically with the enclosing workflow review. */
-export function correctProcessInDb(db: DatabaseSync, root: string, id: string, patch: CorrectionPatch, rationale: string, author = 'farmer', expectedRev?: number): { doc: ProcessDoc; staleDocs: string[] } {
+export function correctProcessInDb(db: RecordTransaction, root: string, id: string, patch: CorrectionPatch, rationale: string, author = 'farmer', expectedRev?: number): { doc: ProcessDoc; staleDocs: string[] } {
   if (!rationale?.trim()) throw new ProcessError('PROC_CORRECTION', 'A correction needs a rationale.');
-  const row = db.prepare('SELECT body FROM processes WHERE id=? ORDER BY rev DESC LIMIT 1').get(id) as { body: string } | undefined;
+  const row = db.first('processes', { where: { id: id }, order: ["-rev"], fields: ["body"] }) as { body: string } | undefined;
   if (!row) throw new Error(`No process "${id}".`);
   const current = JSON.parse(row.body) as ProcessDoc;
   if (expectedRev !== undefined && current.rev !== expectedRev) throw new Error('Stale process revision.');
@@ -706,14 +698,14 @@ export function correctProcessInDb(db: DatabaseSync, root: string, id: string, p
   next.updated_at = new Date().toISOString();
   next.corrections = [...next.corrections, { rev: next.rev, at: next.updated_at, rationale: rationale.trim(), paths }];
   const saved = normalizeProcess(next);
-  db.prepare('INSERT INTO processes(id,rev,body,author,created) VALUES(?,?,?,?,?)').run(id, saved.rev, JSON.stringify(saved), author, saved.updated_at);
+  db.insert('processes', { id: id, rev: saved.rev, body: JSON.stringify(saved), author: author, created: saved.updated_at });
   const staleDocs: string[] = [];
-  const planRow = db.prepare("SELECT body FROM docs WHERE key='plan'").get() as { body: string } | undefined;
+  const planRow = db.first('docs', { where: { key: "plan" }, fields: ["body"] }) as { body: string } | undefined;
   if (planRow) {
     const plan = JSON.parse(planRow.body);
     if (Array.isArray(plan.process_basis) && plan.process_basis.some((b: {process_id: string; rev: number}) => b.process_id === id && b.rev < saved.rev) && !plan.stale) {
       plan.stale = true; plan.stale_reason = `process "${id}" corrected to rev ${saved.rev}`;
-      db.prepare("UPDATE docs SET body=?,updated_at=? WHERE key='plan'").run(JSON.stringify(plan), saved.updated_at); staleDocs.push('plan');
+      db.update('docs', { key: "plan" }, { body: JSON.stringify(plan), updated_at: saved.updated_at }); staleDocs.push('plan');
     }
   }
   return { doc: saved, staleDocs };
@@ -724,15 +716,16 @@ export function correctProcessInDb(db: DatabaseSync, root: string, id: string, p
 export async function markDependentStale(root: string, processId: string, newRev: number): Promise<string[]> {
   const flipped: string[] = [];
   for (const key of ['plan']) {
-    const body = getDoc(root, key) as { process_basis?: unknown; stale?: unknown } | null;
+    const body = (await getDoc(root, key)) as { process_basis?: unknown; stale?: unknown } | null;
     if (!body || typeof body !== 'object') continue;
     const basis = (body as { process_basis?: Array<{ process_id?: unknown; rev?: unknown }> }).process_basis;
     if (!Array.isArray(basis)) continue;
     const hit = basis.some((b) => b?.process_id === processId && typeof b?.rev === 'number' && (b.rev as number) < newRev);
     if (hit && (body as { stale?: unknown }).stale !== true) {
-      setDoc(root, key, { ...body, stale: true, stale_reason: `process "${processId}" corrected to rev ${newRev}` });
+      await setDoc(root, key, { ...body, stale: true, stale_reason: `process "${processId}" corrected to rev ${newRev}` });
       flipped.push(key);
     }
   }
   return flipped;
 }
+

@@ -44,6 +44,8 @@ def backup_project(source: Path, destination: Path) -> None:
     """Copy a stopped project and consolidate SQLite, including committed WAL data."""
     source, destination = source.resolve(), destination.resolve()
     separate(source, destination)
+    if (source / 'record-store.json').exists():
+        raise ValueError('MongoDB owns this project; SQLite archive does not back up live records')
     if not (source / 'fieldops.db').is_file():
         raise ValueError('Source must contain fieldops.db')
     if destination.exists():
@@ -80,6 +82,8 @@ def restore_project(source: Path, destination: Path) -> None:
     project = source / 'project'
     if manifest.get('format') != 'fieldops-offline-backup/1' or manifest.get('files') != inventory(project):
         raise ValueError('Backup manifest or checksums do not match')
+    if (project / 'record-store.json').exists():
+        raise ValueError('MongoDB project markers cannot be restored from a SQLite archive')
     check_database(project / 'fieldops.db')
     destination.mkdir(parents=True, exist_ok=True)
     try:

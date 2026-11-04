@@ -207,20 +207,20 @@ test('stale OI scene, rejected alternative and runtime failure remain explicit',
 test('decisions and rationales survive reopening; stale accepted advice is not actionable', async (t) => {
   const { root, doc, context, candidates } = await setup(t);
   const review = await saveImprovementReview(root, [doc], [], context, candidates, 'replay');
-  assert.throws(() => decideImprovement(root, review.id, candidates[0].id, 'accepted', ' '), /nonempty/);
-  assert.throws(() => decideImprovement(root, review.id, candidates[0].id, 'done', 'x'), /Decision/);
-  const accepted = decideImprovement(root, review.id, candidates[0].id, 'accepted', 'Try it for ten trays.');
+  await assert.rejects(async () => (await decideImprovement(root, review.id, candidates[0].id, 'accepted', ' ')), /nonempty/);
+  await assert.rejects(async () => (await decideImprovement(root, review.id, candidates[0].id, 'done', 'x')), /Decision/);
+  const accepted = await decideImprovement(root, review.id, candidates[0].id, 'accepted', 'Try it for ten trays.');
   assert.equal(accepted.assessments[0].actionable, true);
   openDb(root).close();
-  assert.equal(listImprovementReviews(root)[0].assessments[0].decisions[0].rationale, 'Try it for ten trays.');
+  assert.equal((await listImprovementReviews(root))[0].assessments[0].decisions[0].rationale, 'Try it for ten trays.');
   await applyCorrection(root, doc.id, { title: 'Corrected workflow' }, 'New process review.');
-  const stale = readImprovementReview(root, review.id);
+  const stale = await readImprovementReview(root, review.id);
   assert.equal(stale.stale, true);
   assert.equal(stale.assessments[0].actionable, false);
   assert.equal(stale.assessments[0].decision, 'accepted'); // Historical decision is preserved.
-  assert.equal(improvementPlan(stale).ranked_actions.length, 0);
-  assert.throws(() => decideImprovement(root, review.id, candidates[0].id, 'accepted', 'Again'), /Stale/);
-  const rejected = decideImprovement(root, review.id, candidates[0].id, 'rejected', 'Process changed.');
+  assert.equal((await improvementPlan(stale)).ranked_actions.length, 0);
+  await assert.rejects(async () => (await decideImprovement(root, review.id, candidates[0].id, 'accepted', 'Again')), /Stale/);
+  const rejected = await decideImprovement(root, review.id, candidates[0].id, 'rejected', 'Process changed.');
   assert.equal(rejected.assessments[0].decisions.length, 2);
 });
 
@@ -228,10 +228,10 @@ test('blocked/deferred proposals cannot be accepted, but farmer rejection/defer 
   const { root, doc, context, candidates } = await setup(t);
   context.constraints.budget_usd = 0; context.measurements[0].value = 5;
   const review = await saveImprovementReview(root, [doc], [], context, candidates, 'replay');
-  assert.throws(() => decideImprovement(root, review.id, candidates[0].id, 'accepted', 'Ignore budget'), /Blocked/);
-  const deferred = decideImprovement(root, review.id, candidates[0].id, 'deferred', 'Wait for budget.');
+  await assert.rejects(async () => (await decideImprovement(root, review.id, candidates[0].id, 'accepted', 'Ignore budget')), /Blocked/);
+  const deferred = await decideImprovement(root, review.id, candidates[0].id, 'deferred', 'Wait for budget.');
   assert.equal(deferred.assessments[0].decision, 'deferred');
-  assert.equal(improvementPlan(deferred).ranked_actions.length, 0);
+  assert.equal((await improvementPlan(deferred)).ranked_actions.length, 0);
 });
 
 test('correction during OI validation makes the newly saved review stale', async (t) => {
@@ -264,19 +264,19 @@ test('missing measurements remain unknown instead of inventing savings', async (
 test('changed farmer constraints invalidate historical acceptance and cannot be overridden', async (t) => {
   const { root, doc, context, candidates } = await setup(t);
   const review = await saveImprovementReview(root, [doc], [], context, candidates, 'replay');
-  decideImprovement(root, review.id, candidates[0].id, 'accepted', 'Ready for a trial.');
+  await decideImprovement(root, review.id, candidates[0].id, 'accepted', 'Ready for a trial.');
   context.constraints.available_people = 0;
-  writeWorkflowContext(root, context);
-  const updated = readImprovementReview(root, review.id);
+  await writeWorkflowContext(root, context);
+  const updated = await readImprovementReview(root, review.id);
   assert.equal(updated.stale, true);
   assert.equal(updated.assessments[0].actionable, false);
-  assert.throws(() => decideImprovement(root, review.id, candidates[0].id, 'accepted', 'Again'), /constraints or evidence changed/);
+  await assert.rejects(async () => (await decideImprovement(root, review.id, candidates[0].id, 'accepted', 'Again')), /constraints or evidence changed/);
 });
 
 test('missing structured proposals never turn model narrative into checked actions', async (t) => {
   const { root, doc, context } = await setup(t);
   const review = await saveImprovementReview(root, [doc], [], context, [], 'model');
-  const plan = improvementPlan(review);
+  const plan = await improvementPlan(review);
   assert.deepEqual(plan.ranked_actions, []);
   assert.match(plan.deferred[0].why, /No structured improvement proposals/);
 });
@@ -302,3 +302,4 @@ test('intervention review consumes read-only route checks, retains unknowns and 
   option.route_assessment.revision=2;const count=calls.length;
   assert.equal((await assessImprovements(root,[doc],[],context,candidates,transport))[0].spatial.status,'unvalidated');assert.equal(calls.length,count);
 });
+

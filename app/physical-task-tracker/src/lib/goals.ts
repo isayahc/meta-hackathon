@@ -1,9 +1,9 @@
 // Goals model: operator goals live in the project's fieldops.db and steer
 // the optimizer. Status moves open -> at-risk -> done (or back) as
 // briefings report. No dependencies beyond node:sqlite (via lib/db).
-import type { DatabaseSync } from 'node:sqlite';
+import type { RecordTransaction } from './record-model.js';
 import { requestOnce } from './request-once.js';
-import { withDb } from './db.js';
+import { withRecords } from './records.js';
 import { validDay } from './planning-time.js';
 
 export type GoalStatus = 'open' | 'at-risk' | 'done';
@@ -48,10 +48,8 @@ function toGoal(row: GoalRow): Goal {
 }
 
 export async function listGoals(root: string): Promise<Goal[]> {
-  return withDb(root, (db) =>
-    db
-      .prepare('SELECT * FROM goals ORDER BY rowid')
-      .all()
+  return await withRecords(root, (db) =>
+    db.select('goals')
       .map((r) => toGoal(r as unknown as GoalRow))
   );
 }
@@ -67,15 +65,15 @@ function slugify(text: string, n: number): string {
 }
 
 export async function addGoal(root: string, input: NewGoal, requestId?: unknown): Promise<Goal> {
-  return withDb(root, db => requestOnce(db, 'goal', requestId, input, () => addGoalInDb(db, input)));
+  return await withRecords(root, db => requestOnce(db, 'goal', requestId, input, () => addGoalInDb(db, input)));
 }
 /** Create an ordinary goal within a workflow transaction. */
-export function addGoalInDb(db: DatabaseSync, { text, deadline = null, weight = 3, success_criteria = '' }: NewGoal): Goal {
+export function addGoalInDb(db: RecordTransaction, { text, deadline = null, weight = 3, success_criteria = '' }: NewGoal): Goal {
   if (!text?.trim()) throw new Error('Goal text is required.');
   if (deadline !== null) validDay(deadline);
   if (typeof success_criteria !== 'string' || success_criteria.length > 2000) throw new Error('Invalid success criteria.');
   const w = Math.min(5, Math.max(1, Number(weight) || 3));
-  const n = (db.prepare('SELECT COUNT(*) AS n FROM goals').get() as unknown as { n: number }).n;
+  const n = (({ n: db.select('goals').length }) as unknown as { n: number }).n;
   const goal: Goal = {
     id: slugify(text, n + 1),
     text: text.trim(),
@@ -85,15 +83,7 @@ export function addGoalInDb(db: DatabaseSync, { text, deadline = null, weight = 
     created: new Date().toISOString(),
     success_criteria,
   };
-  db.prepare('INSERT INTO goals(id, text, deadline, weight, status, created, success_criteria) VALUES(?, ?, ?, ?, ?, ?, ?)').run(
-    goal.id,
-    goal.text,
-    goal.deadline,
-    goal.weight,
-    goal.status,
-    goal.created,
-    success_criteria
-  );
+  db.insert('goals', { id: goal.id, text: goal.text, deadline: goal.deadline, weight: goal.weight, status: goal.status, created: goal.created, success_criteria: success_criteria });
   return goal;
 }
 
@@ -103,12 +93,13 @@ export async function setGoalStatus(root: string, id: string, status: string): P
   if (!ALLOWED.has(status)) {
     throw new Error(`Bad status "${status}": want open, at-risk, or done.`);
   }
-  return withDb(root, (db) => {
-    const row = db.prepare('SELECT * FROM goals WHERE id = ?').get(id) as
+  return await withRecords(root, (db) => {
+    const row = db.first('goals', { where: { id: id } }) as
       | GoalRow
       | undefined;
     if (!row) throw new Error(`No goal "${id}".`);
-    db.prepare('UPDATE goals SET status = ? WHERE id = ?').run(status, id);
+    db.update('goals', { id: id }, { status: status });
     return toGoal({ ...row, status: status as GoalStatus });
   });
 }
+

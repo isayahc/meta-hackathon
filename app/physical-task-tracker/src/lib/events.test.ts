@@ -25,10 +25,10 @@ test('addEvent persists and lists back', async (t: TestContext) => {
 
 test('addEvent rejects bad title, date, and time', async (t: TestContext) => {
   const root = await freshRoot(t);
-  await assert.rejects(addEvent(root, { title: '  ', date: '2026-10-26' }), /title/);
-  await assert.rejects(addEvent(root, { title: 'X', date: 'tomorrow' }), /YYYY-MM-DD/);
-  await assert.rejects(addEvent(root, { title: 'X', date: '2026-10-26', time: '9am' }), /HH:MM/);
-  await assert.rejects(addEvent(root, { title: 'X', date: '2026-10-26', time: '25:00' }), /HH:MM/);
+  await assert.rejects((addEvent(root, { title: '  ', date: '2026-10-26' })), /title/);
+  await assert.rejects((addEvent(root, { title: 'X', date: 'tomorrow' })), /YYYY-MM-DD/);
+  await assert.rejects((addEvent(root, { title: 'X', date: '2026-10-26', time: '9am' })), /HH:MM/);
+  await assert.rejects((addEvent(root, { title: 'X', date: '2026-10-26', time: '25:00' })), /HH:MM/);
   assert.deepEqual(await listStoredEvents(root), []);
 });
 
@@ -58,3 +58,4 @@ test('day helpers accept strict shapes only', () => {
   assert.equal(dayOf('garbage'), null);
   assert.equal(dayOf(null), null);
 });
+

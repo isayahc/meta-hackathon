@@ -28,9 +28,9 @@ test('HTTP task links, legacy checklist completion, calendar and CLI share one t
   const result = await promisify(execFile)(process.execPath, [cli, '--root', root, '--command', command]);
   assert.equal(JSON.parse(result.stdout).id, task.id);
   assert.equal((await request('POST', '/api/task-planning', { command: 'edit', id: task.id, revision: task.revision, patch: {}, reason: 'stale' })).status, 409);
-  configurePlanning(root, 1, { timezone: 'America/New_York', person: 'operator', max_minutes: 120, resources: {}, availability: [{ start: '2030-01-10T09:00:00-05:00', end: '2030-01-10T11:00:00-05:00' }] });
-  const plan = proposePlan(root, '2030-01-10', '2030-01-10T08:00:00-05:00');
-  decidePlan(root, plan.id, 'accepted', 'Reviewed', '2030-01-10T08:00:00-05:00');
+  await configurePlanning(root, 1, { timezone: 'America/New_York', person: 'operator', max_minutes: 120, resources: {}, availability: [{ start: '2030-01-10T09:00:00-05:00', end: '2030-01-10T11:00:00-05:00' }] });
+  const plan = await proposePlan(root, '2030-01-10', '2030-01-10T08:00:00-05:00');
+  await decidePlan(root, plan.id, 'accepted', 'Reviewed', '2030-01-10T08:00:00-05:00');
   const events = (await request('GET', '/api/events')).json.events;
   const block = events.find((e: { task_id: string }) => e.task_id === task.id);
   assert.equal(block.time, '09:00'); assert.equal(block.scheduling, 'accepted'); assert.deepEqual(block.goal_ids, [goal.id]);
@@ -44,3 +44,4 @@ test('optimizer UI adopts a task rather than completing the parent goal', async 
   const functionBody = html.slice(html.indexOf('function renderActions('), html.indexOf('function renderFeed('));
   assert.match(functionBody, /Review as task/); assert.match(functionBody, /command: 'create'/); assert.doesNotMatch(functionBody, /setGoal\(/);
 });
+
