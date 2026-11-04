@@ -2,6 +2,7 @@
 // the optimizer. Status moves open -> at-risk -> done (or back) as
 // briefings report. No dependencies beyond node:sqlite (via lib/db).
 import { withDb } from './db.js';
+import { validDay } from './planning-time.js';
 
 export type GoalStatus = 'open' | 'at-risk' | 'done';
 
@@ -12,12 +13,14 @@ export interface Goal {
   weight: number;
   status: GoalStatus;
   created: string;
+  success_criteria?: string;
 }
 
 export interface NewGoal {
   text: string;
   deadline?: string | null;
   weight?: number;
+  success_criteria?: string;
 }
 
 interface GoalRow {
@@ -27,6 +30,7 @@ interface GoalRow {
   weight: number;
   status: GoalStatus;
   created: string;
+  success_criteria?: string;
 }
 
 function toGoal(row: GoalRow): Goal {
@@ -37,13 +41,14 @@ function toGoal(row: GoalRow): Goal {
     weight: row.weight,
     status: row.status,
     created: row.created,
+    success_criteria: row.success_criteria ?? '',
   };
 }
 
 export async function listGoals(root: string): Promise<Goal[]> {
   return withDb(root, (db) =>
     db
-      .prepare('SELECT id, text, deadline, weight, status, created FROM goals ORDER BY rowid')
+      .prepare('SELECT * FROM goals ORDER BY rowid')
       .all()
       .map((r) => toGoal(r as unknown as GoalRow))
   );
@@ -59,8 +64,10 @@ function slugify(text: string, n: number): string {
   return `${slug}-${n}`;
 }
 
-export async function addGoal(root: string, { text, deadline = null, weight = 3 }: NewGoal): Promise<Goal> {
+export async function addGoal(root: string, { text, deadline = null, weight = 3, success_criteria = '' }: NewGoal): Promise<Goal> {
   if (!text?.trim()) throw new Error('Goal text is required.');
+  if (deadline !== null) validDay(deadline);
+  if (typeof success_criteria !== 'string' || success_criteria.length > 2000) throw new Error('Invalid success criteria.');
   const w = Math.min(5, Math.max(1, Number(weight) || 3));
   return withDb(root, (db) => {
     const n = (db.prepare('SELECT COUNT(*) AS n FROM goals').get() as unknown as { n: number }).n;
@@ -71,14 +78,16 @@ export async function addGoal(root: string, { text, deadline = null, weight = 3 
       weight: w,
       status: 'open',
       created: new Date().toISOString(),
+      success_criteria,
     };
-    db.prepare('INSERT INTO goals(id, text, deadline, weight, status, created) VALUES(?, ?, ?, ?, ?, ?)').run(
+    db.prepare('INSERT INTO goals(id, text, deadline, weight, status, created, success_criteria) VALUES(?, ?, ?, ?, ?, ?, ?)').run(
       goal.id,
       goal.text,
       goal.deadline,
       goal.weight,
       goal.status,
-      goal.created
+      goal.created,
+      success_criteria
     );
     return goal;
   });
@@ -91,7 +100,7 @@ export async function setGoalStatus(root: string, id: string, status: string): P
     throw new Error(`Bad status "${status}": want open, at-risk, or done.`);
   }
   return withDb(root, (db) => {
-    const row = db.prepare('SELECT id, text, deadline, weight, status, created FROM goals WHERE id = ?').get(id) as
+    const row = db.prepare('SELECT * FROM goals WHERE id = ?').get(id) as
       | GoalRow
       | undefined;
     if (!row) throw new Error(`No goal "${id}".`);

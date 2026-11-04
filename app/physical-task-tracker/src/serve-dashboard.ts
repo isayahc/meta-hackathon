@@ -22,6 +22,8 @@ import { readOiLinks } from './lib/oi-links.js';
 import { improvementPlan, readWorkflowContext, writeWorkflowContext, ImprovementError, decideImprovement, listImprovementReviews, readImprovementReview } from './lib/improvements.js';
 import { getDoc } from './lib/db.js';
 import { WalkthroughError, captureWalkthrough, listWalkthroughs, readWalkthrough, reviewWalkthrough, walkthroughHandoff, walkthroughImage } from './lib/walkthrough.js';
+import { planningCommand, planningView, planningCalendar } from './lib/task-planning.js';
+import { localParts } from './lib/planning-time.js';
 import { loadEnvSync } from './lib/env.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -312,6 +314,14 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
         res.end(html);
         return;
       }
+      if (url.pathname === '/api/task-planning' && req.method === 'GET') {
+        json(200, planningView(root)); return;
+      }
+      if (url.pathname === '/api/task-planning' && req.method === 'POST') {
+        try { json(200, planningCommand(root, await readBody(req))); }
+        catch (error) { const message = (error as Error).message; json(/Stale/.test(message) ? 409 : 400, { error: message }); }
+        return;
+      }
       if (url.pathname === '/api/walkthroughs' && req.method === 'GET') {
         json(200, { runs: listWalkthroughs(root) }); return;
       }
@@ -381,8 +391,8 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
         return;
       }
       if (req.method === 'POST' && url.pathname === '/api/goals') {
-        const { text, deadline = null, weight = 3 } = await readBody(req);
-        const goal = await addGoal(root, { text, deadline, weight });
+        const { text, deadline = null, weight = 3, success_criteria = '' } = await readBody(req);
+        const goal = await addGoal(root, { text, deadline, weight, success_criteria });
         json(200, { ok: true, goal });
         return;
       }
@@ -518,7 +528,13 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
             });
           }
         }
-        const events = [...stored, ...derived].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+        const human = planningView(root);
+        const timedStored = stored.map(e => {
+          const timing = human.events.find(t => t.id === e.id)?.timing;
+          const p = timing ? localParts(timing.start, human.schedule.config.timezone) : null;
+          return timing ? { ...e, date: p!.day, time: p!.time, ...timing, detail: `${timing.blocking ? 'Fixed commitment' : 'Resource reservation'} · ${human.schedule.config.timezone}` } : e;
+        });
+        const events = [...timedStored, ...derived, ...planningCalendar(root)].sort((a, b) => String(a.date).localeCompare(String(b.date)));
         json(200, { events });
         return;
       }

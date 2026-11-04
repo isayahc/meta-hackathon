@@ -1,9 +1,10 @@
 // Durable actions: the checkable next steps from a video scan, persisted
 // per calendar event so checklist state survives refresh. Actions are
 // deliberately NOT goals: completing every action on an entry never closes
-// anything in the goals table — no code path connects the two.
+// anything in the goals table. Reviewed contribution links live in task metadata.
 // No dependencies beyond node:sqlite (via lib/db).
 import { withDb } from './db.js';
+import { editTask, planningView } from './task-planning.js';
 
 export type ActionStatus = 'open' | 'done';
 
@@ -75,16 +76,14 @@ export async function setActionStatus(root: string, id: string, status: string):
   if (!ALLOWED.has(status)) {
     throw new Error(`Bad status "${status}": want open or done.`);
   }
+  const task = planningView(root).tasks.find(t => t.id === id);
+  if (!task) throw new Error(`No action "${id}".`);
+  editTask(root, id, task.revision, { execution: status === 'done' ? 'done' : 'open' }, 'Checklist status changed by operator');
   return withDb(root, (db) => {
     const row = db
       .prepare('SELECT id, event_id, idx, text, status, created_at, updated_at FROM actions WHERE id = ?')
       .get(id) as unknown as ActionRow | undefined;
     if (!row) throw new Error(`No action "${id}".`);
-    db.prepare('UPDATE actions SET status = ?, updated_at = ? WHERE id = ?').run(
-      status,
-      new Date().toISOString(),
-      id
-    );
-    return toAction({ ...row, status: status as ActionStatus });
+    return toAction(row);
   });
 }

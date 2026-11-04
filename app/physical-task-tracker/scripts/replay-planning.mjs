@@ -1,0 +1,30 @@
+/** Retained synthetic tray workflow: goals, breaks, acceptance, actual work and replanning. */
+import assert from 'node:assert/strict';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve, join } from 'node:path';
+import { addGoal } from '../dist/lib/goals.js';
+import { createTask, configurePlanning, saveCommitment, proposePlan, decidePlan, recordWork, editTask, planningView } from '../dist/lib/task-planning.js';
+
+if (!process.argv[2]) throw new Error('Pass a new artifact directory.');
+const root = resolve(process.argv[2]); await mkdir(root);
+const day = '2026-10-20', at = time => `${day}T${time}:00.000Z`;
+configurePlanning(root, 1, { timezone: 'UTC', person: 'operator', max_minutes: 180, resources: { scoop: 'available' }, availability: [{ start: at('09:00'), end: at('12:00') }] });
+const goal = await addGoal(root, { text: 'Prepare 50 trays', deadline: day, weight: 5, success_criteria: '50 filled and seeded trays pass the operator quality check' });
+const otherGoal = await addGoal(root, { text: 'Have supplies ready', deadline: day, weight: 3 });
+const ready = text => ({ text, active_minutes: 30, remaining_minutes: 30, estimate_source: 'Synthetic operator estimate', completion_criteria: 'Synthetic completion check', resources: ['scoop'], links: [{ goal_id: goal.id, explanation: 'Required step for 50 trays', origin: 'human', review: 'confirmed' }] });
+let stage = createTask(root, { ...ready('Stage trays and soil'), links: [goal, otherGoal].map(g => ({ goal_id: g.id, explanation: 'Makes materials ready', origin: 'human', review: 'confirmed' })) }, 'stage');
+const fill = createTask(root, { ...ready('Fill trays'), dependencies: [stage.id], quantity: { total: 50, remaining: 50, unit: 'tray' } }, 'fill');
+const seed = createTask(root, { ...ready('Seed trays'), dependencies: [fill.id] }, 'seed');
+createTask(root, { ...ready('Check fill and seeding quality'), dependencies: [seed.id] }, 'quality');
+saveCommitment(root, { id: 'break', title: 'Break', start: at('10:00'), end: at('10:15'), blocking: true, resources: [] });
+const baseline = proposePlan(root, day, at('08:00')); assert.equal(baseline.blocks.length, 4); assert.equal(baseline.scheduled_minutes, 120);
+decidePlan(root, baseline.id, 'accepted', 'Synthetic operator accepted', at('08:00'));
+stage = recordWork(root, stage.id, stage.revision, { id: 'stage-actual', start: at('09:00'), end: at('09:45'), outcome: 'Synthetic overrun; half the setup remains', remaining_minutes: 15, done: false });
+stage = editTask(root, stage.id, stage.revision, { execution: 'open' }, 'Resume remaining staging');
+const revised = proposePlan(root, day, at('09:45'));
+assert.ok(revised.conflicts.length, 'Downstream accepted work must request review after overrun');
+assert.equal(planningView(root).goals.find(g => g.id === goal.id).status, 'open');
+await writeFile(join(root, 'baseline.json'), JSON.stringify(baseline, null, 2));
+await writeFile(join(root, 'after-overrun.json'), JSON.stringify(revised, null, 2));
+await writeFile(join(root, 'state.json'), JSON.stringify(planningView(root), null, 2));
+console.log(JSON.stringify({ source: 'synthetic replay', passed: true, root, baseline_blocks: baseline.blocks.length, shared_task_count: baseline.blocks.filter(b => b.task_id === stage.id).length, correction_conflicts: revised.conflicts, goal_outcome: 'not verified' }, null, 2));

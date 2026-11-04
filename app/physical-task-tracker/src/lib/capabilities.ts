@@ -13,6 +13,7 @@ const execute = promisify(execFile);
 const dist = fileURLToPath(new URL('../', import.meta.url));
 const scripts = fileURLToPath(new URL('../../scripts/', import.meta.url));
 export const CAPABILITIES = [
+  { id: 'planning', mode: 'synthetic goal/task/calendar replay', requires: ['Node 22+'], checks: ['shared goal task scheduled once', 'dependencies and break respected', 'overrun preserves actuals and flags downstream accepted conflicts', 'goal outcome stays separate'] },
   { id: 'process', mode: 'synthetic replay', requires: ['Node 22+'], checks: ['scan event → process', 'correction persists', 'original revision retained'] },
   { id: 'improvements', mode: 'synthetic replay', requires: ['Node 22+'], checks: ['optimizer → comparison', 'decision persists', 'process correction makes review stale'] },
   { id: 'floorplan', mode: 'fixture replay with mock OI', requires: ['Node 22+'], checks: ['scaled and unscaled fixtures', 'connector evidence export'], limitation: 'Does not test real OI or model understanding.' },
@@ -135,7 +136,11 @@ export async function testCapabilities(selection: string, directory: string): Pr
   if (!isAbsolute(directory)) throw new Error('--out must be an absolute path to a new directory.');
   await mkdir(directory); // Deliberately refuse an existing directory, even if empty.
   const report: CapabilityReport = { schema: 'fieldops-capability-test/1', status: 'passed', started_at: new Date().toISOString(), node: process.version, directory, live_inference: false, results: [] };
-  const scenarios = { process: processScenario, improvements: improvementsScenario, floorplan: floorplanScenario, walkthrough: walkthroughScenario };
+  const scenarios = { planning: async (s: Scenario): Promise<void> => {
+    const result = await s.command<{ passed: boolean; shared_task_count: number; correction_conflicts: string[] }>(process.execPath, [join(scripts, 'replay-planning.mjs'), join(s.directory, 'project')], 'planning-replay');
+    assert.equal(result.passed, true); assert.equal(result.shared_task_count, 1); assert.ok(result.correction_conflicts.length);
+    s.checks.push('Shared task scheduled once; overrun preserves actuals, flags accepted conflicts and leaves goal outcome open');
+  }, process: processScenario, improvements: improvementsScenario, floorplan: floorplanScenario, walkthrough: walkthroughScenario };
   for (const capability of selected) {
     const folder = join(directory, capability.id); await mkdir(folder);
     const scenario = new Scenario(folder);
