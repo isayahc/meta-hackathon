@@ -119,3 +119,11 @@ scene mutation/persistence, adds preview-token gating and revisioned evidence
 lineage, and explicitly reports unsupported raw meshes/point clouds/regions.
 See [reconstruction-import.md](reconstruction-import.md) for the audited interface,
 known metadata/export limitations, scale semantics and headless commands.
+
+## Read-only route assessment (#54)
+
+The pinned OI route adapter composes SpaceIR validation/connectivity, scene/asset
+reads, existing conservative plan footprints and runtime geometry primitives.
+It reports its supported subset separately from full physical traversability,
+which remains unsupported. See [route-assessment.md](route-assessment.md) for
+contracts, fixtures, source binding, scale requirements and read-only guarantees.

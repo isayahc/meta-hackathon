@@ -56,7 +56,7 @@ async function runtime(root) {
 }
 
 /** Validate a uniform source-to-world transform and evaluate independent measurement evidence. */
-function assessTransform(request, oi) {
+export function assessTransform(request, oi) {
   const { Matrix4, Vector3 } = oi, frame = request.frame;
   if (frame.handedness !== 'right') fail('UNSUPPORTED_TRANSFORM', 'Convert reflected/left-handed geometry through a supported OI asset importer first.');
   const matrix = new Matrix4().set(...frame.matrix), e = matrix.elements;

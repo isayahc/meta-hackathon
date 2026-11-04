@@ -15,6 +15,7 @@ const execute = promisify(execFile);
 const dist = fileURLToPath(new URL('../', import.meta.url));
 const scripts = fileURLToPath(new URL('../../scripts/', import.meta.url));
 export const CAPABILITIES = [
+  { id: 'routes', mode: 'deterministic read-only fixture with real pinned OI', requires: ['Node 22+', 'Pinned OI with dependencies'], checks: ['bent route arithmetic', 'independent scale evidence', 'repeatability', 'baseline/proposal without scene writes'], limitation: 'Conservative horizontal footprints and explicit portals; full physical traversability remains unsupported.' },
   { id: 'reconstruction', mode: 'deterministic fixture with real pinned OI', requires: ['Node 22+', 'OI_ROOT at pinned revision with dependencies'], checks: ['preview before commit', 'metric transforms and independent holdout', 'retry deduplicates', 'correction preserves identity and evidence'], limitation: 'Existing immutable OI assets only; no live inference or raw reconstruction mesh import.' },
   { id: 'spatial', mode: 'synthetic source/location association replay', requires: ['Node 22+'], checks: ['timestamp and identity persist', 'human identity review', 'process/scene changes stay stale', 'missing entities never relink'], limitation: 'Mock OI responses do not prove real scene resolution or scale.' },
   { id: 'journey', mode: 'synthetic video-first journey replay', requires: ['Node 22+'], checks: ['capture before setup', 'correction and goal confirmation persist', 'future task and accepted calendar share identity', 'partial work and follow-up revise remaining work without duplicating tasks'] },
@@ -143,7 +144,16 @@ export async function testCapabilities(selection: string, directory: string): Pr
   if (!isAbsolute(directory)) throw new Error('--out must be an absolute path to a new directory.');
   await mkdir(directory); // Deliberately refuse an existing directory, even if empty.
   const report: CapabilityReport = { schema: 'fieldops-capability-test/1', status: 'passed', started_at: new Date().toISOString(), node: process.version, directory, live_inference: false, results: [] };
-  const scenarios = { reconstruction: async (s: Scenario): Promise<void> => {
+  const scenarios = { routes: async (s: Scenario): Promise<void> => {
+    let oiRoot:string;
+    try{oiRoot=resolveOiRoot();}catch(error){throw new Blocked((error as Error).message);}
+    if(!(await readOiIdentity(oiRoot)).pinned||['tsx','three','ajv'].some(dep=>!existsSync(join(oiRoot,'node_modules',dep,'package.json'))))
+      throw new Blocked('Use pinned OI with dependencies installed.');
+    const result=await s.command<{status:string;mutation_attempts:number}>(process.execPath,['--import',join(oiRoot,'node_modules/tsx/dist/esm/index.mjs'),
+      join(dist,'samples/route-assessment-fixture.mjs'),oiRoot,join(s.directory,'oi-data'),join(dist,'lib/oi-route-assessment.mjs')],'real-oi-routes');
+    assert.equal(result.status,'passed');assert.equal(result.mutation_attempts,0);
+    s.checks.push('Declared 8 m bent route vs sqrt(32) m straight proposal; real OI inputs repeat exactly and no scene/asset mutation is attempted');
+  }, reconstruction: async (s: Scenario): Promise<void> => {
     let oiRoot: string;
     try { oiRoot = resolveOiRoot(); } catch (error) { throw new Blocked((error as Error).message); }
     if (!(await readOiIdentity(oiRoot)).pinned || !existsSync(join(oiRoot, 'node_modules/tsx/dist/esm/index.mjs')) || ['tsx','three','ajv'].some(dep => !existsSync(join(oiRoot,'node_modules',dep,'package.json'))))

@@ -280,3 +280,25 @@ test('missing structured proposals never turn model narrative into checked actio
   assert.deepEqual(plan.ranked_actions, []);
   assert.match(plan.deferred[0].why, /No structured improvement proposals/);
 });
+
+test('intervention review consumes read-only route checks, retains unknowns and never manufactures distance savings', async t => {
+  const {root,doc,context,candidates}=await setup(t);addSpatial(context,candidates[0]);
+  const option=context.spatial_options[0];option.entity_ids=['bench','supplies'];
+  option.route_assessment={schema:'oi-route-assessment/1',scene_id:option.scene_id,revision:1,frame:'oi-world-m-Y-up',station_ids:['bench','supplies'],route:[[0,0,0],[1,0,0]],
+    profile:{kind:'person',width_m:.6,margin_m:.1,source:'mock-fixture'},evidence:[],scale:{predicted_m_per_unit:null,calibration:null,holdout:null,holdout_independence:'not-established'},
+    environment:{coverage:'partial',source:'mock-fixture',unknowns:[]},space:{document:option.space_ir as unknown as Record<string,unknown>,sha256:'0'.repeat(64),from_region:'a',to_region:'b',source:'mock-fixture'},alternative:null};
+  const calls:Array<{op:string;payload:Record<string,unknown>}>=[];
+  let blocked=false;
+  const transport={async request<T>(op:string,payload:Record<string,unknown>):Promise<T>{
+    calls.push({op,payload});return {schema:'oi-route-assessment/1',scene_id:option.scene_id,revision:1,head_revision:1,input_digest:'a'.repeat(64),result_digest:'b'.repeat(64),
+      geometric_path_length_m:8,validated_walkable_route_length_m:null,checks:[{id:'obstruction',status:blocked?'failed':'passed',reason:'Explicit mock test response'},
+        {id:'physical-traversability',status:'unsupported',reason:'Not supported'}],traversability:blocked?'failed':'unknown',stale:false,mutations:0,mock:true} as T;
+  }};
+  const [a]=await assessImprovements(root,[doc],[],context,candidates,transport);
+  assert.equal(a.spatial.route_assessment?.geometric_path_length_m,8);assert.equal(a.spatial.route_assessment?.mock,true);
+  assert.equal(a.feasibility,'deferred');assert.ok(a.unknown_metrics.includes('distance'));
+  assert.deepEqual(calls.map(c=>c.op),['route-assessment']);assert.equal(calls[0].payload.action,'assess');assert.ok(calls[0].payload.dataDir);
+  blocked=true;assert.equal((await assessImprovements(root,[doc],[],context,candidates,transport))[0].feasibility,'blocked');
+  option.route_assessment.revision=2;const count=calls.length;
+  assert.equal((await assessImprovements(root,[doc],[],context,candidates,transport))[0].spatial.status,'unvalidated');assert.equal(calls.length,count);
+});
