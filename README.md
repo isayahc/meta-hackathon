@@ -5,19 +5,25 @@ are being evaluated under [doc/potential-projects](doc/potential-projects).
 
 ## Run the demo
 
-Prerequisites: Node 18+. The working build is the farm-operations task
-tracker (TypeScript, zero runtime dependencies):
+Prerequisites: **Node.js 22 or newer** and npm. From the repository root:
 
-```bash
-cd C:\Users\isaya\meta-hackathon\app\physical-task-tracker
-npm install # once; typescript only
-npm start   # builds, serves ./my-farm, opens the app in your browser
+```powershell
+cd C:\Users\isaya\meta-hackathon
+npm install
+npm start
 ```
 
-No API key, no network for the above — the app loads at
-http://localhost:8123. Full loop (scan → compare → briefing → optimizer →
-ecology → dashboard) with per-step commands:
-[app README](app/physical-task-tracker/README.md).
+The root is an npm workspace: installation includes the Field Ops app, and
+`npm start` builds it, serves it at http://localhost:8123, and opens your browser.
+Existing project data stays in `app/physical-task-tracker/my-farm`.
+
+Use `npm run build`, `npm test`, or `npm run capabilities -- list` from the
+root as well. Running the app's commands directly from
+`app/physical-task-tracker` remains supported.
+
+Opening the dashboard does not require an API key. Live video analysis requires
+the configured model credentials and network access. See the
+[app README](app/physical-task-tracker/README.md) for setup and individual commands.
 
 ## Meta Global AI Developer Hackathon — Scope
 
