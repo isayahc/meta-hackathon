@@ -24,7 +24,7 @@ import { spatialCommand, spatialEvidenceView, inspectSpatialTarget } from './lib
 import type { OiReferenceReader } from './lib/oi-reference.js';
 import { readOiLinks } from './lib/oi-links.js';
 import { improvementPlan, readWorkflowContext, writeWorkflowContext, ImprovementError, decideImprovement, listImprovementReviews, readImprovementReview } from './lib/improvements.js';
-import { getDoc } from './lib/db.js';
+import { getDoc, initDb, DATABASE_VERSION } from './lib/db.js';
 import { WalkthroughError, captureWalkthrough, listWalkthroughs, readWalkthrough, reviewWalkthrough, walkthroughHandoff, walkthroughImage } from './lib/walkthrough.js';
 import { planningCommand, planningView, planningCalendar } from './lib/task-planning.js';
 import { outcomeCommand, outcomeView } from './lib/outcomes.js';
@@ -316,6 +316,11 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
       res.end(JSON.stringify(obj));
     };
     try {
+      if (req.method === 'GET' && url.pathname === '/healthz') {
+        initDb(root);
+        json(200, { status: 'ok', database_version: DATABASE_VERSION });
+        return;
+      }
       if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
         const html = await readFile(join(HERE, 'dashboard', 'index.html'), 'utf8');
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -761,11 +766,24 @@ if (invokedAsMain) {
   // resolve identically no matter the child's working directory.
   const root = resolve(rootArg);
   const port = Number(flagValue(args, '--port', '8123'));
+  const host = flagValue(args, '--host', '127.0.0.1')!;
+  if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Port must be an integer from 1 to 65535.');
   const eco = flagValue(args, '--eco', null);
   const open = args.includes('--open');
+  initDb(root); // Refuse incompatible or failed migrations before accepting requests.
   const server = createServer(root, { eco });
+  let stopping = false;
+  const stop = () => {
+    if (stopping) return;
+    stopping = true;
+    console.log('Stopping: draining active requests.');
+    server.close(() => { process.exitCode = 0; });
+    setTimeout(() => { console.error('Shutdown deadline reached; interrupted jobs require review.'); process.exit(1); }, 25000).unref();
+  };
+  process.on('SIGTERM', stop);
+  process.on('SIGINT', stop);
   const url = `http://localhost:${port}`;
-  server.listen(port, '127.0.0.1', async () => {
+  server.listen(port, host, async () => {
     console.log(`Field Ops dashboard: ${url}  (project: ${root})`);
     if (open) {
       if (await waitForOk(`${url}/api/overview`)) {

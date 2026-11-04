@@ -25,6 +25,17 @@ Opening the dashboard does not require an API key. Live video analysis requires
 the configured model credentials and network access. See the
 [app README](app/physical-task-tracker/README.md) for setup and individual commands.
 
+## Run with Docker
+
+```sh
+docker compose up --build -d
+```
+
+Open http://localhost:8123. Project data and saved credentials use separate
+persistent named volumes; the local `my-farm` folder is not imported automatically.
+See [Docker deployment and recovery](doc/docker.md) for Windows/WSL2 and Linux,
+keys, existing-project migration, backups, upgrades, and verification.
+
 ## Meta Global AI Developer Hackathon — Scope
 
 Built for the [Meta Global AI Developer Hackathon 2026](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) (Meta + Cerebral Valley, Oct 26 – Nov 4, 2026; submissions due Nov 4, 9:00 PM ET). Indie track: judged on creativity, technical ambition, and whether it works.
@@ -50,3 +61,4 @@ See [doc/potential-projects](doc/potential-projects) for candidate problem state
 ## License
 
 MIT
+

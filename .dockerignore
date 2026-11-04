@@ -1,0 +1,18 @@
+# Allowlist: never send local projects, media, credentials, or Git history.
+**
+!package.json
+!package-lock.json
+!app/
+!app/physical-task-tracker/
+!app/physical-task-tracker/package.json
+!app/physical-task-tracker/tsconfig.json
+!app/physical-task-tracker/src/
+!app/physical-task-tracker/src/**
+!app/physical-task-tracker/scripts/
+!app/physical-task-tracker/scripts/copy-assets.mjs
+!docker/
+!docker/**
+**/.env
+**/.env.*
+**/*key*.json
+**/__pycache__/**
