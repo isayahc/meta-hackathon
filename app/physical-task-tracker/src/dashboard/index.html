@@ -154,6 +154,24 @@ img { max-width:100%; height:auto; }
 .journey-stage[hidden], .evidence-steps li[hidden] { display:none; }
 .journey-guidance { padding:16px; background:var(--soft); border-radius:12px; margin:12px 0; }
 .journey-guidance { scroll-margin-top:0; }
+#view-space.focused>.page-heading,#view-space.focused>.workspace-links { display:none; }
+.workspace-back { margin-bottom:8px; }
+#journeydetail .journey-guidance { padding:10px 14px; margin:0 0 8px; }
+#journeydetail .journey-guidance h3 { font-size:18px; }
+#journeydetail .review-workbench { margin:0; padding:16px; }
+.review-workbench h2 { font-size:20px; }
+.review-workbench .review-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; }
+.segment-preview img,.segment-preview video { display:block; width:100%; height:min(36vh,320px); object-fit:contain; border-radius:10px; background:#14241d; }
+.review-step { min-width:0; }
+.review-step>h3 { font-size:20px; }
+.review-step details { margin:4px 0; }
+.review-step details[open] { max-height:260px; overflow:auto; }
+.review-pager { display:flex; justify-content:space-between; align-items:center; gap:8px; margin:10px 0; }
+.review-footer { border-top:1px solid var(--line); margin-top:10px; padding-top:10px; }
+.review-footer form.run { margin:0; display:flex; gap:12px; align-items:end; flex-wrap:wrap; }
+.review-footer label { flex:1; }
+@media(max-width:900px){ .review-workbench .review-grid { grid-template-columns:1fr; gap:10px; } .segment-preview img,.segment-preview video { height:180px; } .review-footer { position:sticky; bottom:70px; z-index:3; background:white; } .review-footer form.run { gap:6px; } .review-footer label { min-width:120px; } }
+
 #journeydetail>section>details { margin:0; }
 #journeydetail>section>h2 { margin-bottom:4px; }
 .journey-guidance h3,.journey-guidance p { margin:0 0 8px; }
@@ -438,6 +456,7 @@ function setDestination(view) {
   if(!['today','plan','cal','space'].includes(view))view='today';
   for(const tab of document.querySelectorAll('nav.tabs button')){const active=tab.dataset.view===view;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;}
   for(const panel of document.querySelectorAll('main>.view')){const active=panel.id==='view-'+view;panel.hidden=!active;panel.classList.toggle('active',active);}
+  if(view==='space')focusWorkspace(uiState.workspaceTarget|| (selectedJourney?'journeydetail':'workflowsection'));
   return view;
 }
 document.querySelectorAll('nav.tabs button').forEach(b=>b.addEventListener('click',()=>setDestination(b.dataset.view)));
@@ -1216,12 +1235,53 @@ function renderToday(){
 function revealTarget(id,route=true){
   const target=$(id);if(!target)return;const view=target.closest('.view');if(view){setDestination(view.id.slice(5));if(route)journeyRoute(view.id.slice(5),'section',id);}
   for(let node=target;node;node=node.parentElement)if(node.tagName==='DETAILS')node.open=true;
+  if(view?.id==='view-space')focusWorkspace(id);
   target.scrollIntoView({block:'start'});target.tabIndex=-1;target.focus();
 }
 function refreshWorkspaceContext(){
   const t=planningState?.tasks.find(t=>t.id===selectedPlanningTask);
   $('workspacecontext').innerHTML=t?`<p>Work area for <button class="ghost" data-opentask="${esc(t.id)}">${esc(t.text)}</button> · ${esc(t.location||'Location not yet confirmed')}</p>${goalChips(t)}`:'<p>Maps enrich the work when spatial evidence is useful. They are optional for planning. Link reviewed process evidence to locations below. Unsupported OI region references stay unresolved.</p>';
 }
+/** Show one workspace activity; supporting tools remain reachable through explicit navigation. */
+function focusWorkspace(id='workflowsection'){
+  const workspace=$('view-space'),target=$(id)||$('workflowsection');
+  if(!workspace||!target)return;
+  uiState.workspaceTarget=id;
+  const home=id==='workflowsection';workspace.classList.toggle('focused',!home);
+  for(const child of workspace.children){
+    child.hidden=home?!(child.id==='workflowsection'||child.classList.contains('page-heading')||child.classList.contains('workspace-links')):!(child===target||child.contains(target)||child.id==='workspaceback');
+  }
+  let back=$('workspaceback');if(!back){back=document.createElement('button');back.id='workspaceback';back.type='button';back.className='ghost workspace-back';back.dataset.workspaceHome='true';back.textContent='← All workflows';workspace.prepend(back);}back.hidden=home;
+}
+/** Resolve visual evidence only from the selected interpretation and observed frame. */
+function stepGif(clip,step){
+  if(!step||step.observed_order===null)return null;
+  const raw=clip.source.interpretations.find(i=>i.id===clip.interpretation_id)?.raw;
+  const frame=step.evidence.spans.find(s=>Number.isInteger(s.frame))?.frame??step.observed_order;
+  const gif=raw?.gif_segments?.find(g=>g.frame===frame);
+  return gif&&Number.isFinite(gif.start_s)&&Number.isFinite(gif.end_s)&&gif.start_s>=0&&gif.end_s>gif.start_s&&typeof gif.file==='string'&&/^[a-zA-Z0-9_.-]+\.gif$/.test(gif.file)?gif:null;
+}
+/** A single clip and observed step occupy the review surface. Suggestions are separate. */
+function reviewWorkbench(w,reason){
+  const clips=w.clips.filter(c=>c.role!=='followup');
+  const ci=Math.min(uiState.reviewClip||0,Math.max(0,clips.length-1)),c=clips[ci];if(!c)return '<section><h2>No recording yet</h2></section>';
+  const s=c.source,p=c.process,observed=p?.steps.filter(x=>x.observed_order!==null)||[],suggested=p?.steps.filter(x=>x.observed_order===null)||[];
+  const index=Math.min(uiState.reviewStep||0,Math.max(0,observed.length-1)),step=observed[index],gif=stepGif(c,step),reviewed=p&&p.rev===c.reviewed_revision;
+  const video=s.media?`<video controls preload="metadata" src="/media/${encodeURIComponent(s.media)}" aria-label="Original recording"></video>`:'';
+  return `<section class="review-workbench"><h2>${esc(p?.title||w.workflow.title)}</h2>
+    ${clips.length>1?`<div class="observation-nav">${clips.map((v,i)=>`<button class="ghost" data-review-clip="${i}" aria-pressed="${i===ci}">Clip ${i+1}</button>`).join('')}</div>`:''}
+    <article><div class="review-grid"><div class="segment-preview">${gif?`<img src="/media/${encodeURIComponent(gif.file)}" alt="Looping video segment for ${esc(step.label)}"><small>${gif.start_s.toFixed(1)}–${gif.end_s.toFixed(1)}s · sampled interval, not a verified action boundary</small>`:video||'<p>No playable recording.</p>'}
+    ${!gif?'<small>No segment GIF saved. Original recording shown.</small>':''}
+    <div class="review-pager"><button class="ghost" data-review-step="${index-1}" ${index===0?'disabled':''}>Previous</button><span>${observed.length?`${index+1} / ${observed.length}`:'No observed steps'}</span><button class="ghost" data-review-step="${index+1}" ${index>=observed.length-1?'disabled':''}>Next</button></div></div>
+    <div class="review-step">${step?`<p class="eyebrow">Observed step ${index+1}</p><h3>${esc(step.label)}</h3>${step.unknowns.length?`<p>${step.unknowns.map(esc).join(' · ')}</p>`:''}
+    <details><summary>Correct this interpretation</summary><form class="run" data-jcommand="correct" data-source="${esc(s.id)}" data-step="${esc(step.id)}" data-draft="step-${esc(step.id)}"><label>What happened?<input name="label" value="${esc(step.label)}" required></label><label>Tools<input name="tools" value="${esc(step.tools.join(', '))}"></label><label>Materials<input name="materials" value="${esc(step.materials.join(', '))}"></label><label>Location<input name="place" value="${esc(step.location||'')}"></label><label>Still unknown<input name="unknowns" value="${esc(step.unknowns.join('; '))}"></label>${reason}<button class="btn">Save correction</button></form></details>`:'<p>No step-level observation was extracted. Review the original recording or retry analysis.</p>'}
+    <details><summary>Outcome and task name</summary><p>Inferred outcome: ${esc(p?.stage||'Unknown')}. Not verified success.</p>${p?`<form class="run" data-jcommand="summary" data-source="${esc(s.id)}"><label>Task name<input name="title" value="${esc(p.title)}" required></label><label>Outcome interpretation<input name="outcome" value="${esc(p.stage||'')}"></label>${reason}<button class="btn">Save interpretation</button></form>`:''}</details>
+    <details><summary>Questions and recording details</summary><p>${esc(s.recorded_at||'Recording time unknown')}</p><p>${esc(s.time_uncertainty)}</p><p>${(p?.unknowns||[]).map(esc).join(' · ')||'No additional questions recorded.'}</p><p>Only sampled instants were analyzed. Unseen work remains unknown.</p>${step?`<button class="ghost" type="button" data-linkprocess="${esc(p.id)}" data-linkstep="${esc(step.id)}">Link work location</button>`:''}${gif?video:''}${s.error?`<p>${esc(s.error)}</p>`:''}<button class="ghost" data-journey-retry="${esc(s.id)}">Reanalyze and generate segment GIFs</button><p class="hint">Creates a new interpretation and requires another review.</p></details>
+    ${suggested.length?`<details><summary>Other reported or suggested steps (${suggested.length})</summary><p>These have no observed video segment. Keep reported steps and suggestions separate from recorded evidence.</p><ul>${suggested.map(x=>`<li>${esc(x.label)}</li>`).join('')}</ul></details>`:''}
+    ${p?`<details><summary>Add an omitted step</summary><form class="run" data-jcommand="addstep" data-source="${esc(s.id)}"><label>Missing action<input name="label" required></label><label>What remains uncertain?<input name="unknowns" required></label>${reason}<button class="btn">Add human-reported step</button></form></details>`:''}</div></div>
+    ${p?`<div class="review-footer"><form class="run" data-jcommand="review" data-source="${esc(s.id)}"><label>Review note<input name="reason" value="Reviewed the recording; unknowns remain explicit" required></label><button class="btn">${reviewed?'Review confirmed':'Confirm review'}</button></form></div>`:`<button class="btn" data-journey-retry="${esc(s.id)}">Retry analysis</button>`}</article></section>`;
+}
+
 function presentJourneyStages(w){
   const root=$('journeydetail'),sections=[...root.children].filter(x=>x.tagName==='SECTION');if(!sections.length)return;
   const names={review:'Review',goals:'Choose a goal',improvements:'Improve',tasks:'Schedule',adapt:'Check results'};
@@ -1235,24 +1295,8 @@ function presentJourneyStages(w){
   const nav=document.createElement('div');nav.className='journey-steps';nav.setAttribute('role','group');nav.setAttribute('aria-label','Workflow review steps');
   nav.innerHTML=Object.entries(names).map(([key,label])=>`<button class="ghost" type="button" data-stage="${key}" ${sections.some(s=>s.dataset.stage===key)?'':'disabled'} ${stage===key?'aria-current="step"':''}>${label}</button>`).join('');
   const guidance=document.createElement('div');guidance.className='journey-guidance';
-  guidance.innerHTML=`<p class="eyebrow">Record → Review → Improve → Schedule → Check results</p><h3>${esc(w.stage==='review'?'Your task is ready to review':w.stage==='saved'?'Observation saved':names[stage])}</h3><p>${esc(stage==='review'?'Check each step and the inferred outcome, then confirm your review. Unseen work remains unknown.':w.next)}</p>`;
-  root.prepend(guidance,nav);guidance.tabIndex=-1;for(const section of sections)section.hidden=section.dataset.stage!==stage;
-  for(const article of sections[0].querySelectorAll(':scope > article')){
-    const review=article.querySelector('[data-jcommand=review]');
-    if(review){const actions=document.createElement('div');actions.className='review-actions';actions.appendChild(review);article.querySelector('h3').after(actions);}
-
-    const video=article.querySelector(':scope > video');if(!video)continue;
-    const grid=document.createElement('div');grid.className='evidence-review';const media=document.createElement('div');media.className='evidence-media';const steps=document.createElement('div');steps.className='evidence-steps';
-    const heading=article.querySelector(':scope > h3');media.appendChild(video);
-    for(const child of [...article.children])if(child!==heading&&!child.classList.contains('review-actions'))steps.appendChild(child);
-    grid.append(media,steps);article.appendChild(grid);
-    const items=[...steps.querySelectorAll(':scope > ol > li')];
-    const controls=document.createElement('div');controls.className='observation-nav';controls.setAttribute('aria-label','Observed steps');
-    const show=index=>{items.forEach((li,i)=>li.hidden=i!==index);[...controls.children].forEach((b,i)=>b.setAttribute('aria-current',String(i===index)));};
-    items.forEach((li,i)=>{const b=document.createElement('button');b.type='button';b.className='ghost';b.textContent=String(i+1);b.setAttribute('aria-label','Review step '+(i+1)+': '+(li.querySelector('strong')?.textContent||'Observation'));b.addEventListener('click',()=>{show(i);const seek=li.querySelector('[data-seek]');if(seek)video.currentTime=Number(seek.dataset.seek);});controls.appendChild(b);});
-    steps.prepend(controls);show(0);
-
-  }
+  guidance.innerHTML=`<h3>${esc(w.stage==='review'?'Your task is ready to review':w.stage==='saved'?'Observation saved':names[stage])}</h3><p>${esc(stage==='review'?'Check each step and the inferred outcome, then confirm your review. Unseen work remains unknown.':w.next)}</p>`;
+  root.prepend(guidance,nav);if(stage==='review'){nav.hidden=true;guidance.querySelector('h3').textContent='Review your recording';}guidance.tabIndex=-1;for(const section of sections)section.hidden=section.dataset.stage!==stage;
   const purpose=root.querySelector('[data-jcommand=goal]');if(purpose&&!purpose.text.value){const proposed=w.clips.find(c=>c.process)?.process.title;if(proposed){const b=document.createElement('button');b.type='button';b.className='ghost';b.textContent='Use observed work as a starting point: '+proposed;b.addEventListener('click',()=>{purpose.text.value=proposed;saveJourneyDraft(purpose);purpose.criteria.focus();});purpose.prepend(b);}}
 }
 function presentTaskDetail(t){
@@ -1278,6 +1322,9 @@ document.querySelector('nav.tabs').addEventListener('keydown',e=>{
 });
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.reveal)revealTarget(b.dataset.reveal);
+  if(b.dataset.workspaceHome){uiState.workspaceTarget='workflowsection';focusWorkspace('workflowsection');journeyRoute('space');}
+  if(b.dataset.reviewStep!==undefined){uiState.reviewStep=Number(b.dataset.reviewStep);renderJourney();}
+  if(b.dataset.reviewClip!==undefined){uiState.reviewClip=Number(b.dataset.reviewClip);uiState.reviewStep=0;renderJourney();}
   if(b.dataset.stage){uiState.stage=b.dataset.stage;renderJourney();const panel=$('journeydetail').querySelector('.journey-stage[data-stage="'+uiState.stage+'"]');panel.tabIndex=-1;panel.focus();}
   if(b.dataset.taskplace){selectedPlanningTask=b.dataset.taskplace;refreshWorkspaceContext();revealTarget('areassection');}
 });
@@ -1398,20 +1445,7 @@ function renderJourney(){
   const w=journeyEntry();if(!w){$('journeydetail').innerHTML='';return;}const j=w.workflow;
   const reason='<label>Reason<input name="reason" required></label>';
   const goalOptions=w.goals.map(g=>`<option value="${esc(g.id)}">${esc(g.text)}</option>`).join('');
-  $('journeydetail').innerHTML=`<section><h2>${esc(j.title)}</h2><details><summary>Recording options</summary><button type="button" class="ghost" data-journey-refresh="true">Refresh saved workflow</button><button type="button" class="ghost" data-journey-add="${esc(j.id)}">Add a related clip</button></details>
-    ${w.clips.filter(c=>c.role!=='followup').map(c=>{const s=c.source,p=c.process;return `<article class="task-card"><h3>${c.role==='baseline'?'Original work':'Additional footage'} · ${esc(s.stage.replaceAll('_',' '))}</h3>
-      ${s.media?`<video controls preload="metadata" src="/media/${encodeURIComponent(s.media)}" aria-label="Original work video"></video>`:''}
-      <p>Recording time: ${esc(s.recorded_at||'unknown')} · ${esc(s.time_uncertainty)}</p>
-      ${s.error?`<p>Analysis failed: ${esc(s.error)}</p>`:''}
-      ${s.processing?'<p>Analysis was started. If it was interrupted, retry the retained clip.</p>':''}
-      ${!p||s.processing||s.stage==='failed_retryable'?`<button class="ghost" type="button" data-journey-retry="${esc(s.id)}">Resume / retry retained clip</button>`:''}
-      ${p?`<details><summary>Edit task name and inferred outcome</summary><form class="run" data-jcommand="summary" data-source="${esc(s.id)}"><label>Task name<input name="title" value="${esc(p.title)}" required></label><label>Outcome interpretation (not verified success)<input name="outcome" value="${esc(p.stage||'')}" placeholder="Unknown unless supported by the clip"></label>${reason}<button class="btn">Save interpretation</button></form></details><p><strong>${esc(p.title)}</strong> · Outcome interpretation: ${esc(p.stage||'Unknown')}</p><p>${esc(s.interpretations.find(i=>i.id===c.interpretation_id)?.origin||'unknown')} interpretation · ${p.rev===c.reviewed_revision?'Confirmed review':'Needs review'} · coverage: ${esc(p.coverage.coverage_note||'Sampled instants; unseen work is unknown')}</p>
-        <ol>${p.steps.map(step=>`<li><p><strong>${esc(step.label)}</strong> — ${step.observed_order===null?'Suggested / unobserved':'Observed in footage'} · ${esc(step.claim)}</p>${step.unknowns.length?`<p class="hint"><strong>Still unknown for this step:</strong> ${step.unknowns.map(esc).join(' · ')}. Review these limits before confirming.</p>`:''}<p>${[...step.tools,...step.materials,...step.inputs,...step.outputs].map(esc).join(' · ')||'Tools and materials not yet specified'} · ${esc(step.location||'Location unknown')}</p><button class="ghost" type="button" data-linkprocess="${esc(p.id)}" data-linkstep="${esc(step.id)}">Link work location</button>${step.evidence.spans.map(span=>`<button type="button" class="ghost" data-seek="${span.start_s}">View source at ${span.start_s}s</button>`).join('')}
-          <details><summary>Correct this interpretation</summary><form class="run" data-jcommand="correct" data-source="${esc(s.id)}" data-step="${esc(step.id)}" data-draft="step-${esc(step.id)}"><label>What happened?<input name="label" value="${esc(step.label)}" required></label><label>Tools (comma separated)<input name="tools" value="${esc(step.tools.join(', '))}"></label><label>Materials (comma separated)<input name="materials" value="${esc(step.materials.join(', '))}"></label><label>Location<input name="place" value="${esc(step.location||'')}"></label><label>Still unknown<input name="unknowns" value="${esc(step.unknowns.join('; '))}"></label>${reason}<button class="btn">Save correction</button></form></details></li>`).join('')}</ol>
-        <details><summary>Add an omitted step</summary><form class="run" data-jcommand="addstep" data-source="${esc(s.id)}"><label>Missing action<input name="label" required></label><label>What remains uncertain?<input name="unknowns" required></label>${reason}<button class="btn">Add human-reported step</button></form></details>
-        <p>${[...p.unknowns,...p.gaps,...p.order_notes].map(esc).join(' · ')||'No additional gaps recorded.'}</p>
-        <form class="run" data-jcommand="review" data-source="${esc(s.id)}">${reason}<button class="btn">Confirm review, keeping unknowns explicit</button></form>`:'<p>Your clip is saved. Analysis is needed before process review.</p>'}</article>`;}).join('')}
-    </section>
+  $('journeydetail').innerHTML=reviewWorkbench(w,reason)+`
     ${w.baseline_reviewed?`<section><h2>What are you trying to accomplish?</h2>${!j.task_ids.length?`<div class="journey-guidance"><p>${j.observation_only?'This observation is saved. You can leave now or continue with a goal.':'You can keep this as a documented observation. Planning future work is optional.'}</p><form class="run" data-jcommand="${j.observation_only?'resume_planning':'save_observation'}"><input type="hidden" name="reason" value="${j.observation_only?'Resume planning from saved observation':'Save reviewed observation without future work'}"><button class="${j.observation_only?'btn':'ghost'}">${j.observation_only?'Continue to goals and planning':'Save observation only'}</button></form></div>`:''}<p>Visible activity does not establish your desired quantity, deadline, quality standard or priority.</p>${w.goals.map(g=>`<p><button class="ghost" data-goaldetail="${esc(g.id)}">${esc(g.text)}</button> · ${esc(g.success_criteria||'Success criteria need clarification')}</p>`).join('')}
       <details ${j.observation_only?'hidden':!j.intent_confirmed?'open':''}><summary>Confirm or change purpose</summary><form class="run" data-jcommand="goal"><label>Goal<select name="goal_id"><option value="">Create a goal</option>${planningState.goals.map(g=>`<option value="${esc(g.id)}">${esc(g.text)}</option>`).join('')}</select></label><label>Desired outcome (for a new goal)<input name="text"></label><label>Success criteria (for a new goal)<input name="criteria"></label><label>Deadline (optional)<input type="date" name="deadline"></label><label>Priority<select name="weight"><option>3</option><option>1</option><option>2</option><option>4</option><option>5</option></select></label><label>What would you like to improve? (or “None for now”)<input name="desire" value="${esc(j.desired_improvement)}" required></label>${reason}<button class="btn">Confirm purpose</button></form>
       <form class="run" data-jcommand="unassigned"><label>Desired improvement or “Unknown for now”<input name="desire" required></label>${reason}<button class="ghost">Keep goals unresolved and organize work</button></form></details></section>`:''}
@@ -1428,7 +1462,7 @@ function renderJourney(){
       ${w.outcomes.map(o=>`<p>${esc(o.result.status)}: ${esc(o.result.next_action)}</p>`).join('')||`<p>${esc(w.outcome_status)}</p>`}
       <button class="ghost" type="button" data-journey-plan="outcomes">Review improvement outcomes</button><button class="ghost" type="button" data-journey-plan="humanplan">Review / replan remaining work</button>
       <details><summary>Workflow history</summary><ul>${j.history.map(h=>`<li>${esc(h.at)} · ${esc(h.action)}: ${esc(h.reason)}</li>`).join('')}</ul></details></section>`;
-  restoreJourneyDrafts();presentJourneyStages(w);
+  restoreJourneyDrafts();presentJourneyStages(w);focusWorkspace(uiState.workspaceTarget||'journeydetail');
 }
 $('journeydetail').addEventListener('input',e=>saveJourneyDraft(e.target.form));
 $('journeydetail').addEventListener('change',e=>saveJourneyDraft(e.target.form));
@@ -1450,7 +1484,7 @@ $('journeycaptureform').addEventListener('submit',e=>{e.preventDefault();const f
   $('capturestatus').textContent='Uploading and interpreting. The source is retained before analysis; you can resume its review if interrupted.';
   const result=await api(context.standalone?'/api/reconcile-video':'/api/journey-video',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...context,revision:workflow?.revision,videoData:await fileData(f.file),frames:Number(f.frames.value),recorded_at:f.recorded_at.value||null})});
   if(context.standalone){selectedUpdate=result.source.id;setDestination('space');journeyRoute('space','update',selectedUpdate);await loadPlanning();$('capturedialog').close();$('updatedetail').focus();return;}
-  selectedJourney=result.workflow.id;uiState.stage=null;setDestination('space');journeyRoute('space','workflow',selectedJourney);await loadJourneys();$('capturedialog').close();$('capturestatus').textContent=journeyEntry()?.clips.some(c=>c.source.stage==='failed_retryable')?'Clip saved; analysis failed. Retry the retained clip below.':'Clip saved. Review what was understood below.';f.file.value='';$('journeydetail').focus({preventScroll:true});$('journeydetail .journey-guidance')?.scrollIntoView({block:'start'});
+  selectedJourney=result.workflow.id;uiState.stage=null;uiState.workspaceTarget='journeydetail';uiState.reviewStep=0;uiState.reviewClip=0;setDestination('space');journeyRoute('space','workflow',selectedJourney);await loadJourneys();$('capturedialog').close();$('capturestatus').textContent=journeyEntry()?.clips.some(c=>c.source.stage==='failed_retryable')?'Clip saved; analysis failed. Retry the retained clip below.':'Clip saved. Review what was understood below.';f.file.value='';$('journeydetail').focus({preventScroll:true});$('journeydetail .journey-guidance')?.scrollIntoView({block:'start'});
  }catch(error){$('capturestatus').textContent=error.message;throw error;}finally{b.disabled=false;await loadJourneys();}});});
 async function chooseJourneyCapture(value='new'){
   uiState.returnFocus=document.activeElement;try{await loadJourneys();}catch(e){setStatus(e.message,true);return;}$('journeycaptureform').context.value=value;
@@ -1467,20 +1501,21 @@ $('journeycaptureform').camera.addEventListener('change',e=>{if(e.target.files.l
 $('journeycaptureform').file.addEventListener('change',e=>$('capturefilename').textContent=e.target.files[0]?.name||'No video selected.');
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.journeyRefresh)readAction(loadJourneys);
-  if(b.dataset.journey){selectedJourney=b.dataset.journey;uiState.stage=null;setDestination('space');journeyRoute('space','workflow',selectedJourney);renderJourney();$('journeydetail').focus({preventScroll:true});$('journeydetail .journey-guidance')?.scrollIntoView({block:'start'});}
+  if(b.dataset.journey){selectedJourney=b.dataset.journey;uiState.stage=null;uiState.workspaceTarget='journeydetail';uiState.reviewStep=0;uiState.reviewClip=0;setDestination('space');journeyRoute('space','workflow',selectedJourney);renderJourney();$('journeydetail').focus({preventScroll:true});$('journeydetail .journey-guidance')?.scrollIntoView({block:'start'});}
   if(b.dataset.journeyAdd)chooseJourneyCapture(JSON.stringify({workflow_id:b.dataset.journeyAdd,role:'additional'}));
   if(b.dataset.journeyFollowup)chooseJourneyCapture(JSON.stringify({workflow_id:selectedJourney,role:'followup',task_id:b.dataset.journeyFollowup}));
   if(b.dataset.seek){const v=b.closest('article').querySelector('video');if(v){v.currentTime=Number(b.dataset.seek);v.focus();}}
-  if(b.dataset.journeyRetry)journeyAction(async()=>{const w=journeyEntry(),c=w.clips.find(c=>c.source_id===b.dataset.journeyRetry);await api('/api/journey-video',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source_id:c.source_id,workflow_id:w.workflow.id,retry:!!c.source.processing||c.source.stage==='failed_retryable',source_revision:c.source.revision})});await loadJourneys();});
-  if(b.dataset.journeyPlan)readAction(async()=>{await loadPlanning();const target=$(b.dataset.journeyPlan)||$('outcomelist');setDestination(target.closest('.view').id.slice(5));journeyRoute(target.closest('.view').id.slice(5),'section',target.id);for(let parent=target.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;if(b.dataset.journeyCandidate){const f=$('outcomeregisterform');f.candidate.value=b.dataset.journeyCandidate;f.candidate.dispatchEvent(new Event('change',{bubbles:true}));const c=journeyEntry()?.clips.find(c=>c.process_id===outcomeCandidates.find(x=>x.key===b.dataset.journeyCandidate)?.assessment.candidate.process_id);if(c){f.source_ref.value=JSON.stringify({kind:'evidence',source_id:c.source_id,interpretation_id:c.interpretation_id});}}target.scrollIntoView({block:'start'});target.querySelector('input,button,select')?.focus();});
-  if(b.dataset.journeyUpdate)readAction(async()=>{setDestination('space');selectedUpdate=b.dataset.journeyUpdate;journeyRoute('space','update',selectedUpdate);await loadPlanning();$('updatedetail').focus();});
+  if(b.dataset.journeyRetry)journeyAction(async()=>{const w=journeyEntry(),c=w.clips.find(c=>c.source_id===b.dataset.journeyRetry);await api('/api/journey-video',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source_id:c.source_id,workflow_id:w.workflow.id,retry:!!c.source.processing||c.source.stage==='failed_retryable'||c.source.interpretations.length>0,source_revision:c.source.revision})});await loadJourneys();});
+  if(b.dataset.journeyPlan)readAction(async()=>{await loadPlanning();const target=$(b.dataset.journeyPlan)||$('outcomelist');if(target.closest('.view').id==='view-space')focusWorkspace(target.id);setDestination(target.closest('.view').id.slice(5));journeyRoute(target.closest('.view').id.slice(5),'section',target.id);for(let parent=target.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;if(b.dataset.journeyCandidate){const f=$('outcomeregisterform');f.candidate.value=b.dataset.journeyCandidate;f.candidate.dispatchEvent(new Event('change',{bubbles:true}));const c=journeyEntry()?.clips.find(c=>c.process_id===outcomeCandidates.find(x=>x.key===b.dataset.journeyCandidate)?.assessment.candidate.process_id);if(c){f.source_ref.value=JSON.stringify({kind:'evidence',source_id:c.source_id,interpretation_id:c.interpretation_id});}}target.scrollIntoView({block:'start'});target.querySelector('input,button,select')?.focus();});
+  if(b.dataset.journeyUpdate)readAction(async()=>{setDestination('space');selectedUpdate=b.dataset.journeyUpdate;focusWorkspace('updatessection');journeyRoute('space','update',selectedUpdate);await loadPlanning();$('updatedetail').focus();});
 });
+document.querySelector('[data-view="space"]').addEventListener('click',()=>{uiState.workspaceTarget='workflowsection';focusWorkspace('workflowsection');});
 document.querySelector('[data-view="today"]').addEventListener('click',()=>readAction(loadJourneys));
 document.querySelectorAll('nav.tabs button').forEach(b=>b.addEventListener('click',()=>journeyRoute(b.dataset.view)));
 async function restoreJourneyRoute(){
   try{uiState.routeLoading=true;const [raw='today',kind,id]=location.hash.slice(1).split('/').map(decodeURIComponent);
     let view=({goals:'plan',calendar:'cal',workspace:'space',spots:'space',activity:'space',run:'today'})[raw]||raw;
-    if(kind==='workflow'&&id){selectedJourney=id;view='space';}if(kind==='update')view='space';if(kind==='task'||kind==='goal')view='plan';
+    if(kind==='workflow'&&id){selectedJourney=id;view='space';uiState.workspaceTarget='journeydetail';}if(kind==='update'){view='space';uiState.workspaceTarget='updatessection';}if(kind==='task'||kind==='goal')view='plan';
     setDestination(view);await loadJourneys();await loadPlanning();
     if(view==='cal'){if(['day','week','month'].includes(kind)&&/^\d{4}-\d{2}-\d{2}$/.test(id||'')){calMode=kind;calCursor=parseDay(id);}await loadCal();if(kind==='entry'&&id)await showCalEntry(id);}
     if(view==='space'){await loadWalkthroughs();await loadSpatial();}if(kind==='spatial'&&id)playSpatial(id);if(kind==='spatial-edit'&&id){editSpatial(id);restoreFormDrafts();}
@@ -1495,4 +1530,3 @@ restoreJourneyRoute();
 </script>
 </body>
 </html>
-

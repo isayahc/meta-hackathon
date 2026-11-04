@@ -1,3 +1,4 @@
+import { generateSegmentGifs } from './lib/video-segments.js';
 // Demo: test video understanding over farm work.
 // Sends N frames (a video file via ffmpeg, or a directory of frame images)
 // to a Muse model and asks what changed between them - task progression.
@@ -111,6 +112,7 @@ if (!KEY) {
   }
 }
 
+const gifSegments: Array<{frame:number;file:string;start_s:number;end_s:number}> = [];
 const args = process.argv.slice(2);
 const input = args.find((a) => !a.startsWith('--'));
 const framesFlag = args.find((a) => a.startsWith('--frames'));
@@ -225,23 +227,7 @@ if (classifySource(st.isDirectory(), extname(input)) === 'image') {
     : prefixArg.includes('=')
       ? (prefixArg.split('=')[1] ?? 'seg')
       : (args[args.indexOf(prefixArg) + 1] ?? 'seg');
-  if (gifsDir) {
-    await mkdir(gifsDir, { recursive: true });
-    const slice = duration > 0 ? duration / FRAME_COUNT : 2;
-    for (let i = 0; i < framePaths.length; i++) {
-      const start = duration > 0 ? i * slice : i * 2;
-      await execFileAsync('ffmpeg', [
-        '-v', 'error',
-        '-ss', String(start),
-        '-i', input,
-        '-t', String(slice),
-        '-vf', 'fps=8,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer',
-        '-loop', '0',
-        join(gifsDir, `${gifPrefix}-${i}.gif`),
-      ]).catch((e: unknown) => console.error(`gif slice ${i} failed: ${(e as Error).message.slice(0, 120)}`));
-    }
-    console.error(`Sliced ${framePaths.length} gifs into ${gifsDir}.`);
-  }
+  if (gifsDir) { gifSegments.push(...await generateSegmentGifs(input, gifsDir, gifPrefix, framePaths.length, duration)); console.error(`Sliced ${gifSegments.length} gifs into ${gifsDir}.`); }
   console.error(`Extracted ${framePaths.length} frames.`);
 }
 
@@ -359,7 +345,9 @@ if (SRT_MODE) {
     frame_times_s: framePaths.map((_, i) => frameTimes[i] ?? null),
     frame_times_estimated: frameTimesEstimated,
     frame_files: framePaths.map((p) => basename(p)),
+    gif_segments: gifSegments,
   };
   console.log(JSON.stringify(out, null, 2));
   console.error(`(via frames: ${framePaths.map((p) => basename(p)).join(', ')})`);
 }
+

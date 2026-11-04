@@ -27,5 +27,6 @@ test('actual capture HTTP → workflow review HTTP → CLI reload; retries and s
 
 test('dashboard scripts parse and expose guided source review, explicit intent and recovery controls',async()=>{
  const html=await readFile(new URL('./dashboard/index.html',import.meta.url),'utf8');for(const [,js]of html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g))new Script(js);
- assert.match(html,/Record or upload your work/);assert.match(html,/Confirm review, keeping unknowns explicit/);assert.match(html,/I intend to do this future work/);assert.match(html,/Resume \/ retry retained clip/);assert.match(html,/window.addEventListener\('popstate'/);assert.match(html,/sessionStorage/);
+ assert.match(html,/Record or upload your work/);assert.match(html,/Confirm review/);assert.match(html,/I intend to do this future work/);assert.match(html,/Retry analysis/);assert.match(html,/window.addEventListener\('popstate'/);assert.match(html,/sessionStorage/);
 });
+
