@@ -147,3 +147,7 @@ python3 -m unittest discover -s /absolute/path/meta-hackathon/app/physical-task-
 The Python suite additionally exercises real ffmpeg video frame extraction and
 requires ffmpeg/ffprobe. Keep reports specific: fixture behavior, fresh inference,
 real OI integration, and visual checks are different evidence categories.
+
+### Repeated evidence and reconciliation
+
+Run `task-capabilities.js test reconciliation --out <new absolute directory>` after building. The labeled synthetic replay exercises partial progress, quantity correction, duplicate ingestion/review, historical evidence and blocker propagation while preserving accepted scheduling and goal outcome. See [the reconciliation contract](evidence-reconciliation.md) for agent-driven commands, retained artifacts and browser verification limits.

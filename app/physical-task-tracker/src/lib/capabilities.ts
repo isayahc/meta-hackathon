@@ -13,6 +13,7 @@ const execute = promisify(execFile);
 const dist = fileURLToPath(new URL('../', import.meta.url));
 const scripts = fileURLToPath(new URL('../../scripts/', import.meta.url));
 export const CAPABILITIES = [
+  { id: 'reconciliation', mode: 'synthetic evidence/review replay', requires: ['Node 22+'], checks: ['follow-up updates canonical tasks', 'late evidence requires confirmation', 'duplicate upload/review does not duplicate progress', 'blocker propagates while accepted schedule and goal outcome remain separate'] },
   { id: 'planning', mode: 'synthetic goal/task/calendar replay', requires: ['Node 22+'], checks: ['shared goal task scheduled once', 'dependencies and break respected', 'overrun preserves actuals and flags downstream accepted conflicts', 'goal outcome stays separate'] },
   { id: 'process', mode: 'synthetic replay', requires: ['Node 22+'], checks: ['scan event → process', 'correction persists', 'original revision retained'] },
   { id: 'improvements', mode: 'synthetic replay', requires: ['Node 22+'], checks: ['optimizer → comparison', 'decision persists', 'process correction makes review stale'] },
@@ -136,7 +137,11 @@ export async function testCapabilities(selection: string, directory: string): Pr
   if (!isAbsolute(directory)) throw new Error('--out must be an absolute path to a new directory.');
   await mkdir(directory); // Deliberately refuse an existing directory, even if empty.
   const report: CapabilityReport = { schema: 'fieldops-capability-test/1', status: 'passed', started_at: new Date().toISOString(), node: process.version, directory, live_inference: false, results: [] };
-  const scenarios = { planning: async (s: Scenario): Promise<void> => {
+  const scenarios = { reconciliation: async (s: Scenario): Promise<void> => {
+    const result = await s.command<{ passed: boolean; duplicate_progress: boolean; accepted_schedule_preserved: boolean }>(process.execPath, [join(scripts, 'replay-reconciliation.mjs'), join(s.directory, 'project')], 'reconciliation-replay');
+    assert.equal(result.passed, true); assert.equal(result.duplicate_progress, false); assert.equal(result.accepted_schedule_preserved, true);
+    s.checks.push('Reviewed evidence updates canonical tasks once; blocker flags downstream work without replacing accepted schedule or completing goal');
+  }, planning: async (s: Scenario): Promise<void> => {
     const result = await s.command<{ passed: boolean; shared_task_count: number; correction_conflicts: string[] }>(process.execPath, [join(scripts, 'replay-planning.mjs'), join(s.directory, 'project')], 'planning-replay');
     assert.equal(result.passed, true); assert.equal(result.shared_task_count, 1); assert.ok(result.correction_conflicts.length);
     s.checks.push('Shared task scheduled once; overrun preserves actuals, flags accepted conflicts and leaves goal outcome open');

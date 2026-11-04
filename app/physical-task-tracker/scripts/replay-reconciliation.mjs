@@ -1,0 +1,28 @@
+/** Labeled synthetic repeated-evidence benchmark; no model calls or listening app. */
+import assert from 'node:assert/strict';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve, join } from 'node:path';
+import { addGoal } from '../dist/lib/goals.js';
+import { createTask, configurePlanning, proposePlan, decidePlan, planningView } from '../dist/lib/task-planning.js';
+import { ingestEvidence, beginInterpretation, finishInterpretation, associateEvidence, proposeChange, reviewChanges, manualUpdate, reconciliationView, reconciliationPlan, retainEvidence } from '../dist/lib/reconciliation.js';
+const root=resolve(process.argv[2]);await mkdir(root);await mkdir(join(root,'media'));
+const save=async(name,data)=>writeFile(join(root,name),JSON.stringify(data,null,2));
+await writeFile(join(root,'media','synthetic.mp4'),'Labeled synthetic byte fixture, not playable footage.');
+const goal=await addGoal(root,{text:'Prepare 50 trays',success_criteria:'50 trays pass inspection'});
+const first=createTask(root,{text:'Fill 50 trays',active_minutes:60,estimate_source:'Synthetic operator estimate',completion_criteria:'50 filled trays inspected',quantity:{total:50,remaining:50,unit:'trays'},links:[{goal_id:goal.id,origin:'human',review:'confirmed',explanation:'Produces required trays'}]},'fill');
+const next=createTask(root,{text:'Seed filled trays',active_minutes:30,estimate_source:'Synthetic operator estimate',completion_criteria:'All filled trays seeded',dependencies:[first.id]},'seed');
+configurePlanning(root,1,{timezone:'UTC',person:'operator',max_minutes:180,resources:{},availability:[{start:'2030-01-10T09:00:00Z',end:'2030-01-10T12:00:00Z'}]});
+const plan=proposePlan(root,'2030-01-10','2030-01-10T08:00:00Z');decidePlan(root,plan.id,'accepted','Synthetic baseline','2030-01-10T08:00:00Z');await save('baseline.json',planningView(root));
+let s=ingestEvidence(root,{kind:'video',media:'synthetic.mp4',recorded_at:'2026-01-01T09:00:00Z',context:{task_ids:[first.id]}});
+s=beginInterpretation(root,s.id,s.revision);s=finishInterpretation(root,s.id,s.processing.token,{origin:'replay',model:'synthetic fixture',prompt_version:'reconciliation-benchmark/1',observations:[{id:'o1',text:'Some trays filled; hidden trays not countable',start_s:2,end_s:2,confidence:'low',coverage:'sampled',uncertainty:'Cannot determine completion, total quantity, or work duration'}]});
+s=associateEvidence(root,s.id,s.revision,first.id,'confirmed','Synthetic operator identifies the batch');
+s=proposeChange(root,s.id,s.revision,{task_id:first.id,observation_id:'o1',kind:'progress',patch:{execution:'paused'},quantity_mode:'remaining',quantity_value:30,unit:'trays',reason:'Synthetic person counts 30 remaining',uncertainty:'Count requires human confirmation'});
+assert.throws(()=>reviewChanges(root,s.id,s.revision,'late',[{change_id:s.changes[0].id,decision:'accepted',reason:'Historical claim'}]),/Historical/);
+const decisions=[{change_id:s.changes[0].id,decision:'corrected',reason:'Synthetic current count confirms 28 remaining',correction:{quantity:{total:50,remaining:28,unit:'trays'},execution:'paused'},current_confirmed:true}];const revision=s.revision;
+s=reviewChanges(root,s.id,revision,'review',decisions);reviewChanges(root,s.id,revision,'review',decisions);
+assert.equal(ingestEvidence(root,{kind:'video',media:'synthetic.mp4'}).id,s.id);assert.equal(planningView(root).tasks.length,2);assert.equal(planningView(root).tasks[0].actuals.length,0);
+const current=planningView(root).tasks.find(t=>t.id===first.id);assert.equal(current.quantity.remaining,28);
+manualUpdate(root,{request_id:'blocked',task_id:first.id,task_revision:current.revision,report:'Synthetic report: soil unavailable',patch:{execution:'blocked'}});
+const effects=reconciliationPlan(root,'2030-01-10','2030-01-10T08:00:00Z');assert.ok(effects.plan.conflicts.length);assert.ok(effects.plan.deferred.some(d=>d.task_id===next.id));assert.deepEqual(planningView(root).schedule.blocks,plan.blocks);assert.equal(planningView(root).goals[0].status,'open');
+await save('review.json',reconciliationView(root));await save('effects.json',effects);await save('after.json',planningView(root));
+console.log(JSON.stringify({passed:true,mode:'synthetic evidence replay; no live inference or video decoding',canonical_tasks:2,remaining:28,duplicate_progress:false,goal_status:'open',accepted_schedule_preserved:true,conflicts:effects.plan.conflicts,artifacts:root}));

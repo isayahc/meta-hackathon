@@ -346,3 +346,7 @@ Setup, CLI/API, evidence format, and outstanding #45 acceptance gates:
 Imperial Valley, California, circa 1948.
 Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Harvesting_carrots.jpg)
 (Los Angeles Daily News / UCLA collection).
+
+## Follow-up evidence and review
+
+Open a task → Record follow-up evidence → review **What this changes** in Plan. Correct/accept/reject/defer source-backed updates without duplicating tasks or replacing accepted calendar blocks. Manual progress reports apply directly with history. See [evidence reconciliation](../../doc/evidence-reconciliation.md) for the typed JSON/CLI contract and headless replay.

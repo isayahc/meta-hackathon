@@ -48,7 +48,8 @@ function atomic<T>(root: string, fn: (db: DatabaseSync) => T): T {
   return withDb(root, db => { db.exec('BEGIN IMMEDIATE'); try { const result = fn(db); db.exec('COMMIT'); return result; } catch (e) { db.exec('ROLLBACK'); throw e; } });
 }
 /** Extend old checklist rows lazily without changing IDs, media or done state. */
-function tasks(db: DatabaseSync): Task[] {
+/** Read canonical tasks on an existing transaction for evidence reconciliation. */
+export function tasks(db: DatabaseSync): Task[] {
   return (db.prepare('SELECT * FROM actions ORDER BY id').all() as unknown as Array<{ id: string; event_id: string; text: string; status: string; task_rev: number; task_json: string | null }>).map(row => {
     const base: Task = { id: row.id, event_id: row.event_id, text: row.text, revision: row.task_rev, execution: row.status === 'done' ? 'done' : 'open',
       review: row.status === 'done' ? 'confirmed' : 'proposed', links: [], dependencies: [], active_minutes: null, remaining_minutes: null, original_minutes: null,
@@ -59,7 +60,7 @@ function tasks(db: DatabaseSync): Task[] {
   });
 }
 function snapshot(db: DatabaseSync): Snapshot {
-  const events = (db.prepare('SELECT id,title,timing_json FROM events ORDER BY id').all() as unknown as Array<{ id: string; title: string; timing_json: string | null }>).map(e => ({ id: e.id, title: e.title, timing: e.timing_json ? JSON.parse(e.timing_json) : null }));
+  const events = (db.prepare('SELECT id,title,timing_json FROM events WHERE timing_json IS NOT NULL ORDER BY id').all() as unknown as Array<{ id: string; title: string; timing_json: string | null }>).map(e => ({ id: e.id, title: e.title, timing: e.timing_json ? JSON.parse(e.timing_json) : null }));
   return { tasks: tasks(db), goals: db.prepare('SELECT id,text,weight,deadline,status,success_criteria FROM goals ORDER BY id').all() as unknown as GoalRow[], events,
     schedule: doc(db, 'human-schedule', defaultSchedule()), process_revisions: Object.fromEntries((db.prepare('SELECT id,MAX(rev) as rev FROM processes GROUP BY id ORDER BY id').all() as unknown as Array<{ id: string; rev: number }>).map(p => [p.id, p.rev])) };
 }
@@ -93,7 +94,8 @@ function validateTask(db: DatabaseSync, task: Task, all: Task[]): void {
   const done = new Set<string>(); for (const id of edges.keys()) visit(id, new Set(), done);
 }
 const EDITABLE = new Set(['text', 'execution', 'review', 'links', 'dependencies', 'active_minutes', 'remaining_minutes', 'setup_minutes', 'travel_minutes', 'passive_minutes', 'estimate_source', 'splittable', 'resources', 'preconditions', 'person', 'location', 'completion_criteria', 'deadline', 'window', 'process', 'quantity', 'defer_until']);
-function update(db: DatabaseSync, task: Task, raw: unknown, reason: string): Task {
+/** Apply a validated task patch within the caller’s transaction. */
+export function update(db: DatabaseSync, task: Task, raw: unknown, reason: string): Task {
   const patch = object(raw); check(Object.keys(patch).every(k => EDITABLE.has(k)), 'Unknown or immutable task field.'); words(reason, 'Change reason');
   const next = { ...task, ...patch, revision: task.revision + 1 } as Task;
   if (task.original_minutes === null && next.active_minutes !== null) next.original_minutes = next.active_minutes;
@@ -321,3 +323,6 @@ export function planningCommand(root: string, raw: unknown): unknown {
   if (v.command === 'time') return { instant: zonedInstant(v.local as string, v.timezone as string, v.fold as 'earlier' | 'later' | undefined) };
   throw new PlanningError('Unknown planning command.');
 }
+
+/** Preview current feasibility without saving a new proposal or replacing accepted work. */
+export function previewPlan(root: string, day: string, now: string): TaskPlan { return withDb(root, db => calculate(snapshot(db), day, now)); }
