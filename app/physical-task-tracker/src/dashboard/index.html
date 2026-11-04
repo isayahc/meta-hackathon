@@ -48,7 +48,7 @@ section>section { padding:0; background:transparent; border:0; }
 .next-action h3 { font-size:28px; letter-spacing:-.02em; }
 .next-action .task-buttons { margin-top:24px; }
 .today-grid,.cols { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; }
-.today-grid>section,.master-detail>section,.detail-panel,.calendar-tools>section,#view-plan>section,#workflowsection,#areassection,#outcomessection,#updatessection { background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:24px; }
+.today-grid>section,.master-detail>section,.detail-panel,.calendar-tools>section,#view-plan>section,#workflowsection,#areassection,#outcomessection,#updatessection,#spatialevidencesection { background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:24px; }
 .master-detail { display:grid; grid-template-columns:minmax(240px,.85fr) minmax(0,1.2fr); gap:24px; align-items:start; }
 .master-detail>* { min-width:0; }
 .detail-panel { position:sticky; top:24px; max-height:calc(100vh - 48px); overflow:auto; }
@@ -187,7 +187,7 @@ dialog::backdrop { background:#11271dcc; }
 @media(max-width:480px) {
  main { padding:96px 14px 108px; } .app-header { padding:12px 14px; } .brand { font-size:18px; } .brand-mark { width:30px; height:32px; }
  #globalrecordwork { padding:10px 12px; font-size:14px; }
- .next-action,.today-grid>section,.master-detail>section,.detail-panel,.calendar-tools>section,#view-plan>section,#workflowsection,#areassection,#outcomessection,#updatessection,#journeydetail>section,.calendar-layout>div>section { padding:18px; }
+ .next-action,.today-grid>section,.master-detail>section,.detail-panel,.calendar-tools>section,#view-plan>section,#workflowsection,#areassection,#outcomessection,#updatessection,#spatialevidencesection,#journeydetail>section,.calendar-layout>div>section { padding:18px; }
  .next-action h3 { font-size:24px; } .page-heading { margin-bottom:22px; }
  .task-buttons>* { flex:1 1 140px; } .planning-fields { grid-template-columns:1fr; } .goals { grid-template-columns:1fr; }
  .goal-link-row { grid-template-columns:1fr; } .goal-link-row input { grid-column:auto; }
@@ -286,7 +286,40 @@ dialog::backdrop { background:#11271dcc; }
         <label>What changed?<input name="report" required></label><label>Current status<select name="execution"><option value="">Keep status</option><option value="open">Ready</option><option value="paused">Paused</option><option value="blocked">Blocked</option><option value="done">Completion criteria verified</option></select></label>
         <label>Remaining quantity (current total, optional)<input name="remaining" type="number" min="0" step="any"></label><label>Remaining active minutes (optional)<input name="minutes" type="number" min="0" step="any"></label>
         <button class="btn" type="submit">Save my update</button></form>
-      </section></section><section id="areassection" class=""><h2>Work areas</h2><div id="workspacecontext"></div><div class="cols"><section aria-label="Spots">
+      </section></section><section id="spatialevidencesection" aria-labelledby="spatialheading">
+  <div class="section-heading"><h2 id="spatialheading">Work locations & source evidence</h2><button class="ghost" id="refreshspatial" type="button">Check saved references</button></div>
+  <p>Link an observed action to a named work area or a reviewed OI object. Identity review and metric scale are separate.</p>
+  <p id="spatialstatus" role="status" aria-live="polite"></p>
+  <label>Show evidence for process<select id="spatialprocessfilter"><option value="">All processes</option></select></label>
+  <label>Show evidence for work area<select id="spatialspotfilter"><option value="">All work areas and OI references</option></select></label>
+  <div id="spatiallinks"></div><div id="spatialplayback" tabindex="-1"></div>
+  <details id="spatialeditor"><summary>Link a process step to a location</summary>
+    <p id="spatialediting" role="status"></p>
+    <form id="spatialform" class="run">
+      <label>Reviewed process<select name="process_id" required></select></label>
+      <label>Observed action<select name="step_id" required></select></label>
+      <p id="spatialsourcehint"></p>
+      <div class="planning-fields"><label>Source start (seconds)<input name="start_s" type="number" min="0" step="any" required></label><label>Source end (seconds)<input name="end_s" type="number" min="0" step="any" required></label></div>
+      <label>Location type<select name="target_kind"><option value="spot">Named work area</option><option value="oi">OI scene or object</option></select></label>
+      <label id="spatialspotlabel">Work area<select name="spot_id"></select></label>
+      <div id="spatialoifields" hidden>
+        <label>Saved OI scene<select name="saved_scene"><option value="">Choose a saved scene or enter a reference below</option></select></label>
+        <button class="ghost" type="button" id="inspectspatial">Read this scene from OI</button>
+        <label>Object at the pinned scene revision<select name="oi_choice"><option value="scene">Whole scene</option></select></label>
+        <p id="spatialinspection" role="status">Read a scene before choosing an object. Unavailable or unsupported references remain unverified.</p>
+        <details><summary>Reference details / another OI scene</summary>
+          <label>OI scene ID<input name="scene_id"></label><label>Pinned scene revision<input name="scene_revision" type="number" min="1" step="1"></label>
+          <label>Reference kind<select name="entity_kind"><option value="scene">Scene</option><option value="instance">Object instance</option><option value="region">Region (resolution may be unsupported)</option><option value="occupancy">Equipment occupancy (resolution may be unsupported)</option></select></label>
+          <label>Stable entity ID<input name="entity_id" value="scene"></label>
+        </details>
+      </div>
+      <label>Identity decision<select name="review"><option value="confirmed">I confirm this action happened at this location</option><option value="ambiguous">Location or cross-visit identity is uncertain</option><option value="proposed">Proposed link, still needs review</option></select></label>
+      <label>Why does this evidence belong here?<input name="reason" required></label>
+      <div class="task-buttons"><button class="btn" type="submit">Save location association</button><button class="ghost" id="newspatial" type="button">Start another association</button></div>
+    </form>
+  </details>
+</section>
+<section id="areassection" class=""><h2>Work areas</h2><div id="workspacecontext"></div><div class="cols"><section aria-label="Spots">
         <h3>Named areas</h3>
         <div id="spots"></div>
       </section><section aria-label="Spot detail" id="detail"><h3>Work area</h3><p>Select an area to review its history.</p></section></div><details class="disclosure"><summary>Map a work area</summary><div class="disclosure-body"><section aria-label="Walkthrough mapping">
@@ -423,7 +456,7 @@ function renderDetail(ov) {
   const oiLinks = (s.oi_links ?? []).map((l) => `<li>${esc(l.role)} ${esc(l.oi_entity_id)} · scene rev ${esc(l.revision)}</li>`).join('');
   el.innerHTML = `<h3>Work area</h3><h3 style="margin:.2em 0">${esc(s.name)} <span class="chip">${esc(s.stage ?? 'unknown')}</span></h3>` +
     `<p>${esc(s.summary ?? '(no standing state)')}</p>` +
-    `<h2>Open issues</h2><ul>${issues}</ul>` +
+    `<button class="ghost" type="button" data-spatialspot="${esc(s.id)}">Open linked process evidence</button><h2>Open issues</h2><ul>${issues}</ul>` +
     `<h2>Recent sessions</h2><ul class="sess" style="font-size:13px;color:var(--muted)">${sessions}</ul>` +
     (oiLinks ? `<details><summary>Spatial references</summary><ul>${oiLinks}</ul><p>Open the supported map from its saved mapping result. No separate renderer is created here.</p></details>` : '') +
     `<p style="font-size:13px;color:var(--muted)">${s.session_count ?? 0} sessions · updated ${esc(s.updated_at ?? 'never')}</p>`;
@@ -1007,7 +1040,7 @@ function renderTaskDetail(id) {
       <p class="hint">Create another goal using the form above, then assign it here.</p>
       <label>Reason for changes<input name="reason" type="text" required></label><button class="btn" type="submit">Save task and goal links</button>
     </form>
-    <div class="task-buttons"><button class="ghost" type="button" data-taskcalendar="${esc(t.id)}">Open calendar</button><button class="ghost" type="button" data-taskevidence="${esc(t.event_id)}">Open source evidence</button></div>
+    ${t.process?`<p><button class="ghost" type="button" data-linkprocess="${esc(t.process.id)}" data-linkstep="${esc(t.process.step_id||'')}">Open process location links</button></p>`:''}<div class="task-buttons"><button class="ghost" type="button" data-taskcalendar="${esc(t.id)}">Open calendar</button><button class="ghost" type="button" data-taskevidence="${esc(t.event_id)}">Open source evidence</button></div>
     <details><summary>Record actual work / partial completion</summary><form class="run" id="worklogform" data-id="${esc(t.id)}" data-revision="${t.revision}">
       <label>Started<input name="start" type="datetime-local" required></label><label>Stopped<input name="end" type="datetime-local" required></label>
       <label>Remaining active minutes<input name="remaining" type="number" min="0" required></label>
@@ -1173,7 +1206,7 @@ function revealTarget(id,route=true){
 }
 function refreshWorkspaceContext(){
   const t=planningState?.tasks.find(t=>t.id===selectedPlanningTask);
-  $('workspacecontext').innerHTML=t?`<p>Work area for <button class="ghost" data-opentask="${esc(t.id)}">${esc(t.text)}</button> · ${esc(t.location||'Location not yet confirmed')}</p>${goalChips(t)}`:'<p>Maps enrich the work when spatial evidence is useful. They are optional for planning. Linking task locations to individual map objects is not available yet.</p>';
+  $('workspacecontext').innerHTML=t?`<p>Work area for <button class="ghost" data-opentask="${esc(t.id)}">${esc(t.text)}</button> · ${esc(t.location||'Location not yet confirmed')}</p>${goalChips(t)}`:'<p>Maps enrich the work when spatial evidence is useful. They are optional for planning. Link reviewed process evidence to locations below. Unsupported OI region references stay unresolved.</p>';
 }
 function presentJourneyStages(w){
   const root=$('journeydetail'),sections=[...root.children].filter(x=>x.tagName==='SECTION');if(!sections.length)return;
@@ -1242,6 +1275,65 @@ for(const event of ['input','change'])document.addEventListener(event,e=>saveFor
 const draftObserver=new MutationObserver(records=>{if(records.some(r=>[...r.addedNodes].some(n=>n.nodeType===1&&(n.matches('form')||n.querySelector('form')))))restoreFormDrafts();});
 draftObserver.observe(document.querySelector('main'),{childList:true,subtree:true});
 
+// Spatial evidence is a reviewed relationship; the OI runner owns scene resolution.
+let spatialState=null,spatialEdit=null;
+function selectedSpatialProcess(){return spatialState?.processes.find(p=>p.id===$('spatialform').process_id.value);}
+function spatialSourceFields(stepId){
+  const f=$('spatialform'),p=selectedSpatialProcess();f.step_id.innerHTML=(p?.steps||[]).map(s=>`<option value="${esc(s.id)}">${esc(s.label)}</option>`).join('');if(stepId)f.step_id.value=stepId;
+  spatialStepFields();
+}
+function spatialStepFields(){
+  const f=$('spatialform'),p=selectedSpatialProcess(),step=p?.steps.find(s=>s.id===f.step_id.value),span=step?.spans[0];
+  f.dataset.id=(spatialEdit||'new')+':'+(p?.id||'')+':'+(step?.id||'');f.dataset.revision=String(p?.revision||0)+':'+(spatialState?.associations.find(v=>v.association.id===spatialEdit)?.association.revision||0);
+  f.start_s.value=span?.start_s??'';f.end_s.value=span?.end_s??'';f.querySelector('[type=submit]').disabled=!step?.media||!span;
+  $('spatialsourcehint').textContent=step?.media&&span?'Source spans: '+step.spans.map(s=>`${s.start_s}–${s.end_s}s`).join(', ')+'. Select a range inside one span; unseen time remains unknown.':'This action has no playable source span. Add source evidence before associating it.';
+  restoreFormDrafts();
+}
+function spatialTargetFields(){const oi=$('spatialform').target_kind.value==='oi';$('spatialoifields').hidden=!oi;$('spatialspotlabel').hidden=oi;}
+async function loadSpatial(){
+  $('spatialstatus').textContent='Checking evidence and pinned location references…';
+  try{spatialState=await api('/api/spatial-evidence');const f=$('spatialform'),old=f.process_id.value,step=f.step_id.value,spot=f.spot_id.value,filter=$('spatialspotfilter').value,processFilter=$('spatialprocessfilter').value;
+    f.process_id.innerHTML=spatialState.processes.map(p=>`<option value="${esc(p.id)}">${esc(p.title)}</option>`).join('');if(old)f.process_id.value=old;
+    $('spatialprocessfilter').innerHTML='<option value="">All processes</option>'+spatialState.processes.map(p=>`<option value="${esc(p.id)}">${esc(p.title)}</option>`).join('');$('spatialprocessfilter').value=processFilter;
+    const options=spatialState.spots.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');f.spot_id.innerHTML='<option value="">Choose a named work area</option>'+options;f.spot_id.value=spot;
+    $('spatialspotfilter').innerHTML='<option value="">All work areas and OI references</option>'+options;$('spatialspotfilter').value=filter;
+    f.saved_scene.innerHTML='<option value="">Choose a saved scene or enter a reference below</option>'+spatialState.scenes.map((s,i)=>`<option value="${esc(JSON.stringify(s))}">Saved scene ${i+1} · revision ${s.revision}</option>`).join('');
+    spatialSourceFields(step);spatialTargetFields();renderSpatialLinks();$('spatialstatus').textContent='References checked. Review warnings before relying on a location.';
+  }catch(e){$('spatialstatus').textContent=e.message;throw e;}
+}
+function spatialCard(v){
+  const a=v.association;
+  return `<article class="task-card"><h3>${esc(v.step_label)} → ${esc(v.target_label)}</h3><p>${esc(v.process_title)} · <span class="chip">${esc(a.review)}</span> · ${v.current?'Identity reference is current':'Location needs review'}</p><p>Source ${a.source.start_s}–${a.source.end_s}s · ${esc(a.reason)}</p><ul>${v.issues.map(i=>`<li>${esc(i.message)}</li>`).join('')}</ul><div class="task-buttons"><button class="ghost" data-spatialplay="${esc(a.id)}" ${v.evidence_url?'':'disabled'}>Open source at ${a.source.start_s}s</button><button class="ghost" data-spatialedit="${esc(a.id)}">Review / re-anchor location</button>${v.spatial?`<a class="ghost" href="${esc(v.spatial.revision_url)}" target="_blank" rel="noopener">Open pinned OI scene</a><a class="ghost" href="${esc(v.spatial.head_url)}" target="_blank" rel="noopener">Inspect current scene</a>`:''}</div><form class="run spatialreview" data-id="${esc(a.id)}" data-revision="${a.revision}"><label>Identity review reason<input name="reason" required></label><div class="task-buttons"><button class="ghost" name="decision" value="confirmed">Confirm identity</button><button class="ghost" name="decision" value="ambiguous">Keep unresolved</button><button class="ghost" name="decision" value="rejected">Reject link</button></div><p class="hint">Confirming identity does not update pinned revisions, prove scale, or resolve missing objects.</p></form><details><summary>Reference and review history</summary><pre>${esc(JSON.stringify({source:a.source,target:a.target,origin:a.origin,revision:a.revision,history:a.history},null,2))}</pre></details></article>`;
+}
+function renderSpatialLinks(){const spot=$('spatialspotfilter').value,process=$('spatialprocessfilter').value;const rows=(spatialState?.associations||[]).filter(v=>(!process||v.association.source.process_id===process)&&(!spot||(v.association.target.kind==='spot'&&v.association.target.spot_id===spot)));$('spatiallinks').innerHTML=rows.map(spatialCard).join('')||'<p>No source/location associations yet. Open a process action to link its evidence.</p>';}
+async function openSpatial(processId,stepId){
+  revealTarget('spatialevidencesection');await loadSpatial();$('spatialprocessfilter').value=processId;$('spatialspotfilter').value='';renderSpatialLinks();spatialEdit=null;$('spatialeditor').open=true;const f=$('spatialform');f.process_id.value=processId;spatialSourceFields(stepId);$('spatialediting').textContent='New association; confirm the location from the evidence.';f.step_id.focus();
+}
+function playSpatial(id){
+  const v=spatialState?.associations.find(v=>v.association.id===id);if(!v?.evidence_url)return;const s=v.association.source;
+  $('spatialplayback').innerHTML=`<h3>${esc(v.step_label)} at ${esc(v.target_label)}</h3><p>Pinned source range ${s.start_s}–${s.end_s}s. ${s.start_s===s.end_s?'This is a sampled instant; continuous activity is not established.':''}</p><video controls preload="metadata" src="${esc(v.evidence_url)}"></video><button class="ghost" id="replayspatial" type="button">Return to linked timestamp</button>`;
+  const video=$('spatialplayback').querySelector('video');video.addEventListener('loadedmetadata',()=>{video.currentTime=s.start_s;});video.addEventListener('timeupdate',()=>{if(s.end_s>s.start_s&&video.currentTime>=s.end_s&&!video.paused)video.pause();});$('replayspatial').onclick=()=>{video.currentTime=s.start_s;video.focus();};
+  journeyRoute('space','spatial',id);revealTarget('spatialplayback',false);
+}
+function editSpatial(id){
+  const a=spatialState.associations.find(v=>v.association.id===id)?.association;if(!a)return;spatialEdit=id;journeyRoute('space','spatial-edit',id);const f=$('spatialform');f.process_id.value=a.source.process_id;spatialSourceFields(a.source.step_id);f.start_s.value=a.source.start_s;f.end_s.value=a.source.end_s;f.target_kind.value=a.target.kind;spatialTargetFields();
+  if(a.target.kind==='spot')f.spot_id.value=a.target.spot_id;else{f.scene_id.value=a.target.scene_id;f.scene_revision.value=a.target.revision;f.entity_kind.value=a.target.entity_kind;f.entity_id.value=a.target.entity_id;}
+  f.review.value=a.review==='rejected'?'ambiguous':a.review;f.reason.value='';delete f.dataset.requestId;$('spatialediting').textContent=`Editing association revision ${a.revision}. Original process revision ${a.source.process_revision}; the selected process is revision ${selectedSpatialProcess()?.revision??'unavailable'}. Review both the evidence and target before saving a new anchor.`;
+  $('spatialeditor').open=true;restoreFormDrafts();revealTarget('spatialeditor',false);
+}
+$('spatialform').process_id.addEventListener('change',()=>spatialSourceFields());$('spatialform').step_id.addEventListener('change',spatialStepFields);$('spatialform').target_kind.addEventListener('change',spatialTargetFields);
+$('spatialform').saved_scene.addEventListener('change',e=>{if(!e.target.value)return;const s=JSON.parse(e.target.value),f=$('spatialform');f.scene_id.value=s.scene_id;f.scene_revision.value=s.revision;f.entity_kind.value='scene';f.entity_id.value='scene';f.oi_choice.innerHTML='<option value="scene">Whole scene</option>';$('spatialinspection').textContent='Read this pinned scene to choose its objects.';});
+$('spatialform').oi_choice.addEventListener('change',e=>{const f=$('spatialform');f.entity_kind.value=e.target.value==='scene'?'scene':'instance';f.entity_id.value=e.target.value;});
+$('inspectspatial').addEventListener('click',async e=>{const button=e.currentTarget;if(button.disabled)return;button.disabled=true;$('spatialinspection').textContent='Reading the pinned OI scene…';try{const f=$('spatialform'),{inspection:i}=await api('/api/spatial-evidence?scene_id='+encodeURIComponent(f.scene_id.value)+'&revision='+encodeURIComponent(f.scene_revision.value));f.oi_choice.innerHTML='<option value="scene">Whole scene</option>'+i.entities.map(e=>`<option value="${esc(e.id)}">${esc(e.name)}</option>`).join('');f.entity_kind.value='scene';f.entity_id.value='scene';$('spatialinspection').textContent=`${i.mock?'Synthetic OI fixture · ':''}${i.name} · pinned revision ${i.revision}, current revision ${i.head_revision}. ${i.scale_reason} Region/occupancy resolution is unsupported by this OI pin.`;saveFormDraft(f);}catch(error){$('spatialinspection').textContent=error.message;}finally{button.disabled=false;}});
+$('spatialform').addEventListener('submit',e=>{e.preventDefault();const f=e.target;operation(async()=>{const p=selectedSpatialProcess();if(!p)throw new Error('Choose an existing process.');f.dataset.requestId ||= crypto.randomUUID();saveFormDraft(f);const target=f.target_kind.value==='spot'?{kind:'spot',spot_id:f.spot_id.value}:{kind:'oi',scene_id:f.scene_id.value,revision:Number(f.scene_revision.value),entity_kind:f.entity_kind.value,entity_id:f.entity_id.value};const old=spatialState.associations.find(v=>v.association.id===spatialEdit)?.association;
+  const {association}=await api('/api/spatial-evidence',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:'save',request_id:f.dataset.requestId,...(old?{id:old.id,revision:old.revision}:{}),source:{process_id:p.id,process_revision:p.revision,step_id:f.step_id.value,start_s:Number(f.start_s.value),end_s:Number(f.end_s.value)},target,origin:'human',review:f.review.value,reason:f.reason.value})});clearFormDraft(f);spatialEdit=null;f.reason.value='';await loadSpatial();playSpatial(association.id);
+},'spatialstatus');});
+$('spatiallinks').addEventListener('submit',e=>{e.preventDefault();const f=e.target;operation(async()=>{f.dataset.requestId ||= crypto.randomUUID();saveFormDraft(f);await api('/api/spatial-evidence',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:'review',request_id:f.dataset.requestId,id:f.dataset.id,revision:Number(f.dataset.revision),review:e.submitter.value,reason:f.reason.value})});clearFormDraft(f);await loadSpatial();},'spatialstatus');});
+$('spatialprocessfilter').addEventListener('change',renderSpatialLinks);$('spatialspotfilter').addEventListener('change',renderSpatialLinks);$('refreshspatial').addEventListener('click',()=>readAction(loadSpatial));
+$('newspatial').addEventListener('click',()=>{const f=$('spatialform');clearFormDraft(f);spatialEdit=null;f.reset();spatialSourceFields();spatialTargetFields();$('spatialediting').textContent='New location association.';});
+document.querySelector('[data-view="space"]').addEventListener('click',()=>readAction(loadSpatial));
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.linkprocess)readAction(()=>openSpatial(b.dataset.linkprocess,b.dataset.linkstep));if(b.dataset.spatialplay)playSpatial(b.dataset.spatialplay);if(b.dataset.spatialedit)editSpatial(b.dataset.spatialedit);if(b.dataset.spatialspot)readAction(async()=>{revealTarget('spatialevidencesection');await loadSpatial();$('spatialspotfilter').value=b.dataset.spatialspot;$('spatialprocessfilter').value='';renderSpatialLinks();});});
+
 // Guided journey: persisted references, explicit future intent, and resumable routes.
 let journeyState=null, selectedJourney=null, journeyLoading=null;
 const journeyPost=body=>api('/api/journeys',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -1291,7 +1383,7 @@ function renderJourney(){
       ${s.processing?'<p>Analysis was started. If it was interrupted, retry the retained clip.</p>':''}
       ${!p||s.processing||s.stage==='failed_retryable'?`<button class="ghost" type="button" data-journey-retry="${esc(s.id)}">Resume / retry retained clip</button>`:''}
       ${p?`<p>${esc(s.interpretations.find(i=>i.id===c.interpretation_id)?.origin||'unknown')} interpretation · ${p.rev===c.reviewed_revision?'Confirmed review':'Needs review'} · coverage: ${esc(p.coverage.coverage_note||'Sampled instants; unseen work is unknown')}</p>
-        <ol>${p.steps.map(step=>`<li><p><strong>${esc(step.label)}</strong> — ${step.observed_order===null?'Suggested / unobserved':'Observed in footage'} · ${esc(step.claim)}</p><p>${[...step.tools,...step.materials,...step.inputs,...step.outputs].map(esc).join(' · ')||'Tools and materials not yet specified'} · ${esc(step.location||'Location unknown')}</p>${step.evidence.spans.map(span=>`<button type="button" class="ghost" data-seek="${span.start_s}">View source at ${span.start_s}s</button>`).join('')}
+        <ol>${p.steps.map(step=>`<li><p><strong>${esc(step.label)}</strong> — ${step.observed_order===null?'Suggested / unobserved':'Observed in footage'} · ${esc(step.claim)}</p><p>${[...step.tools,...step.materials,...step.inputs,...step.outputs].map(esc).join(' · ')||'Tools and materials not yet specified'} · ${esc(step.location||'Location unknown')}</p><button class="ghost" type="button" data-linkprocess="${esc(p.id)}" data-linkstep="${esc(step.id)}">Link work location</button>${step.evidence.spans.map(span=>`<button type="button" class="ghost" data-seek="${span.start_s}">View source at ${span.start_s}s</button>`).join('')}
           <details><summary>Correct this interpretation</summary><form class="run" data-jcommand="correct" data-source="${esc(s.id)}" data-step="${esc(step.id)}" data-draft="step-${esc(step.id)}"><label>What happened?<input name="label" value="${esc(step.label)}" required></label><label>Tools (comma separated)<input name="tools" value="${esc(step.tools.join(', '))}"></label><label>Materials (comma separated)<input name="materials" value="${esc(step.materials.join(', '))}"></label><label>Location<input name="place" value="${esc(step.location||'')}"></label><label>Still unknown<input name="unknowns" value="${esc(step.unknowns.join('; '))}"></label>${reason}<button class="btn">Save correction</button></form></details></li>`).join('')}</ol>
         <details><summary>Add an omitted step</summary><form class="run" data-jcommand="addstep" data-source="${esc(s.id)}"><label>Missing action<input name="label" required></label><label>What remains uncertain?<input name="unknowns" required></label>${reason}<button class="btn">Add human-reported step</button></form></details>
         <p>${[...p.unknowns,...p.gaps,...p.order_notes].map(esc).join(' · ')||'No additional gaps recorded.'}</p>
@@ -1367,7 +1459,7 @@ async function restoreJourneyRoute(){
     if(kind==='workflow'&&id){selectedJourney=id;view='space';}if(kind==='update')view='space';if(kind==='task'||kind==='goal')view='plan';
     setDestination(view);await loadJourneys();await loadPlanning();
     if(view==='cal'){if(['day','week','month'].includes(kind)&&/^\d{4}-\d{2}-\d{2}$/.test(id||'')){calMode=kind;calCursor=parseDay(id);}await loadCal();if(kind==='entry'&&id)await showCalEntry(id);}
-    if(view==='space')await loadWalkthroughs();
+    if(view==='space'){await loadWalkthroughs();await loadSpatial();}if(kind==='spatial'&&id)playSpatial(id);if(kind==='spatial-edit'&&id){editSpatial(id);restoreFormDrafts();}
     if(kind==='task'&&id){uiState.goal=null;selectedPlanningTask=id;renderTaskDetail(id);$('planningtaskdetail').focus();}
     if(kind==='update'&&id){selectedUpdate=id;renderUpdate(id);$('updatedetail').focus();}
     if(kind==='goal'&&id)await showPlanningGoal(id);

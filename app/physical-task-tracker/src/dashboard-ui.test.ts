@@ -78,3 +78,15 @@ test('form drafts restore text, choices and retry IDs, but never overwrite a new
   ctx.form=form;new Script('saveFormDraft(form)').runInContext(ctx);form.elements[0]!.value='';new Script('restoreFormDrafts()').runInContext(ctx);assert.equal(form.elements[0]!.value,'Keep my correction');
   form.dataset.revision='2';form.elements[0]!.value='Latest value';new Script('restoreFormDrafts()').runInContext(ctx);assert.equal(form.elements[0]!.value,'Latest value');assert.equal(storage.size,0);assert.match(messages[0]!,/Saved data changed/);
 });
+
+test('spatial evidence cards expose uncertainty and disable missing media without claiming a current identity',()=>{
+  const ctx=context(['esc','spatialCard']);ctx.view={association:{id:'a',revision:2,source:{start_s:4,end_s:6},review:'ambiguous',reason:'Two similar benches',target:{kind:'spot',spot_id:'bench'},history:[]},step_label:'<Untrusted action>',process_title:'Tray preparation',target_label:'Bench',current:false,evidence_url:null,spatial:null,issues:[{code:'media_missing',message:'Source unavailable'}]};
+  const output=new Script('spatialCard(view)').runInContext(ctx) as string;
+  assert.match(output,/&lt;Untrusted action&gt;/);assert.match(output,/Location needs review/);assert.match(output,/data-spatialplay="a" disabled/);assert.match(output,/Two similar benches/);assert.match(output,/Source unavailable/);assert.match(output,/Keep unresolved/);assert.match(output,/Confirming identity does not update pinned revisions/);
+});
+
+test('location evidence filters keep process and named-area context separate',()=>{
+  const nodes:Record<string,{value:string;innerHTML?:string}>={spatialspotfilter:{value:'bench'},spatialprocessfilter:{value:'p1'},spatiallinks:{value:''}};
+  const associations=[{association:{source:{process_id:'p1'},target:{kind:'spot',spot_id:'bench'}}},{association:{source:{process_id:'p2'},target:{kind:'spot',spot_id:'bench'}}},{association:{source:{process_id:'p1'},target:{kind:'oi'}}}];
+  const ctx=context(['renderSpatialLinks'],{$:(id:string)=>nodes[id],spatialState:{associations},spatialCard:()=>'<article>match</article>'});new Script('renderSpatialLinks()').runInContext(ctx);assert.equal(nodes.spatiallinks.innerHTML,'<article>match</article>');nodes.spatialspotfilter.value='';new Script('renderSpatialLinks()').runInContext(ctx);assert.equal(nodes.spatiallinks.innerHTML,'<article>match</article><article>match</article>');
+});

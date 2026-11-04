@@ -19,6 +19,8 @@ import { listStoredEvents, getStoredEvent, addEvent, dayOf, isDay, type Calendar
 import { listActions, syncActions, setActionStatus } from './lib/actions.js';
 import { buildProcessFromScan, saveRevision } from './lib/processes.js';
 import { listSpotBriefs, recentSessions } from './lib/spot-state.js';
+import { spatialCommand, spatialEvidenceView, inspectSpatialTarget } from './lib/spatial-evidence.js';
+import type { OiReferenceReader } from './lib/oi-reference.js';
 import { readOiLinks } from './lib/oi-links.js';
 import { improvementPlan, readWorkflowContext, writeWorkflowContext, ImprovementError, decideImprovement, listImprovementReviews, readImprovementReview } from './lib/improvements.js';
 import { getDoc } from './lib/db.js';
@@ -302,7 +304,7 @@ export function buildFeed(spots: OverviewSpot[]): FeedEvent[] {
   return events.sort((a, b) => (b.sort > a.sort ? 1 : -1)).slice(0, 15);
 }
 
-export function createServer(rootArg: string, { eco = null, scanRunner = runScript }: { eco?: string | null; scanRunner?: typeof runScript } = {}) {
+export function createServer(rootArg: string, { eco = null, scanRunner = runScript, spatialReader }: { eco?: string | null; scanRunner?: typeof runScript; spatialReader?: OiReferenceReader } = {}) {
   // Absolute from the start: CLI children run from dist/, so stored paths
   // (media clips, the db) must resolve identically in every process.
   const root = resolve(rootArg);
@@ -317,6 +319,14 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
         const html = await readFile(join(HERE, 'dashboard', 'index.html'), 'utf8');
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(html);
+        return;
+      }
+      if (url.pathname === '/api/spatial-evidence' && ['GET','POST'].includes(req.method || '')) {
+        try {
+          if(req.method==='POST')json(200,{association:await spatialCommand(root,await readBody(req))});
+          else if(url.searchParams.has('scene_id'))json(200,{inspection:await inspectSpatialTarget(root,{kind:'oi',scene_id:url.searchParams.get('scene_id'),revision:Number(url.searchParams.get('revision')),entity_kind:'scene',entity_id:'scene'},spatialReader)});
+          else json(200,await spatialEvidenceView(root,spatialReader));
+        }catch(error){const e=error as Error & {code?:string};json(e.code?.startsWith('STALE')?409:400,{error:e.message,code:e.code??'SPATIAL_FAILED'});}
         return;
       }
       if (url.pathname === '/api/journeys' && req.method === 'GET') { json(200, journeyView(root)); return; }

@@ -13,6 +13,7 @@ const execute = promisify(execFile);
 const dist = fileURLToPath(new URL('../', import.meta.url));
 const scripts = fileURLToPath(new URL('../../scripts/', import.meta.url));
 export const CAPABILITIES = [
+  { id: 'spatial', mode: 'synthetic source/location association replay', requires: ['Node 22+'], checks: ['timestamp and identity persist', 'human identity review', 'process/scene changes stay stale', 'missing entities never relink'], limitation: 'Mock OI responses do not prove real scene resolution or scale.' },
   { id: 'journey', mode: 'synthetic video-first journey replay', requires: ['Node 22+'], checks: ['capture before setup', 'correction and goal confirmation persist', 'future task and accepted calendar share identity', 'partial work and follow-up revise remaining work without duplicating tasks'] },
   { id: 'outcomes', mode: 'synthetic intervention outcome replay', requires: ['Node 22+'], checks: ['baseline and follow-up evidence retained', 'unequal workloads normalized', 'predictions separate from measurements', 'corrections invalidate decisions; rejection changes briefing without completing work'] },
   { id: 'reconciliation', mode: 'synthetic evidence/review replay', requires: ['Node 22+'], checks: ['follow-up updates canonical tasks', 'late evidence requires confirmation', 'duplicate upload/review does not duplicate progress', 'blocker propagates while accepted schedule and goal outcome remain separate'] },
@@ -139,7 +140,13 @@ export async function testCapabilities(selection: string, directory: string): Pr
   if (!isAbsolute(directory)) throw new Error('--out must be an absolute path to a new directory.');
   await mkdir(directory); // Deliberately refuse an existing directory, even if empty.
   const report: CapabilityReport = { schema: 'fieldops-capability-test/1', status: 'passed', started_at: new Date().toISOString(), node: process.version, directory, live_inference: false, results: [] };
-  const scenarios = { journey: async (s: Scenario): Promise<void> => {
+  const scenarios = { spatial: async (s: Scenario): Promise<void> => {
+    const root=join(s.directory,'project');
+    const result=await s.command<{passed:boolean;canonical_associations:number;automatic_relinks:number;oi_mutations:number}>(process.execPath,[join(scripts,'replay-spatial.mjs'),root],'spatial-replay');
+    assert.equal(result.passed,true);assert.equal(result.canonical_associations,1);assert.equal(result.automatic_relinks,0);assert.equal(result.oi_mutations,0);
+    const view=await s.cli<{associations:Array<{association:{source:{start_s:number}}}>}>('task-spatial',['view','--root',root],'reopen-associations');assert.equal(view.associations.length,1);assert.equal(view.associations[0].association.source.start_s,4);
+    s.checks.push('Reviewed source/OI references survive CLI reopen; stale/deleted identities stay explicit with no scene writes or automatic relinking');
+  }, journey: async (s: Scenario): Promise<void> => {
     const result = await s.command<{passed:boolean;canonical_tasks:number;context_preserved:boolean}>(process.execPath,[join(scripts,'replay-journey.mjs'),join(s.directory,'project')],'journey-replay');
     assert.equal(result.passed,true); assert.equal(result.canonical_tasks,1); assert.equal(result.context_preserved,true);
     const view = await s.cli<{workflows:unknown[]}>('task-journey',['view','--root',join(s.directory,'project')],'resume-workflow');

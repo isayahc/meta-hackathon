@@ -496,7 +496,7 @@ export async function readOiIdentity(oiRoot: string): Promise<OiIdentity> {
   };
 }
 
-export type OiOp = 'validate' | 'compile' | 'commit' | 'head';
+export type OiOp = 'validate' | 'compile' | 'commit' | 'head' | 'inspect';
 
 export interface OiTransport {
   request<T>(op: OiOp, payload: Record<string, unknown>): Promise<T>;
@@ -592,6 +592,7 @@ export class OiRunnerTransport implements OiTransport {
 // Scripted offline transport for tests and --mock-oi runs. Every result is
 // labeled mock:true and must never be mistaken for an OI verdict.
 export interface OiMockScript {
+  inspect?: (input: Record<string, unknown>) => unknown;
   validate?: (spaceIr: OiSpaceIrDoc) => OiValidation;
   compile?: (spaceIr: OiSpaceIrDoc) => OiCompiled;
   commit?: (input: Record<string, unknown>) => OiCommitted;
@@ -602,6 +603,10 @@ export class OiMockTransport implements OiTransport {
   constructor(private readonly script: OiMockScript = {}) {}
   async request<T>(op: OiOp, payload: Record<string, unknown>): Promise<T> {
     this.calls.push({ op, payload });
+    if (op === 'inspect') {
+      if (!this.script.inspect) throw new OiError('OI_INSPECTION_UNSUPPORTED', 'Mock reference inspection needs an explicit fixture.');
+      return { ...this.script.inspect(payload) as object, mock: true } as T;
+    }
     if (op === 'validate') {
       const fn =
         this.script.validate ??

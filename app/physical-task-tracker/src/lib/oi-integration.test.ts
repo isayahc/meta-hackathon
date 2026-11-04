@@ -2,6 +2,7 @@
 // (validate + compile + local commit) through the real runner transport.
 // Needs OI_ROOT at the pinned commit with node_modules installed; otherwise
 // the suite skips with setup instructions (see doc/oi-boundary.md).
+import type { OiReferenceInspection } from './oi-reference.js';
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm, readFile } from 'node:fs/promises';
@@ -128,4 +129,27 @@ describe('oi live integration (pinned OI)', { skip: !avail.ok ? (avail as { reas
     assert.equal(compiled.bindings.length, 6);
     assert.deepEqual((compiled.workspace as { room: unknown }).room, [8, 6, 2.7]);
   });
+  it('inspects pinned/current identities and detects moved/deleted instances without mutating scenes', async () => {
+    if (!avail.ok) return;
+    const { obs, digest } = await loadFixture('floorplan-cabin-observations.json');
+    const transport = new OiRunnerTransport(avail.oiRoot);
+    const compiled = await transport.request<OiCompiled>('compile', { spaceIr: buildSpaceIr(obs, { sourceId: 'links', digestSha256: digest }) });
+    const dataDir = await mkdtemp(join(tmpdir(), 'oi-reference-'));
+    try {
+      const sceneId = randomUUID();
+      const commit = (baseRevision: number) => transport.request<OiCommitted>('commit', { workspace: compiled.workspace, sceneId, baseRevision, requestId: randomUUID(), dataDir, name: 'Reference fixture', workbenchOrigin: 'http://localhost:5173' });
+      await commit(0);
+      const items = compiled.workspace.items as Array<{ id: string; position: number[] }>;
+      const entityId = items[0].id;
+      const inspect = (entityKind = 'instance') => transport.request<OiReferenceInspection>('inspect', { sceneId, revision: 1, entityKind, entityId, dataDir, workbenchOrigin: 'http://localhost:5173' });
+      assert.equal((await inspect()).entity_state, 'present');
+      items[0].position[0] += 1; await commit(1);
+      const moved = await inspect(); assert.equal(moved.changed, true); assert.equal(moved.head_revision, 2); assert.equal(moved.scale, 'unknown'); assert.equal(moved.mock, false);
+      items.shift(); await commit(2);
+      const removed = await inspect(); assert.equal(removed.entity_state, 'present'); assert.equal(removed.head_entity_state, 'missing');
+      assert.equal((await inspect('region')).entity_state, 'unsupported');
+      assert.equal((await transport.request<{revision:number}>('head', {sceneId,dataDir})).revision, 3);
+    } finally { await rm(dataDir, { recursive: true, force: true }); }
+  });
+
 });
