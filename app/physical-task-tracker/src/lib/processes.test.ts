@@ -2,7 +2,7 @@
 // corrections, and staleness. No network, no API key.
 import { test, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { openDb } from './db.js';
@@ -34,6 +34,7 @@ const SCAN = {
   suggested_next_steps: ['Finish spreading the remaining run', 'Water the mulch in'],
   confidence: 'medium',
   unknowns: ['mulch depth cannot be told from these frames'],
+  frame_times_s: [5, 15, 25],
 };
 
 async function assertProcError(fn: () => unknown, code: string): Promise<ProcessError> {
@@ -52,11 +53,23 @@ test('a video scan yields an inspectable process, not just a task array', async 
   assert.equal(doc.schema, 'farm-process/1');
   assert.equal(doc.goals.length, 1);
   assert.equal(doc.goals[0]?.label, 'Spread mulch under the north fence');
-  assert.deepEqual(doc.goals[0]?.step_ids, ['proc-1-s0', 'proc-1-s1']);
-  assert.equal(doc.steps.length, 2);
-  assert.equal(doc.steps[0]?.label, 'Finish spreading the remaining run');
-  // Unknown discipline: inferred, not started, no invented precedence/order.
-  for (const s of doc.steps) {
+  assert.deepEqual(doc.goals[0]?.step_ids, ['proc-1-o0', 'proc-1-o1', 'proc-1-o2', 'proc-1-s0', 'proc-1-s1']);
+  assert.equal(doc.steps.length, 5);
+  assert.equal(doc.stage, 'half the run is covered');
+  // Observed work: kept with frame refs and temporal order, never complete.
+  const observed = doc.steps.slice(0, 3);
+  assert.deepEqual(observed.map((s) => s.label), SCAN.per_frame);
+  for (const [i, s] of observed.entries()) {
+    assert.equal(s.claim, 'observed');
+    assert.equal(s.execution, 'unknown');
+    assert.equal(s.observed_order, i);
+    assert.deepEqual(s.evidence.spans, [{ start_s: (SCAN.frame_times_s as number[])[i], end_s: (SCAN.frame_times_s as number[])[i], frame: i }]);
+    assert.equal(s.requires_unknown, true);
+  }
+  // Proposed work: distinguishable, not started, no invented order.
+  const proposed = doc.steps.slice(3);
+  assert.equal(proposed[0]?.label, 'Finish spreading the remaining run');
+  for (const s of proposed) {
     assert.equal(s.claim, 'unknown'); // no footage supports these future steps
     assert.equal(s.execution, 'not_started');
     assert.equal(s.requires_unknown, true);
@@ -65,6 +78,7 @@ test('a video scan yields an inspectable process, not just a task array', async 
   }
   assert.equal(doc.coverage.total_s, 30);
   assert.equal(doc.coverage.observed_spans.length, 3);
+  assert.ok(doc.gaps.some((g) => g.includes('proc-1-s0') && g.includes('no supporting footage')));
   assert.deepEqual(doc.unknowns, ['mulch depth cannot be told from these frames']);
   assert.equal(doc.confidence, 'medium');
   const badConf = buildProcessFromScan({ id: 'proc-2', analysis: { suggested_next_steps: ['x'], confidence: 'extreme' } });
@@ -160,14 +174,16 @@ test('farmer corrections persist as revisions with originals retained', async (t
     'The wheelbarrow cannot reach the far run.'
   );
   assert.equal(doc.rev, 2);
-  assert.equal(doc.steps[0]?.label, 'Finish spreading the remaining run by hand');
-  assert.equal(doc.steps[0]?.claim, 'corrected');
+  const byId = new Map(doc.steps.map((s) => [s.id, s]));
+  assert.equal(byId.get('p-s0')?.label, 'Finish spreading the remaining run by hand');
+  assert.equal(byId.get('p-s0')?.claim, 'corrected');
   assert.equal(doc.corrections.length, 1);
   assert.match(doc.corrections[0]?.rationale ?? '', /wheelbarrow/);
   // Original claims retained under rev 1.
   const original = await readProcess(root, 'p', 1);
-  assert.equal(original.steps[0]?.label, 'Finish spreading the remaining run');
-  assert.equal(original.steps[0]?.claim, 'unknown');
+  const origById = new Map(original.steps.map((s) => [s.id, s]));
+  assert.equal(origById.get('p-s0')?.label, 'Finish spreading the remaining run');
+  assert.equal(origById.get('p-s0')?.claim, 'unknown');
   // Correction without rationale is refused.
   await assertProcError(() => applyCorrection(root, 'p', { title: 'x' }, '  '), 'PROC_CORRECTION');
 });
@@ -226,16 +242,116 @@ test('downstream analysis uses the corrected version; older recommendations go s
   assert.deepEqual(await markDependentStale(root, 'p', 3), []);
 });
 
-test('evidenced completion validates end to end', async () => {
-  const doc = buildProcessFromScan({ id: 'p', analysis: { suggested_next_steps: ['Spread the run'] }, duration_s: 60 });
+test('evidenced completion validates end to end', async (t: TestContext) => {
+  const root = await freshRoot(t);
+  await mkdir(join(root, 'media'), { recursive: true });
+  await writeFile(join(root, 'media', 'clip.mp4'), 'fake-bytes');
+  const doc = buildProcessFromScan({
+    id: 'p',
+    analysis: { suggested_next_steps: ['Spread the run'], frame_times_s: [5, 15, 25] },
+    media: 'clip.mp4',
+    duration_s: 30,
+  });
+  // Instant criterion at a sampled instant with present media: sufficient.
   const step = doc.steps[0]!;
-  step.completion_criteria = ['full run covered'];
-  step.criteria_evidence = { 'full run covered': [{ start_s: 50, end_s: 60 }] };
-  step.evidence.spans = [{ start_s: 0, end_s: 60 }];
+  step.completion_criteria = ['mulch visible at end'];
+  step.criteria_evidence = { 'mulch visible at end': [{ start_s: 25, end_s: 25, frame: 2 }] };
+  step.evidence.spans = [{ start_s: 25, end_s: 25, frame: 2 }];
   step.execution = 'complete';
   step.claim = 'observed';
   doc.goals[0]!.execution = 'complete';
-  const clean = normalizeProcess(validateProcess(doc));
-  assert.equal(clean.steps[0]?.execution, 'complete');
-  assert.equal(clean.goals[0]?.execution, 'complete');
+  const saved = await saveRevision(root, doc);
+  assert.equal(saved.steps[0]?.execution, 'complete');
+  assert.equal(saved.goals[0]?.execution, 'complete');
+});
+
+test('observed work survives with no suggested steps, partial times, repeats', async () => {
+  const doc = buildProcessFromScan({
+    id: 'p',
+    analysis: {
+      observed_task: 'Bed prep',
+      per_frame: ['soil filling', 'seeding', 'watering'],
+      suggested_next_steps: [],
+      frame_times_s: [5, null, 25],
+    },
+    media: 'clip.mp4',
+    duration_s: 30,
+  });
+  assert.equal(doc.steps.length, 3);
+  assert.deepEqual(doc.steps.map((s) => s.id), ['p-o0', 'p-o1', 'p-o2']);
+  assert.ok(doc.steps.every((s) => s.claim === 'observed' && s.execution === 'unknown'));
+  assert.deepEqual(doc.steps.map((s) => s.observed_order), [0, 1, 2]);
+  assert.deepEqual(doc.goals[0]?.step_ids, ['p-o0', 'p-o1', 'p-o2']);
+  // Partial sampling: the untimed frame keeps its order, gains a gap.
+  assert.deepEqual(doc.steps[1]?.evidence.spans, []);
+  assert.ok(doc.gaps.some((g) => g.includes('p-o1') && g.includes('timestamps unavailable')));
+  // Repeated actions stay distinct observations; nothing completes.
+  const repeat = buildProcessFromScan({
+    id: 'r',
+    analysis: { per_frame: ['watering row 1', 'watering row 2'], suggested_next_steps: [] },
+    duration_s: 20,
+  });
+  assert.equal(repeat.steps.length, 2);
+  assert.ok(repeat.steps.every((s) => s.execution === 'unknown'));
+});
+
+test('completion requires resolvable media and covered spans', async (t: TestContext) => {
+  const root = await freshRoot(t);
+  await mkdir(join(root, 'media'), { recursive: true });
+  await writeFile(join(root, 'media', 'clip.mp4'), 'fake-bytes');
+  const base = () => {
+    const doc = buildProcessFromScan({
+      id: 'p',
+      analysis: { suggested_next_steps: ['Spread the run'], frame_times_s: [5, 15, 25] },
+      media: 'clip.mp4',
+      duration_s: 30,
+    });
+    const step = doc.steps[0]!;
+    step.completion_criteria = ['done'];
+    step.claim = 'observed';
+    step.execution = 'complete';
+    doc.goals[0]!.execution = 'complete';
+    return { doc, step };
+  };
+  // No source media: rejected.
+  {
+    const { doc, step } = base();
+    step.evidence.media = null;
+    step.criteria_evidence = { done: [{ start_s: 15, end_s: 15, frame: 1 }] };
+    const err = await assertProcError(() => saveRevision(root, doc), 'PROC_UNEVIDENCED_COMPLETION');
+    assert.match(err.message, /media/);
+  }
+  // Named but missing media file: rejected.
+  {
+    const { doc, step } = base();
+    step.evidence.media = 'gone.mp4';
+    step.criteria_evidence = { done: [{ start_s: 15, end_s: 15, frame: 1 }] };
+    await assertProcError(() => saveRevision(root, doc), 'PROC_UNEVIDENCED_COMPLETION');
+  }
+  // Instant outside sampled coverage: rejected (999s-style fabrication).
+  {
+    const { doc, step } = base();
+    step.criteria_evidence = { done: [{ start_s: 29, end_s: 29 }] };
+    await assertProcError(() => saveRevision(root, doc), 'PROC_UNEVIDENCED_COMPLETION');
+  }
+  // Unknown frame identity: rejected.
+  {
+    const { doc, step } = base();
+    step.criteria_evidence = { done: [{ start_s: 15, end_s: 15, frame: 9 }] };
+    await assertProcError(() => saveRevision(root, doc), 'PROC_UNEVIDENCED_COMPLETION');
+  }
+  // Interval criterion with only isolated instants: partial, insufficient.
+  {
+    const { doc, step } = base();
+    step.criteria_evidence = { done: [{ start_s: 5, end_s: 25 }] };
+    await assertProcError(() => saveRevision(root, doc), 'PROC_UNEVIDENCED_COMPLETION');
+  }
+  // Continuous coverage over the interval: accepted.
+  {
+    const { doc, step } = base();
+    doc.coverage.observed_spans.push({ start_s: 0, end_s: 30 });
+    step.criteria_evidence = { done: [{ start_s: 5, end_s: 25 }] };
+    const saved = await saveRevision(root, doc);
+    assert.equal(saved.steps[0]?.execution, 'complete');
+  }
 });

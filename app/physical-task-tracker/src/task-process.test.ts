@@ -45,14 +45,18 @@ test('build/show/list/correct round-trips a scan event to a corrected process', 
   const buildOut = JSON.parse(built.stdout) as { ok: boolean; id: string; rev: number; steps: number };
   assert.equal(buildOut.ok, true);
   assert.equal(buildOut.rev, 1);
-  assert.equal(buildOut.steps, 2);
+  assert.equal(buildOut.steps, 4);
 
   const shown = await runCli(['show', '--root', root, '--id', 'proc-mulch']);
   assert.equal(shown.code, 0, shown.stderr);
-  const showOut = JSON.parse(shown.stdout) as { process: { title: string; provenance: { source_event_id: string }; steps: Array<{ claim: string; execution: string }> } };
+  const showOut = JSON.parse(shown.stdout) as { process: { title: string; provenance: { source_event_id: string }; steps: Array<{ id: string; label: string; claim: string; execution: string }> } };
   assert.equal(showOut.process.title, 'Spread mulch under the north fence');
   assert.equal(showOut.process.provenance.source_event_id, event.id);
-  assert.ok(showOut.process.steps.every((s) => s.execution === 'not_started'));
+  const byId = new Map(showOut.process.steps.map((s) => [s.id, s]));
+  assert.equal(byId.get('proc-mulch-o0')?.label, 'bare soil');
+  assert.equal(byId.get('proc-mulch-o0')?.claim, 'observed');
+  assert.equal(byId.get('proc-mulch-s0')?.label, 'Finish spreading the remaining run');
+  assert.ok(showOut.process.steps.filter((s) => s.id.includes('-s')).every((s) => s.execution === 'not_started'));
 
   const listed = await runCli(['list', '--root', root]);
   assert.equal(listed.code, 0, listed.stderr);
@@ -70,7 +74,8 @@ test('build/show/list/correct round-trips a scan event to a corrected process', 
 
   const rev1 = await runCli(['show', '--root', root, '--id', 'proc-mulch', '--rev', '1']);
   assert.equal(rev1.code, 0, rev1.stderr);
-  assert.equal((JSON.parse(rev1.stdout) as { process: { steps: Array<{ label: string }> } }).process.steps[0]?.label, 'Finish spreading the remaining run');
+  const rev1Steps = (JSON.parse(rev1.stdout) as { process: { steps: Array<{ id: string; label: string }> } }).process.steps;
+  assert.equal(rev1Steps.find((s) => s.id === 'proc-mulch-s0')?.label, 'Finish spreading the remaining run');
 });
 
 test('correct rejects a cycling patch and reports usage errors as JSON-safe failures', async (t) => {

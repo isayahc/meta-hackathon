@@ -50,8 +50,31 @@ test('video scan prints pure JSON to stdout, notes to stderr', async (t: TestCon
   assert.equal(parsed.recorded_source, 'mtime');
   assert.equal(parsed.recorded_estimate, true);
   assert.ok(parsed.recorded_at && !Number.isNaN(Date.parse(String(parsed.recorded_at))));
+  // No --duration: sample instants unknown, carried as nulls.
+  assert.deepEqual(parsed.frame_times_s, [null, null]);
+  assert.equal(parsed.video_duration_s, null);
+  assert.equal(parsed.frame_times_estimated, false);
+  assert.deepEqual(parsed.frame_files, ['frame-a.jpg', 'frame-b.jpg']);
   assert.match(stderr, /\(via frames:/);
   assert.match(stderr, /Estimated .* \(file date only; treat as an estimate\)\./);
+});
+
+test('frames dir with --duration carries estimated sample instants', async (t: TestContext) => {
+  const dir = await mkdtemp(join(tmpdir(), 'scan-video-times-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await writeFile(join(dir, 'frame-a.jpg'), Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
+  await writeFile(join(dir, 'frame-b.jpg'), Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
+  const stub = join(dir, 'stub-fetch.mjs');
+  await writeFile(stub, STUB);
+  const { stdout } = await execFileAsync(
+    process.execPath,
+    ['--import', pathToFileURL(stub).href, SCRIPT, dir, '--frames', '2', '--duration', '20'],
+    { cwd: dir, env: { ...process.env, META_API_KEY: 'test-key-for-times' } }
+  );
+  const parsed = JSON.parse(stdout) as Record<string, unknown>;
+  assert.deepEqual(parsed.frame_times_s, [5, 15]);
+  assert.equal(parsed.frame_times_estimated, true);
+  assert.equal(parsed.video_duration_s, 20);
 });
 
 function hasFfmpeg(): boolean {

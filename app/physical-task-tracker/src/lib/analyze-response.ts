@@ -337,11 +337,31 @@ export function buildBriefingPrompt(spots: SpotBrief[], goals: string[] = []): s
 // constraints. constraints: [strings] such as weather windows, labor,
 // daylight, equipment. ecoSummary: optional field-conditions block
 // (see eco summarizeEco), or null.
+export interface OptimizerProcessStep {
+  id: string;
+  label: string;
+  claim: string;
+  execution: string;
+  requires: string[];
+  observed_order: number | null;
+  unknowns: string[];
+}
+
+export interface OptimizerProcess {
+  id: string;
+  rev: number;
+  title: string;
+  goals: Array<{ label: string; execution: string }>;
+  steps: OptimizerProcessStep[];
+  gaps: string[];
+}
+
 export function buildOptimizerPrompt(
   goals: Goal[],
   spots: SpotBrief[],
   constraints: string[] = [],
-  ecoSummary: string | null = null
+  ecoSummary: string | null = null,
+  processes: OptimizerProcess[] = []
 ): string {
   const open = goals.filter((g) => g.status !== 'done');
   const goalLines = open.length
@@ -366,6 +386,33 @@ export function buildOptimizerPrompt(
         })
         .join('\n\n')
     : '(no spots observed yet)';
+  const clip = (s: string, n: number): string => (s.length > n ? `${s.slice(0, n)}…` : s);
+  const processBlock = processes.length
+    ? '\nFarmer processes (current revisions; farmer-corrected steps outrank older spot summaries where they conflict):\n' +
+      processes
+        .map((p) => {
+          const shown = p.steps.slice(0, 50);
+          const lines = shown.map(
+            (s) =>
+              `  - [${s.id}] "${clip(s.label, 160)}" claim=${s.claim} exec=${s.execution}` +
+              ` requires=${s.requires.length ? s.requires.join(',') : 'none'}` +
+              ` order=${s.observed_order ?? 'none'}`
+          );
+          if (p.steps.length > shown.length) lines.push(`  - (+${p.steps.length - shown.length} more steps not shown)`);
+          for (const g of p.gaps.slice(0, 10)) lines.push(`  ! gap: ${clip(g, 160)}`);
+          for (const s of shown) {
+            for (const u of s.unknowns.slice(0, 3)) lines.push(`  ! ${s.id} unknown: ${clip(u, 160)}`);
+          }
+          return (
+            `- [${p.id}] "${clip(p.title, 160)}" (rev ${p.rev})\n` +
+            p.goals.map((g) => `  goal: ${clip(g.label, 160)} [${g.execution}]`).join('\n') +
+            (p.goals.length ? '\n' : '') +
+            lines.join('\n')
+          );
+        })
+        .join('\n') +
+      '\n'
+    : '';
   const constraintBlock = constraints.length
     ? `\nHard constraints (never violate):\n${constraints.map((c) => `- ${c}`).join('\n')}\n`
     : '';
@@ -384,6 +431,7 @@ export function buildOptimizerPrompt(
     `\nOpen goals:\n${goalLines}\n` +
     `\nObserved spots:\n${spotLines}\n` +
     (ecoSummary ? `\nField conditions (ecology data):\n${ecoSummary}\n` : '') +
+    processBlock +
     constraintBlock
   );
 }

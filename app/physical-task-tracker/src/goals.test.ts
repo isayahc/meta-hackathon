@@ -57,3 +57,22 @@ test('optimizer prompt degrades gracefully with no goals or spots', () => {
   assert.match(p, /no open goals/i);
   assert.match(p, /no spots observed/i);
 });
+test('optimizer prompt carries corrected processes with revisions', () => {
+  const p = buildOptimizerPrompt([], [], [], null, [
+    {
+      id: 'proc-mulch',
+      rev: 2,
+      title: 'Mulch the north fence',
+      goals: [{ label: 'Mulch the north fence', execution: 'unknown' }],
+      steps: [
+        { id: 'proc-mulch-s0', label: 'Finish spreading by hand', claim: 'corrected', execution: 'not_started', requires: [], observed_order: null, unknowns: [] },
+      ],
+      gaps: ['step "proc-mulch-s0": no supporting footage'],
+    },
+  ]);
+  assert.match(p, /proc-mulch/);
+  assert.match(p, /rev 2/);
+  assert.match(p, /Finish spreading by hand/);
+  assert.match(p, /claim=corrected/);
+  assert.match(p, /farmer-corrected steps outrank/);
+});

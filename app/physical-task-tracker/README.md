@@ -189,7 +189,7 @@ A scan event also yields a versioned process (`farm-process/1`): goals,
 steps with inputs/outputs, tools/materials, actor roles, preconditions
 and completion criteria, `requires` precedence kept separate from
 observed footage order, plus evidence, coverage, confidence/unknowns,
-and model provenance. Claim status (`observed|inferred|corrected|
+and model provenance. Frame lines become observed steps with sampled instants and order; suggestions stay proposed. The optimizer consumes current revisions and stamps exactly what it saw. Claim status (`observed|inferred|corrected|
 unknown`) is tracked separately from execution status, and partial
 footage can never establish completion — unsupported details stay
 unknown. Farmer corrections append revisions (originals retained);

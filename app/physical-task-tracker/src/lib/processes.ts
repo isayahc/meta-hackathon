@@ -10,6 +10,8 @@
 // readable. Downstream docs (optimizer plan) stamp the process revisions
 // they were built from and go stale when a correction lands.
 // No dependencies beyond node:sqlite (via lib/db).
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { withDb, getDoc, setDoc } from './db.js';
 
 export const PROCESS_SCHEMA = 'farm-process/1';
@@ -81,6 +83,7 @@ export interface ProcessDoc {
   id: string;
   rev: number;
   title: string;
+  stage: string | null;
   goals: ProcessGoal[];
   steps: ProcessStep[];
   coverage: { observed_spans: TimeSpan[]; total_s: number | null; coverage_note?: string | null };
@@ -273,6 +276,9 @@ export function validateProcess(doc: unknown): ProcessDoc {
   if (doc.confidence !== null && doc.confidence !== 'low' && doc.confidence !== 'medium' && doc.confidence !== 'high') {
     throw new ProcessError('PROC_BAD_STATUS', `Bad confidence "${String(doc.confidence)}": want low, medium, high, or null.`);
   }
+  if ((doc as { stage?: unknown }).stage !== null && typeof (doc as { stage?: unknown }).stage !== 'string') {
+    throw new ProcessError('PROC_SCHEMA', 'Process stage must be a string or null.');
+  }
   return doc as unknown as ProcessDoc;
 }
 
@@ -284,9 +290,13 @@ export function normalizeProcess(doc: ProcessDoc): ProcessDoc {
   const gaps: string[] = [];
   for (const s of out.steps) {
     const spans = s.evidence.spans.length + Object.values(s.criteria_evidence).reduce((n, v) => n + v.length, 0);
-    if (spans === 0) {
+    // Supported = timestamped spans, or an observed frame in known media.
+    const supported = spans > 0 || (s.observed_order !== null && s.observed_order !== undefined && s.evidence.media !== null);
+    if (!supported) {
       gaps.push(`step "${s.id}": no supporting footage`);
       if (s.claim !== 'corrected') s.claim = 'unknown';
+    } else if (spans === 0) {
+      gaps.push(`step "${s.id}": frame timestamps unavailable`);
     }
     for (const c of s.completion_criteria) {
       if (!(s.criteria_evidence[c] ?? []).length) gaps.push(`step "${s.id}" criterion "${c}": unevidenced`);
@@ -324,6 +334,62 @@ export function normalizeProcess(doc: ProcessDoc): ProcessDoc {
   return out;
 }
 
+// Completion support: a 'complete' claim must resolve against real source
+// media and observed coverage, not just well-formed numbers. Isolated
+// sampled instants prove instants, never intervals: an interval criterion
+// needs continuous coverage. Call after validateProcess; non-complete
+// steps are untouched (missing evidence blocks completion, never the doc).
+export interface SourceContext {
+  mediaPresent: (media: string | null) => boolean;
+}
+
+export function validateCompletion(doc: ProcessDoc, ctx: SourceContext): void {
+  const totalS = doc.coverage.total_s;
+  const covered = doc.coverage.observed_spans;
+  const framed = new Set(covered.map((o) => o.frame).filter((f): f is number => typeof f === 'number'));
+  const supports = (span: TimeSpan): boolean => {
+    if (span.frame !== null && span.frame !== undefined && !framed.has(span.frame)) return false;
+    if (span.start_s === span.end_s) {
+      return covered.some((o) => o.start_s <= span.start_s && span.start_s <= o.end_s);
+    }
+    let reach = span.start_s;
+    for (const o of [...covered].sort((a, b) => a.start_s - b.start_s)) {
+      if (o.start_s > reach) break;
+      reach = Math.max(reach, o.end_s);
+      if (reach >= span.end_s) return true;
+    }
+    return false;
+  };
+  for (const s of doc.steps) {
+    if (s.execution !== 'complete') continue;
+    if (s.evidence.media === null || !ctx.mediaPresent(s.evidence.media)) {
+      throw new ProcessError('PROC_UNEVIDENCED_COMPLETION', `Step "${s.id}": complete needs resolvable source media.`);
+    }
+    if (totalS === null) {
+      throw new ProcessError('PROC_UNEVIDENCED_COMPLETION', `Step "${s.id}": complete needs known footage bounds.`);
+    }
+    for (const spans of Object.values(s.criteria_evidence)) {
+      for (const span of spans) {
+        if (!supports(span)) {
+          throw new ProcessError(
+            'PROC_UNEVIDENCED_COMPLETION',
+            `Step "${s.id}": span [${span.start_s}s, ${span.end_s}s] is not covered by observed footage.`
+          );
+        }
+      }
+    }
+  }
+}
+
+function mediaFilePresent(root: string, media: string | null): boolean {
+  if (typeof media !== 'string' || !media || media.includes('/') || media.includes('\\')) return false;
+  try {
+    return existsSync(join(root, 'media', media));
+  } catch {
+    return false;
+  }
+}
+
 // Occurrences a repeated step stands for: a fixed count, or null when the
 // repeat runs until a condition (count unknowable upfront).
 export function occurrencesOf(step: ProcessStep): number | null {
@@ -339,6 +405,9 @@ export interface ScanAnalysisInput {
   suggested_next_steps?: unknown;
   confidence?: unknown;
   unknowns?: unknown;
+  frame_times_s?: unknown;
+  video_duration_s?: unknown;
+  frame_times_estimated?: unknown;
 }
 
 export interface BuildProcessInput {
@@ -365,30 +434,81 @@ export function buildProcessFromScan(input: BuildProcessInput): ProcessDoc {
   const id = input.id?.trim() || `proc-${input.eventId ?? Date.now()}`;
   const stepsRaw = cleanLines(input.analysis.suggested_next_steps);
   const frames = cleanLines(input.analysis.per_frame);
-  const totalS = typeof input.duration_s === 'number' && Number.isFinite(input.duration_s) && input.duration_s > 0
+  const durationRaw = typeof input.duration_s === 'number' && Number.isFinite(input.duration_s) && input.duration_s > 0
     ? input.duration_s
-    : null;
+    : input.analysis.video_duration_s;
+  const totalS = typeof durationRaw === 'number' && Number.isFinite(durationRaw) && durationRaw > 0 ? durationRaw : null;
+  const timesRaw = Array.isArray(input.analysis.frame_times_s) ? input.analysis.frame_times_s : [];
+  const frameTimes: Array<number | null> = timesRaw.map((t) => (typeof t === 'number' && Number.isFinite(t) && t >= 0 ? t : null));
+  const estimated = input.analysis.frame_times_estimated === true;
   const now = new Date().toISOString();
   const confidenceRaw = input.analysis.confidence;
   const confidence = confidenceRaw === 'low' || confidenceRaw === 'medium' || confidenceRaw === 'high' ? confidenceRaw : null;
   const observedTask = typeof input.analysis.observed_task === 'string' && input.analysis.observed_task.trim()
     ? input.analysis.observed_task.trim()
     : null;
+  const stage = typeof input.analysis.stage === 'string' && input.analysis.stage.trim()
+    ? input.analysis.stage.trim()
+    : null;
+  const media = input.media ?? null;
 
+  // Sampled instants only — never the intervals between isolated frames.
   const observedSpans: TimeSpan[] = [];
+  frameTimes.forEach((t, i) => {
+    if (t !== null) observedSpans.push({ start_s: t, end_s: t, frame: i });
+  });
   let coverageNote: string | null = null;
-  if (frames.length && totalS !== null) {
-    frames.forEach((_, i) => {
-      observedSpans.push({ start_s: (totalS * i) / frames.length, end_s: (totalS * (i + 1)) / frames.length, frame: i });
-    });
-    coverageNote = `frame spans estimated from ${frames.length} frames over ${totalS}s`;
+  if (observedSpans.length && estimated) {
+    coverageNote = totalS !== null
+      ? `frame spans estimated from ${frameTimes.length} frames over ${totalS}s`
+      : 'frame times estimated (total length unknown)';
+  } else if (!observedSpans.length && (frames.length || frameTimes.length)) {
+    coverageNote = 'frame timestamps unavailable; sampled instants unknown';
   }
+
+  const emptyStep = {
+    inputs: [] as string[],
+    outputs: [] as string[],
+    tools: [] as string[],
+    materials: [] as string[],
+    actors: [] as string[],
+    preconditions: [] as string[],
+    completion_criteria: [] as string[],
+    criteria_evidence: {} as Record<string, TimeSpan[]>,
+    requires: [] as string[],
+    requires_unknown: true,
+    repeat: null,
+    location: null,
+    unknowns: [] as string[],
+  };
+  const observedSteps: ProcessStep[] = frames.map((label, i) => {
+    const t = frameTimes[i] ?? null;
+    return {
+      ...structuredClone(emptyStep),
+      id: `${id}-o${i}`,
+      label,
+      claim: 'observed' as ClaimStatus,
+      execution: 'unknown' as ExecutionStatus,
+      observed_order: i,
+      evidence: { media, spans: t === null ? [] : [{ start_s: t, end_s: t, frame: i }] },
+    };
+  });
+  const proposedSteps: ProcessStep[] = stepsRaw.map((label, i) => ({
+    ...structuredClone(emptyStep),
+    id: `${id}-s${i}`,
+    label,
+    claim: 'inferred' as ClaimStatus,
+    execution: 'not_started' as ExecutionStatus,
+    observed_order: null,
+    evidence: { media, spans: [] },
+  }));
 
   const doc: ProcessDoc = {
     schema: PROCESS_SCHEMA,
     id,
     rev: 1,
     title: input.title?.trim() || observedTask || 'Untitled process',
+    stage,
     goals: [
       {
         id: `${id}-g0`,
@@ -396,30 +516,10 @@ export function buildProcessFromScan(input: BuildProcessInput): ProcessDoc {
         claim: observedTask ? 'observed' : 'unknown',
         execution: 'unknown',
         completion_criteria: [],
-        step_ids: stepsRaw.map((_, i) => `${id}-s${i}`),
+        step_ids: [...observedSteps, ...proposedSteps].map((s) => s.id),
       },
     ],
-    steps: stepsRaw.map((label, i) => ({
-      id: `${id}-s${i}`,
-      label,
-      claim: 'inferred' as ClaimStatus,
-      execution: 'not_started' as ExecutionStatus,
-      inputs: [],
-      outputs: [],
-      tools: [],
-      materials: [],
-      actors: [],
-      preconditions: [],
-      completion_criteria: [],
-      criteria_evidence: {},
-      requires: [],
-      requires_unknown: true,
-      observed_order: null,
-      repeat: null,
-      location: null,
-      evidence: { media: input.media ?? null, spans: [] },
-      unknowns: [],
-    })),
+    steps: [...observedSteps, ...proposedSteps],
     coverage: { observed_spans: observedSpans, total_s: totalS, coverage_note: coverageNote },
     gaps: [],
     order_notes: [],
@@ -448,6 +548,7 @@ interface ProcessRow {
 
 export async function saveRevision(root: string, doc: ProcessDoc, author = 'model'): Promise<ProcessDoc> {
   const clean = normalizeProcess(validateProcess(doc));
+  validateCompletion(clean, { mediaPresent: (m) => mediaFilePresent(root, m) });
   return withDb(root, (db) => {
     const prior = db.prepare('SELECT rev FROM processes WHERE id = ? AND rev = ?').get(clean.id, clean.rev) as
       | { rev: number }
@@ -498,6 +599,7 @@ export async function listProcesses(root: string): Promise<ProcessCurrent[]> {
 export interface CorrectionPatch {
   title?: string;
   confidence?: 'low' | 'medium' | 'high' | null;
+  stage?: string | null;
   steps?: Record<string, Partial<ProcessStep>>;
   goals?: Record<string, Partial<ProcessGoal>>;
   add_steps?: ProcessStep[];
@@ -526,6 +628,10 @@ export async function applyCorrection(
   if (patch.confidence !== undefined) {
     next.confidence = patch.confidence;
     paths.push('confidence');
+  }
+  if (patch.stage !== undefined) {
+    next.stage = patch.stage;
+    paths.push('stage');
   }
   const byId = new Map(next.steps.map((s) => [s.id, s]));
   for (const [stepId, partial] of Object.entries(patch.steps ?? {})) {
@@ -572,6 +678,7 @@ export async function applyCorrection(
   // correction (cycle, bad timestamp, unevidenced completion) must leave
   // the stored revisions untouched.
   validateProcess(next);
+  validateCompletion(next, { mediaPresent: (m) => mediaFilePresent(root, m) });
   next.rev = current.rev + 1;
   next.updated_at = new Date().toISOString();
   next.corrections = [...next.corrections, { rev: next.rev, at: next.updated_at, rationale: rationale.trim(), paths }];
