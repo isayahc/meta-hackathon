@@ -55,6 +55,7 @@ executable if it is not named `python3`.
 
 | Scenario | What runs | What it proves |
 | --- | --- | --- |
+| `lifecycle` | Reviewed synthetic baseline/follow-up → held-out explicit-rule evaluation → selected policy → bundle import/replay → correction | Traceable episodes, explicit unknowns, immutable historical scores and stale reuse; one synthetic workflow, no training or farmer validation; see [lifecycle contract](workflow-lifecycle.md) |
 | `routes` | Real pinned OI with deterministic two-station geometry | Declared bent-route arithmetic, repeatability, conservative checks and baseline/proposal comparison with zero scene/asset writes; physical walkability remains unsupported |
 | `reconstruction` | Deterministic fixture with **real pinned OI** | Explicit transforms, calibration/holdout, preview/commit, retries and revisioned identity/lineage; blocked without OI setup, no model inference |
 | `spatial` | Synthetic source/identity review → moved/deleted OI responses → separate CLI reopen | Durable source spans/checksums, review history and stale states, no automatic relinking or scene writes; OI responses are mocked |

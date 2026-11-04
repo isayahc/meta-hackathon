@@ -466,3 +466,10 @@ test('goal and dated-note HTTP retries create one canonical record each', async 
   assert.equal((await listGoals(root)).filter(g=>g.text===goal.text).length,1);
   const events=await call(root,'GET','/api/events');assert.equal(events.json.events.filter((e:{title:string})=>e.title===note.title).length,1);
 });
+
+test('lifecycle HTTP adapter captures and reopens reviewed episodes through the canonical trial services',async t=>{
+ const root=await scratch(t);const {lifecycleFixture}=await import('./lib/lifecycle-fixture.js');const {trial}=await lifecycleFixture(root);
+ const command={command:'capture',request_id:'http-episode',trial_id:trial.id,trial_revision:trial.revision,visit_id:trial.baseline!.id,mode:'synthetic',reviewer:'Operator',reason:'Synthetic baseline review',expected_status:'unknown',permissions:{metadata_export:true,media_export:false,training:false,authority:'Fixture author'}};
+ const saved=await call(root,'POST','/api/lifecycle',command);assert.equal(saved.status,200);const retry=await call(root,'POST','/api/lifecycle',command);assert.deepEqual(retry.json,saved.json);const view=await call(root,'GET','/api/lifecycle');assert.equal(view.json.episodes.length,1);assert.equal(view.json.episodes[0].episode.id,saved.json.id);
+ const invalid=await call(root,'POST','/api/lifecycle',{...command,request_id:'missing',visit_id:'no-visit'});assert.equal(invalid.status,400);const stale=await call(root,'POST','/api/lifecycle',{...command,request_id:'stale',trial_revision:99});assert.equal(stale.status,409);
+});

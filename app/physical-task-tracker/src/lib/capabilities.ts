@@ -15,6 +15,7 @@ const execute = promisify(execFile);
 const dist = fileURLToPath(new URL('../', import.meta.url));
 const scripts = fileURLToPath(new URL('../../scripts/', import.meta.url));
 export const CAPABILITIES = [
+  { id: 'lifecycle', mode: 'synthetic reviewed workflow and explicit-rule replay', requires: ['Node 22+'], checks: ['episode revisions and unknowns', 'held-out outcome rule', 'portable bundle round-trip', 'corrections invalidate reuse'], limitation: 'One synthetic workflow, no live inference, training or farmer validation.' },
   { id: 'routes', mode: 'deterministic read-only fixture with real pinned OI', requires: ['Node 22+', 'Pinned OI with dependencies'], checks: ['bent route arithmetic', 'independent scale evidence', 'repeatability', 'baseline/proposal without scene writes'], limitation: 'Conservative horizontal footprints and explicit portals; full physical traversability remains unsupported.' },
   { id: 'reconstruction', mode: 'deterministic fixture with real pinned OI', requires: ['Node 22+', 'OI_ROOT at pinned revision with dependencies'], checks: ['preview before commit', 'metric transforms and independent holdout', 'retry deduplicates', 'correction preserves identity and evidence'], limitation: 'Existing immutable OI assets only; no live inference or raw reconstruction mesh import.' },
   { id: 'spatial', mode: 'synthetic source/location association replay', requires: ['Node 22+'], checks: ['timestamp and identity persist', 'human identity review', 'process/scene changes stay stale', 'missing entities never relink'], limitation: 'Mock OI responses do not prove real scene resolution or scale.' },
@@ -144,7 +145,10 @@ export async function testCapabilities(selection: string, directory: string): Pr
   if (!isAbsolute(directory)) throw new Error('--out must be an absolute path to a new directory.');
   await mkdir(directory); // Deliberately refuse an existing directory, even if empty.
   const report: CapabilityReport = { schema: 'fieldops-capability-test/1', status: 'passed', started_at: new Date().toISOString(), node: process.version, directory, live_inference: false, results: [] };
-  const scenarios = { routes: async (s: Scenario): Promise<void> => {
+  const scenarios = { lifecycle: async (s: Scenario): Promise<void> => {
+    const result=await s.command<{passed:boolean;checks:string[]}>(process.execPath,[join(dist,'samples/lifecycle-fixture.mjs'),join(s.directory,'artifacts')],'lifecycle-replay');
+    assert.equal(result.passed,true);s.checks.push(...result.checks);
+  }, routes: async (s: Scenario): Promise<void> => {
     let oiRoot:string;
     try{oiRoot=resolveOiRoot();}catch(error){throw new Blocked((error as Error).message);}
     if(!(await readOiIdentity(oiRoot)).pinned||['tsx','three','ajv'].some(dep=>!existsSync(join(oiRoot,'node_modules',dep,'package.json'))))
