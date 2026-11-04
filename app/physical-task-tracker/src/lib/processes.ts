@@ -5,11 +5,11 @@
 // status (how far the work got). Unsupported details stay unknown —
 // partial footage can never establish completion.
 //
-// Storage reuses fieldops.db: one row per (process id, revision) in the
-// processes table. Corrections append revisions; original claims stay
+// Storage keeps one record per (process id, revision) in the
+// selected backend. Corrections append revisions; original claims stay
 // readable. Downstream docs (optimizer plan) stamp the process revisions
 // they were built from and go stale when a correction lands.
-// No dependencies beyond node:sqlite (via lib/db).
+// Persistence uses the selected project record backend (lib/records).
 import type { RecordTransaction } from './record-model.js';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';

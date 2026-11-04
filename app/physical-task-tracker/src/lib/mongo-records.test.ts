@@ -48,7 +48,7 @@ test('Mongo live records: capture, correction, next action, calendar, handler an
   await send({command:'review',source_id:j.clips[0].source_id,process_revision:corrected.rev});
   await send({command:'next_decide',choice:'later',basis:(await journeyView(root)).workflows[0].proposal.basis});
   const task = (await planningView(root)).tasks[0];
-  await editTask(root,task.id,task.revision,{active_minutes:20,remaining_minutes:20,review:'confirmed',estimate_source:'Operator estimate'},'Ready to schedule');
+  await editTask(root,task.id,task.revision,{active_minutes:20,remaining_minutes:20,review:'confirmed',completion_criteria:'Tray seeded and checked',estimate_source:'Operator estimate'},'Ready to schedule');
   await configurePlanning(root,1,{timezone:'UTC',person:'operator',resources:{},max_minutes:120,availability:[{start:'2030-01-10T09:00:00Z',end:'2030-01-10T11:00:00Z'}]});
   const plan = await proposePlan(root,'2030-01-10','2030-01-10T08:00:00Z');
   assert.equal(plan.blocks.length,1); await decidePlan(root,plan.id,'accepted','Operator accepts','2030-01-10T08:00:00Z');
@@ -87,9 +87,17 @@ test('Mongo concurrent stale corrections, duplicate requests, rollback and proje
   assert.equal((await planningView(a.root)).tasks[0].revision,task.revision+1);
   await assert.rejects(withRecords(a.root,tx=>{tx.insert('docs',{key:'must-rollback',body:'{}',updated_at:'now'});tx.update('goals',{id:first.id},{text:'Must roll back'});throw new Error('Injected failure');}),/Injected/);
   assert.equal(await getDoc(a.root,'must-rollback'),null);assert.equal((await listGoals(a.root))[0].text,'Harvest');
+  // Force a database write error after another collection has already been changed.
+  await withMongo(async (_client,db)=>{await db.collection('records_docs').createIndex({'project_id':1,'data.body.failure_token':1},{name:'test-transaction-failure',unique:true,partialFilterExpression:{'data.body.failure_token':{$exists:true}}});});
+  await setDoc(a.root,'collision-owner',{failure_token:'unique'});
+  await assert.rejects(withRecords(a.root,tx=>{tx.update('goals',{id:first.id},{text:'Must roll back at Mongo'});tx.insert('docs',{key:'collision',body:JSON.stringify({failure_token:'unique'}),updated_at:'now'});}),/duplicate key/i);
+  assert.equal((await listGoals(a.root))[0].text,'Harvest');assert.equal(await getDoc(a.root,'collision'),null);
+  await withMongo(async (_client,db)=>{await db.collection('records_docs').dropIndex('test-transaction-failure');});
   await assert.rejects(addGoal(a.root,{text:'Changed request'},'same-request'),/different input/);
   await setDoc(b.root,'same-key',{scope:'B'});await setDoc(a.root,'same-key',{scope:'A'});
   assert.deepEqual(await getDoc(b.root,'same-key'),{scope:'B'});
+  await setDoc(a.root,'json-null',null);assert.equal(await getDoc(a.root,'json-null'),null);
+  await setDoc(a.root,'json-string','value');assert.equal(await getDoc(a.root,'json-string'),'value');
   assert.throws(()=>initDb(a.root),/SQLite access refused/);
   // A missing authority is an error even if a stale local SQLite file is present.
   writeFileSync(join(a.root,'fieldops.db'),'stale fallback sentinel');

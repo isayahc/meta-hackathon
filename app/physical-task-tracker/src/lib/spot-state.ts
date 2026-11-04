@@ -2,7 +2,7 @@
 //   spots      one row per spot: name, stage, summary, open_issues,
 //              session_ids, updated_at
 //   sessions   one row per visit: spot_id, analysis JSON
-// No dependencies beyond node:sqlite (via lib/db).
+// Persistence uses the selected project record backend (lib/records).
 import { withRecords } from './records.js';
 import type { SpotBrief } from './analyze-response.js';
 

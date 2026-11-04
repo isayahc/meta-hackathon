@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { MongoClient, type Db, type Document, type ClientSession } from 'mongodb';
 import { withDb } from './db.js';
-import { COLUMNS, JSON_FIELDS, KEYS, TABLES, RecordTransaction, emptyRows, recordKey, validateRow, type Rows, type Row, type Table } from './record-model.js';
+import { COLUMNS, DEFAULTS, NUMERIC_FIELDS, JSON_FIELDS, KEYS, TABLES, RecordTransaction, emptyRows, recordKey, validateRow, type Rows, type Row, type Table } from './record-model.js';
 export { RecordTransaction } from './record-model.js';
 export const RECORD_SCHEMA = 1;
 export const RECORD_MARKER = 'record-store.json';
@@ -69,7 +69,10 @@ function encode(table: Table, row: Row): Document {
 /** Decode native BSON records for the domain transaction. */
 function decode(table: Table, data: Document): Row {
   const row = { ...data } as Row;
-  for (const field of JSON_FIELDS[table] ?? []) if (row[field] !== null) row[field] = JSON.stringify(data[field]);
+  for (const field of JSON_FIELDS[table] ?? []) {
+    const nullable = field in DEFAULTS[table] && DEFAULTS[table][field] === null;
+    if (data[field] !== null || !nullable) row[field] = JSON.stringify(data[field]);
+  }
   validateRow(table,row); return row;
 }
 /** Stable Mongo identity includes both project and record primary key. */
@@ -82,7 +85,7 @@ export async function provisionRecords(db: Db): Promise<void> {
     const name = `records_${table}`;
     const validator = { $jsonSchema: { bsonType: 'object', required: ['_id','project_id','schema_version','position','data'], additionalProperties: false,
       properties: { _id: { bsonType: 'string' }, project_id: { bsonType: 'string' }, schema_version: { enum: [RECORD_SCHEMA] }, position: { bsonType: ['int','long','double'] },
-        data: { bsonType: 'object', required: COLUMNS[table], additionalProperties: false, properties: Object.fromEntries(COLUMNS[table].map(k => [k, {}])) } } } };
+        data: { bsonType: 'object', required: COLUMNS[table], additionalProperties: false, properties: Object.fromEntries(COLUMNS[table].map(k => [k, { bsonType: (JSON_FIELDS[table] ?? []).includes(k) ? ['object','array','string','bool','int','long','double','null'] : [...(NUMERIC_FIELDS.has(k) ? ['int','long','double'] : ['string']), ...(DEFAULTS[table][k] === null ? ['null'] : [])] }])) } } } };
     if (!(await db.listCollections({ name }).hasNext())) {
       try { await db.createCollection(name, { validator }); } catch (error) { if ((error as {code?:number}).code !== 48) throw error; }
     }
@@ -156,7 +159,7 @@ export async function withRecords<T>(root: string, fn: (db: RecordTransaction) =
     try { return await session.withTransaction(async () => {
       const projects = db.collection<ProjectRecord>('record_projects');
       const project = await projects.findOne({ _id: marker.project_id }, { session });
-      if (!project || project.schema_version !== RECORD_SCHEMA) throw new Error('Mongo project is missing or has an incompatible schema; refusing fallback.');
+      if (!project || project.schema_version !== RECORD_SCHEMA || !Number.isSafeInteger(project.revision) || project.revision < 0) throw new Error('Mongo project is missing or has an incompatible schema; refusing fallback.');
       const before = await loadRows(db, marker.project_id, session), {result,after} = execute(before);
       if (JSON.stringify(before) !== JSON.stringify(after)) {
         // Updating the shared fence turns write skew (including new receipts) into a retried transaction.

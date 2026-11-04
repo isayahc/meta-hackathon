@@ -1,6 +1,6 @@
-// Goals model: operator goals live in the project's fieldops.db and steer
+// Goals model: operator goals live in the project's selected record store and steer
 // the optimizer. Status moves open -> at-risk -> done (or back) as
-// briefings report. No dependencies beyond node:sqlite (via lib/db).
+// briefings report. Persistence uses lib/records.
 import type { RecordTransaction } from './record-model.js';
 import { requestOnce } from './request-once.js';
 import { withRecords } from './records.js';

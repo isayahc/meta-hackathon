@@ -1,7 +1,7 @@
 // Calendar events: operator-visible log of what happened and what's due.
 // Stored events live in the project's fieldops.db. Day/week/month views
 // also overlay goal deadlines and spot updates derived at read time.
-// No dependencies beyond node:sqlite (via lib/db).
+// Persistence uses the selected project record backend (lib/records).
 
 import { requestOnce } from './request-once.js';
 import { withRecords } from './records.js';

@@ -8,6 +8,7 @@ export const KEYS: Record<Table, string[]> = {
   goals: ['id'], spots: ['id'], sessions: ['spot_id', 'sid'], events: ['id'], docs: ['key'],
   actions: ['id'], oi_links: ['entity_kind', 'entity_id', 'oi_entity_id'], processes: ['id', 'rev'],
 };
+export const NUMERIC_FIELDS = new Set(['weight','idx','task_rev','rev','revision']);
 export const DEFAULTS: Record<Table, Row> = {
   goals: { deadline: null, weight: 3, status: 'open', success_criteria: '' },
   spots: { stage: 'unobserved', summary: '', open_issues: '[]', session_ids: '[]' },
@@ -42,6 +43,7 @@ export function validateRow(table: Table, row: Row): void {
   for (const key of COLUMNS[table]) {
     const v = row[key];
     if (v === undefined || v !== null && typeof v !== 'string' && (typeof v !== 'number' || !Number.isFinite(v))) throw new Error(`Invalid ${table}.${key}`);
+    if (v !== null && typeof v !== (NUMERIC_FIELDS.has(key) ? 'number' : 'string')) throw new Error(`Wrong type for ${table}.${key}`);
     if (v === null && !(key in DEFAULTS[table] && DEFAULTS[table][key] === null)) throw new Error(`Required ${table}.${key}`);
   }
 }

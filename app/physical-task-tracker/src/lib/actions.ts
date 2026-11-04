@@ -3,7 +3,7 @@ import type { Cell } from './record-model.js';
 // per calendar event so checklist state survives refresh. Actions are
 // deliberately NOT goals: completing every action on an entry never closes
 // anything in the goals table. Reviewed contribution links live in task metadata.
-// No dependencies beyond node:sqlite (via lib/db).
+// Persistence uses the selected project record backend (lib/records).
 import { withRecords } from './records.js';
 import { editTask, planningView } from './task-planning.js';
 
