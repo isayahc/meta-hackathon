@@ -24,7 +24,9 @@ import { spatialCommand, spatialEvidenceView, inspectSpatialTarget } from './lib
 import type { OiReferenceReader } from './lib/oi-reference.js';
 import { readOiLinks } from './lib/oi-links.js';
 import { improvementPlan, readWorkflowContext, writeWorkflowContext, ImprovementError, decideImprovement, listImprovementReviews, readImprovementReview } from './lib/improvements.js';
-import { getDoc, initDb, DATABASE_VERSION } from './lib/db.js';
+import { DATABASE_VERSION } from './lib/db.js';
+import { initRecords, storageMarker } from './lib/records.js';
+import { getDoc } from './lib/records.js';
 import { WalkthroughError, captureWalkthrough, listWalkthroughs, readWalkthrough, reviewWalkthrough, walkthroughHandoff, walkthroughImage } from './lib/walkthrough.js';
 import { planningCommand, planningView, planningCalendar } from './lib/task-planning.js';
 import { outcomeCommand, outcomeView } from './lib/outcomes.js';
@@ -317,8 +319,8 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
     };
     try {
       if (req.method === 'GET' && url.pathname === '/healthz') {
-        initDb(root);
-        json(200, { status: 'ok', database_version: DATABASE_VERSION });
+        await initRecords(root);
+        json(200, { status: 'ok', database_version: DATABASE_VERSION, record_backend: storageMarker(root)?.backend ?? 'sqlite' });
         return;
       }
       if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
@@ -343,9 +345,9 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
         }catch(error){json(400,{error:(error as Error).message});}
         return;
       }
-      if (url.pathname === '/api/journeys' && req.method === 'GET') { json(200, journeyView(root)); return; }
+      if (url.pathname === '/api/journeys' && req.method === 'GET') { json(200, await journeyView(root)); return; }
       if (url.pathname === '/api/journeys' && req.method === 'POST') {
-        try { json(200, journeyCommand(root, await readBody(req))); }
+        try { json(200, await journeyCommand(root, await readBody(req))); }
         catch (error) { const message = (error as Error).message; json(/Stale/.test(message) ? 409 : 400, { error: message }); }
         return;
       }
@@ -361,17 +363,17 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
         } catch (error) { const message = (error as Error).message; json(/Stale/.test(message) ? 409 : 400, { error: message }); }
         return;
       }
-      if (url.pathname === '/api/outcomes' && req.method === 'GET') { json(200, outcomeView(root)); return; }
+      if (url.pathname === '/api/outcomes' && req.method === 'GET') { json(200, await outcomeView(root)); return; }
       if (url.pathname === '/api/outcomes' && req.method === 'POST') {
-        try { json(200, outcomeCommand(root, await readBody(req))); }
+        try { json(200, await outcomeCommand(root, await readBody(req))); }
         catch (error) { const message = (error as Error).message; json(/Stale/.test(message) ? 409 : 400, { error: message }); }
         return;
       }
       if (url.pathname === '/api/reconciliation' && req.method === 'GET') {
-        json(200, reconciliationView(root)); return;
+        json(200, await reconciliationView(root)); return;
       }
       if (url.pathname === '/api/reconciliation' && req.method === 'POST') {
-        try { json(200, reconciliationCommand(root, await readBody(req))); }
+        try { json(200, await reconciliationCommand(root, await readBody(req))); }
         catch (error) { const message = (error as Error).message; json(/Stale/.test(message) ? 409 : 400, { error: message }); }
         return;
       }
@@ -390,15 +392,15 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
         return;
       }
       if (url.pathname === '/api/task-planning' && req.method === 'GET') {
-        json(200, planningView(root)); return;
+        json(200, await planningView(root)); return;
       }
       if (url.pathname === '/api/task-planning' && req.method === 'POST') {
-        try { json(200, planningCommand(root, await readBody(req))); }
+        try { json(200, await planningCommand(root, await readBody(req))); }
         catch (error) { const message = (error as Error).message; json(/Stale/.test(message) ? 409 : 400, { error: message }); }
         return;
       }
       if (url.pathname === '/api/walkthroughs' && req.method === 'GET') {
-        json(200, { runs: listWalkthroughs(root) }); return;
+        json(200, { runs: await listWalkthroughs(root) }); return;
       }
       if (url.pathname === '/api/walkthroughs' && req.method === 'POST') {
         const input = await readBody(req, 160 * 1024 * 1024);
@@ -421,21 +423,21 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
           const bytes = await walkthroughImage(root, id, walkthrough[3] ?? '');
           res.writeHead(200, { 'Content-Type': 'image/png', 'X-Content-Type-Options': 'nosniff' }); res.end(bytes); return;
         }
-        if (req.method === 'GET' && walkthrough[2] === 'handoff') { json(200, walkthroughHandoff(root, id)); return; }
-        if (req.method === 'GET' && !walkthrough[2]) { json(200, { run: readWalkthrough(root, id) }); return; }
+        if (req.method === 'GET' && walkthrough[2] === 'handoff') { json(200, await walkthroughHandoff(root, id)); return; }
+        if (req.method === 'GET' && !walkthrough[2]) { json(200, { run: await readWalkthrough(root, id) }); return; }
         if (req.method === 'POST' && walkthrough[2] === 'review') {
           const { revision, patch } = await readBody(req);
-          json(200, { run: reviewWalkthrough(root, id, revision, patch) }); return;
+          json(200, { run: await reviewWalkthrough(root, id, revision, patch) }); return;
         }
       }
       if (req.method === 'GET' && url.pathname === '/api/overview') {
         const spots = await loadSpots(root);
         const goals = await listGoals(root);
-        const plan = getDoc(root, 'plan') as Record<string, unknown> | null;
+        const plan = (await getDoc(root, 'plan')) as Record<string, unknown> | null;
         if (typeof plan?.improvement_review_id === 'string') {
-          const review = readImprovementReview(root, plan.improvement_review_id);
+          const review = await readImprovementReview(root, plan.improvement_review_id);
           plan.improvements = review;
-          plan.plan = improvementPlan(review, root);
+          plan.plan = (await improvementPlan(review, root));
           if (review.stale) { plan.stale = true; plan.stale_reason = review.stale_reasons.join(' '); }
         }
         const ecoDoc = (await getDoc(root, 'eco')) as { summary?: string } | null;
@@ -443,26 +445,26 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
         return;
       }
       if (url.pathname === '/api/improvement-context' && req.method === 'GET') {
-        json(200, { context: readWorkflowContext(root) });
+        json(200, { context: await readWorkflowContext(root) });
         return;
       }
       if (url.pathname === '/api/improvement-context' && req.method === 'POST') {
         const { context } = await readBody(req);
-        json(200, { context: writeWorkflowContext(root, context) });
+        json(200, { context: await writeWorkflowContext(root, context) });
         return;
       }
       if (req.method === 'GET' && url.pathname === '/api/improvements') {
-        json(200, { reviews: listImprovementReviews(root) });
+        json(200, { reviews: await listImprovementReviews(root) });
         return;
       }
       const improvementMatch = /^\/api\/improvements\/([^/]+)$/.exec(url.pathname);
       if (improvementMatch && req.method === 'GET') {
-        json(200, { review: readImprovementReview(root, decodeURIComponent(improvementMatch[1]!)) });
+        json(200, { review: await readImprovementReview(root, decodeURIComponent(improvementMatch[1]!)) });
         return;
       }
       if (improvementMatch && req.method === 'POST') {
         const { candidate_id, status, rationale } = await readBody(req);
-        json(200, { review: decideImprovement(root, decodeURIComponent(improvementMatch[1]!), candidate_id, status, rationale) });
+        json(200, { review: await decideImprovement(root, decodeURIComponent(improvementMatch[1]!), candidate_id, status, rationale) });
         return;
       }
       if (req.method === 'POST' && url.pathname === '/api/goals') {
@@ -598,13 +600,13 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
             });
           }
         }
-        const human = planningView(root);
+        const human = await planningView(root);
         const timedStored = stored.map(e => {
           const timing = human.events.find(t => t.id === e.id)?.timing;
           const p = timing ? localParts(timing.start, human.schedule.config.timezone) : null;
           return timing ? { ...e, date: p!.day, time: p!.time, ...timing, detail: `${timing.blocking ? 'Fixed commitment' : 'Resource reservation'} · ${human.schedule.config.timezone}` } : e;
         });
-        const events = [...timedStored, ...derived, ...planningCalendar(root)].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+        const events = [...timedStored, ...derived, ...(await planningCalendar(root))].sort((a, b) => String(a.date).localeCompare(String(b.date)));
         json(200, { events });
         return;
       }
@@ -770,7 +772,7 @@ if (invokedAsMain) {
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Port must be an integer from 1 to 65535.');
   const eco = flagValue(args, '--eco', null);
   const open = args.includes('--open');
-  initDb(root); // Refuse incompatible or failed migrations before accepting requests.
+  await initRecords(root); // Refuse incompatible or failed migrations before accepting requests.
   const server = createServer(root, { eco });
   let stopping = false;
   const stop = () => {

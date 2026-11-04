@@ -25,10 +25,10 @@ test('addGoal persists with clamped weight and slug id', async (t: TestContext) 
 
 test('addGoal rejects empty text; setGoalStatus validates', async (t: TestContext) => {
   const root = await freshRoot(t);
-  await assert.rejects(() => addGoal(root, { text: '  ' }), /required/);
+  await assert.rejects(async () => (await addGoal(root, { text: '  ' })), /required/);
   const g = await addGoal(root, { text: 'Water north row' });
-  await assert.rejects(() => setGoalStatus(root, g.id, 'soon'), /Bad status/);
-  await assert.rejects(() => setGoalStatus(root, 'nope-1', 'done'), /No goal/);
+  await assert.rejects(async () => (await setGoalStatus(root, g.id, 'soon')), /Bad status/);
+  await assert.rejects(async () => (await setGoalStatus(root, 'nope-1', 'done')), /No goal/);
   assert.equal((await setGoalStatus(root, g.id, 'at-risk')).status, 'at-risk');
 });
 
@@ -88,3 +88,4 @@ test('optimizer keeps late steps, long constraints, and dependency uncertainty',
   assert.match(prompt, /\[long-s2\].*requires=unknown; known=long-s1/);
   assert.ok(prompt.includes(process.steps[50]!.preconditions[0]!));
 });
+

@@ -6,8 +6,7 @@ Field Ops physical-task tracker for the Meta Global AI Developer Hackathon
 2026 (indie track). Farm ops first, construction second: phone video/photo
 in, task lists out. The app lives at
 `C:\Users\isaya\meta-hackathon\app\physical-task-tracker` — TypeScript
-strict, `src/` compiles to `dist/`, zero runtime dependencies (Node
-builtins only; `node:sqlite` is allowed).
+strict, `src/` compiles to `dist/`, Node builtins plus MongoDB and S3 SDKs for optional external storage.
 
 ## Commands (run from the app dir)
 
@@ -39,8 +38,12 @@ replayed, or mocked. A replay pass never proves live model quality or UI behavio
   frontend build step. Verify UI changes headless and read the screenshot.
 - `lib/` owns shared logic; `task-*.ts` files are thin CLIs with pure-JSON
   stdout (notes go to stderr) because the server parses them.
-- Project state lives in `<project>/fieldops.db` (+ `<project>/media/` for
-  clips). Legacy JSON migrates once, automatically.
+- Unconfigured projects use `<project>/fieldops.db`; explicitly activated projects
+  use MongoDB as their sole record authority (`record-store.json`). Media still
+  lives in `<project>/media/`. Use asynchronous `lib/records.ts` APIs for live
+  records; `lib/db.ts` is only the SQLite adapter and migration/test boundary.
+  Domain transaction callbacks are synchronous and side-effect-free so retries
+  are safe. Never bypass the authority marker or silently fall back to SQLite.
 - Use full absolute paths in every command, edit, and answer.
 - Never commit secrets. `.env` is gitignored; `example.env` holds
   placeholders only. The API key lives outside the repo at
@@ -66,3 +69,4 @@ replayed, or mocked. A replay pass never proves live model quality or UI behavio
   stale snapshot. If a merge landed mid-task, rebase your plan on it before
   continuing.
 - After opening or updating a PR, report its URL and what is in it.
+

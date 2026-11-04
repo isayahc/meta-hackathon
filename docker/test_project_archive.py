@@ -44,6 +44,18 @@ class ProjectArchiveTests(unittest.TestCase):
                 restore_project(root / 'backup', root / 'bad-restore')
             self.assertFalse((root / 'bad-restore').exists())
 
+    def test_mongo_authority_refuses_stale_sqlite_backup(self) -> None:
+        """Never present an old SQLite copy as a backup of live Mongo records."""
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            project = root / 'source'
+            project.mkdir()
+            (project / 'record-store.json').write_text('{"backend":"mongodb"}', encoding='utf-8')
+            (project / 'fieldops.db').write_bytes(b'stale copy')
+            with self.assertRaisesRegex(ValueError, 'MongoDB owns'):
+                backup_project(project, root / 'backup')
+            self.assertFalse((root / 'backup').exists())
+
     def test_reject_symlinks_and_overlap(self) -> None:
         """Do not follow external files or recursively copy backup directories."""
         with tempfile.TemporaryDirectory() as folder:

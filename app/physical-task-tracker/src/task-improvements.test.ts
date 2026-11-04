@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { applyCorrection, buildProcessFromScan, saveRevision, type BuildProcessInput } from './lib/processes.js';
-import { getDoc } from './lib/db.js';
+import { getDoc } from './lib/records.js';
 import type { ImprovementCandidate, ImprovementReview, WorkflowContext } from './lib/improvements.js';
 
 const exec = promisify(execFile);
@@ -41,7 +41,7 @@ test('offline replay produces a checked plan; decisions persist through the actu
   assert.equal(output.plan.ranked_actions.length, 1);
   assert.equal(review.assessments[0].comparisons[0].status, 'projection');
   assert.equal(output.model_narrative.improvements[0].id, data.candidates[0].id);
-  const saved = getDoc(root, 'plan') as { improvement_review_id: string };
+  const saved = (await getDoc(root, 'plan')) as { improvement_review_id: string };
   assert.equal(saved.improvement_review_id, review.id);
   const accepted = JSON.parse(await cli(root, 'task-improvements', ['decide', '--root', root, '--id', review.id,
     '--candidate', data.candidates[0].id, '--status', 'accepted', '--rationale', 'Try ten trays first.'])) as ImprovementReview;
@@ -99,3 +99,4 @@ test('stubbed provider narrative cannot bypass checks; input changes during gene
   const request = JSON.parse(await readFile(join(root, 'request.json'), 'utf8'));
   assert.match(request.messages[0].content[0].text, /"budget_usd":25/);
 });
+

@@ -1,10 +1,10 @@
 // Calendar events: operator-visible log of what happened and what's due.
 // Stored events live in the project's fieldops.db. Day/week/month views
 // also overlay goal deadlines and spot updates derived at read time.
-// No dependencies beyond node:sqlite (via lib/db).
+// Persistence uses the selected project record backend (lib/records).
 
 import { requestOnce } from './request-once.js';
-import { withDb } from './db.js';
+import { withRecords } from './records.js';
 
 export type CalendarEventKind = 'scan' | 'spot' | 'goal' | 'note';
 
@@ -47,8 +47,8 @@ interface EventRow {
 }
 
 export async function listStoredEvents(root: string): Promise<CalendarEvent[]> {
-  return withDb(root, (db) =>
-    (db.prepare('SELECT id, title, date, time, kind, detail, payload, media, created_at FROM events ORDER BY date, time').all() as unknown as EventRow[]).map(
+  return await withRecords(root, (db) =>
+    (db.select('events', { order: ["date","time"], fields: ["id","title","date","time","kind","detail","payload","media","created_at"] }) as unknown as EventRow[]).map(
       (r): CalendarEvent => ({
         id: r.id,
         title: r.title,
@@ -109,8 +109,8 @@ export async function addEvent(
   }
   const payloadText = payload === null || payload === undefined ? null : typeof payload === 'string' ? payload : JSON.stringify(payload);
   const mediaName = typeof media === 'string' && media && !media.includes('/') && !media.includes('\\') ? media : null;
-  return withDb(root, (db) => requestOnce(db, 'event', requestId, { title, date, time, kind, detail, payload, media }, () => {
-    const n = (db.prepare('SELECT COUNT(*) AS n FROM events').get() as unknown as { n: number }).n;
+  return await withRecords(root, (db) => requestOnce(db, 'event', requestId, { title, date, time, kind, detail, payload, media }, () => {
+    const n = (({ n: db.select('events').length }) as unknown as { n: number }).n;
     const event: CalendarEvent = {
       id: slugify(title, n + 1),
       title: title.trim(),
@@ -122,17 +122,8 @@ export async function addEvent(
       media: mediaName,
       created_at: new Date().toISOString(),
     };
-    db.prepare('INSERT INTO events(id, title, date, time, kind, detail, payload, media, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
-      event.id,
-      event.title,
-      event.date,
-      event.time,
-      event.kind,
-      event.detail,
-      event.payload,
-      event.media,
-      event.created_at
-    );
+    db.insert('events', { id: event.id, title: event.title, date: event.date, time: event.time, kind: event.kind, detail: event.detail, payload: event.payload, media: event.media, created_at: event.created_at });
     return event;
   }));
 }
+

@@ -43,3 +43,10 @@ MinIO is built from the source release RELEASE.2025-10-15T17-29-55Z rather than 
 - Integrate memory and agent checkpoint behavior from #72/#73.
 
 The migration scaffolding is not a substitute for those stages. SQLite remains the sole live authority until that work lands.
+
+## Live-record follow-up
+
+The opt-in live MongoDB record backend is now documented in
+[mongo-records.md](mongo-records.md). The transfer commands on this page remain
+an offline SQLite-to-archive workflow and refuse Mongo-owned project roots.
+They do not back up newly written live Mongo records.

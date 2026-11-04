@@ -52,8 +52,8 @@ test('replay preserves frame identity and forces honest replay provenance', asyn
   assert.equal(run.report.source, 'replay');
   assert.equal(run.report.observations[0].frame_id, 'frame-4');
   assert.equal(run.report.frames[1].timestamp_s, 2);
-  assert.equal(readWalkthrough(root, run.id).report.scale.status, 'unverified');
-  const exportData = walkthroughHandoff(root, run.id);
+  assert.equal((await readWalkthrough(root, run.id)).report.scale.status, 'unverified');
+  const exportData = await walkthroughHandoff(root, run.id);
   assert.equal(exportData.status, 'requires_reviewed_import_plan');
   assert.deepEqual(exportData.stations, []);
 });
@@ -63,9 +63,9 @@ test('artifact traversal, mismatched hashes and missing files are rejected', asy
   const bad = structuredClone(report); bad.artifacts[0].file = '../secret.png';
   assert.throws(() => parseCaptureReport(bad), /artifact name/);
   await writeFile(join(bundle, 'image.png'), 'changed');
-  await assert.rejects(() => replayWalkthrough(root, manifest), /digest mismatch/);
+  await assert.rejects(async () => (await replayWalkthrough(root, manifest)), /digest mismatch/);
   await rm(join(bundle, 'image.png'));
-  await assert.rejects(() => replayWalkthrough(root, manifest), /ENOENT/);
+  await assert.rejects(async () => (await replayWalkthrough(root, manifest)), /ENOENT/);
 });
 
 test('worker cannot fabricate frame links, calibrated scale, OI IDs or successful capture', async t => {
@@ -85,16 +85,16 @@ test('worker cannot fabricate frame links, calibrated scale, OI IDs or successfu
 test('reviews preserve raw artifacts, persist corrections and reject stale edits', async t => {
   const { root, manifest } = await fixture(t); const run = await replayWalkthrough(root, manifest);
   const initial = await readFile(join(root, 'walkthroughs', run.id, 'run.json'), 'utf8');
-  const reviewed = reviewWalkthrough(root, run.id, 1, confirm);
+  const reviewed = await reviewWalkthrough(root, run.id, 1, confirm);
   assert.equal(reviewed.revision, 2);
-  assert.equal(readWalkthrough(root, run.id).reviews[0].station, 'Tray filling station');
-  const handoff = walkthroughHandoff(root, run.id);
+  assert.equal((await readWalkthrough(root, run.id)).reviews[0].station, 'Tray filling station');
+  const handoff = await walkthroughHandoff(root, run.id);
   assert.equal((handoff.stations as unknown[]).length, 1);
   assert.equal(handoff.run_revision, 2);
   assert.equal(handoff.scale_status, 'unverified');
-  assert.throws(() => reviewWalkthrough(root, run.id, 1, confirm), /Stale/);
-  reviewWalkthrough(root, run.id, 2, { ...confirm, decision: 'rejected', rationale: 'Ambiguous identity on review.' });
-  assert.equal((walkthroughHandoff(root, run.id).stations as unknown[]).length, 0);
+  await assert.rejects(async () => (await reviewWalkthrough(root, run.id, 1, confirm)), /Stale/);
+  await reviewWalkthrough(root, run.id, 2, { ...confirm, decision: 'rejected', rationale: 'Ambiguous identity on review.' });
+  assert.equal(((await walkthroughHandoff(root, run.id)).stations as unknown[]).length, 0);
   assert.equal(await readFile(join(root, 'walkthroughs', run.id, 'run.json'), 'utf8'), initial);
 });
 
@@ -102,22 +102,22 @@ test('moving objects and missing depth cannot be confirmed as stations', async t
   const { root, report, manifest } = await fixture(t);
   report.observations[0].motion = 'dynamic'; await writeFile(manifest, JSON.stringify(report));
   const run = await replayWalkthrough(root, manifest);
-  assert.throws(() => reviewWalkthrough(root, run.id, 1, confirm), /Dynamic/);
+  await assert.rejects(async () => (await reviewWalkthrough(root, run.id, 1, confirm)), /Dynamic/);
   report.observations[0].motion = 'unverified'; report.observations[0].predicted_centroid = null; report.observations[0].geometry_status = 'missing_depth';
   await writeFile(manifest, JSON.stringify(report));
   const missing = await replayWalkthrough(root, manifest);
-  assert.throws(() => reviewWalkthrough(root, missing.id, 1, confirm), /Missing depth/);
+  await assert.rejects(async () => (await reviewWalkthrough(root, missing.id, 1, confirm)), /Missing depth/);
 });
 
 test('calibration and holdout inputs remain separate and never certify scale locally', async t => {
   const { root, manifest } = await fixture(t); const run = await replayWalkthrough(root, manifest);
   const calibration = { frame_id: 'frame-0', a: [0, 0], b: [.5, .5], measured_m: 1, source: 'Tape measurement A' };
   const holdout = { ...calibration, a: [.5, .5], b: [0, 0] };
-  assert.throws(() => reviewWalkthrough(root, run.id, 1, { measurements: { calibration, holdout } }), /reuse/);
+  await assert.rejects(async () => (await reviewWalkthrough(root, run.id, 1, { measurements: { calibration, holdout } })), /reuse/);
   holdout.frame_id = 'frame-4'; holdout.source = 'Independent tape measurement B';
-  const reviewed = reviewWalkthrough(root, run.id, 1, { measurements: { calibration, holdout } });
+  const reviewed = await reviewWalkthrough(root, run.id, 1, { measurements: { calibration, holdout } });
   assert.equal(reviewed.measurements?.holdout.source, 'Independent tape measurement B');
-  assert.equal(walkthroughHandoff(root, run.id).scale_status, 'unverified');
+  assert.equal((await walkthroughHandoff(root, run.id)).scale_status, 'unverified');
 });
 
 test('API review, image access, stale conflicts and handoff use persisted evidence', async t => {
@@ -131,7 +131,7 @@ test('API review, image access, stale conflicts and handoff use persisted eviden
   assert.equal((await api(root, 'GET', path + '/handoff')).json.stations.length, 1);
   assert.equal((await api(root, 'POST', '/api/walkthroughs', { imagesData: [], mode: 'capture' })).status, 400);
   await writeFile(join(root, 'walkthroughs', run.id, 'image.png'), 'tampered');
-  await assert.rejects(() => walkthroughImage(root, run.id, 'image.png'), /changed on disk/);
+  await assert.rejects(async () => (await walkthroughImage(root, run.id, 'image.png')), /changed on disk/);
 });
 
 test('real CLI replay/show/handoff round trip emits JSON without model inference', async t => {
@@ -155,9 +155,9 @@ test('reconstruction preparation retains reviewed evidence and requires explicit
     candidates: [{id:'station',observation_ids:['o0'],frame_id:'mapanything-world',name:'Reviewed workbench',status:'confirmed',epistemic_status:'surveyed',confidence:1,unknowns:[],identity:{action:'create',entity_id:null},
       geometry:{kind:'oi-asset-placement',asset_version:run.id,position:[4,0,2],rotation_degrees:[0,0,0]}}],
   };
-  await assert.rejects(()=>prepareWalkthroughReconstruction(root,run.id,1,plan), /confirmed static review/);
-  reviewWalkthrough(root,run.id,1,confirm);
-  await assert.rejects(()=>prepareWalkthroughReconstruction(root,run.id,1,plan), /changed/);
+  await assert.rejects(async ()=>(await prepareWalkthroughReconstruction(root,run.id,1,plan)), /confirmed static review/);
+  await reviewWalkthrough(root,run.id,1,confirm);
+  await assert.rejects(async ()=>(await prepareWalkthroughReconstruction(root,run.id,1,plan)), /changed/);
   const request = await prepareWalkthroughReconstruction(root,run.id,2,plan);
   assert.equal(request.source.revision,2); assert.equal(request.source.schema,'walkthrough-observations/1');
   assert.equal(request.source.artifacts.length,3); assert.equal(request.candidates[0].confidence,.8);
@@ -165,10 +165,11 @@ test('reconstruction preparation retains reviewed evidence and requires explicit
   assert.deepEqual(request.candidates[0].geometry.position,[4,0,2]); // Never substitute predicted centroid [1,2,3].
   assert.match(request.candidates[0].unknowns.join(' '),/Source mode: replay/);
   const mock = new OiMockTransport();
-  await assert.rejects(()=>reconstructionCommand('commit',{request},mock),/projectRoot/);
-  reviewWalkthrough(root,run.id,2,{...confirm,decision:'rejected'});
-  await assert.rejects(()=>reconstructionCommand('commit',{projectRoot:root,request},mock),/changed/);
+  await assert.rejects(async ()=>(await reconstructionCommand('commit',{request},mock)),/projectRoot/);
+  await reviewWalkthrough(root,run.id,2,{...confirm,decision:'rejected'});
+  await assert.rejects(async ()=>(await reconstructionCommand('commit',{projectRoot:root,request},mock)),/changed/);
   assert.equal(mock.calls.length,0);
   await writeFile(join(root,'walkthroughs',run.id,'image.png'),'tampered');
-  await assert.rejects(()=>prepareWalkthroughReconstruction(root,run.id,3,plan),/digest mismatch/);
+  await assert.rejects(async ()=>(await prepareWalkthroughReconstruction(root,run.id,3,plan)),/digest mismatch/);
 });
+

@@ -1,7 +1,7 @@
 /** Registered intervention trials, source-backed measurements and conservative outcome comparisons. */
 import { createHash, randomUUID } from 'node:crypto';
-import type { DatabaseSync } from 'node:sqlite';
-import { withDb } from './db.js';
+import type { RecordTransaction } from './record-model.js';
+import { withRecords } from './records.js';
 import type { Assessment, ImprovementReview } from './improvements.js';
 import type { ProcessDoc } from './processes.js';
 import type { EvidenceSource } from './reconciliation.js';
@@ -39,16 +39,16 @@ function words(value: unknown, label: string, empty = false): string { need(type
 function number(value: unknown, label: string, positive = false): number { need(typeof value === 'number' && Number.isFinite(value) && (positive ? value > 0 : value >= 0), `${label} must be a finite ${positive ? 'positive' : 'nonnegative'} number.`); return value; }
 function now(): string { return new Date().toISOString(); }
 function hash(value: unknown): string { return createHash('sha256').update(JSON.stringify(value)).digest('hex'); }
-function get<T>(db: DatabaseSync, key: string): T | null { const row = db.prepare('SELECT body FROM docs WHERE key=?').get(key) as { body: string } | undefined; return row ? JSON.parse(row.body) as T : null; }
-function put(db: DatabaseSync, key: string, value: unknown): void { db.prepare('INSERT INTO docs VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET body=excluded.body,updated_at=excluded.updated_at').run(key, JSON.stringify(value), now()); }
-function atomic<T>(root: string, fn: (db: DatabaseSync) => T): T { return withDb(root, db => { db.exec('BEGIN IMMEDIATE'); try { const result = fn(db); db.exec('COMMIT'); return result; } catch (error) { db.exec('ROLLBACK'); throw error; } }); }
-function trial(db: DatabaseSync, id: string): InterventionTrial { const result = get<InterventionTrial>(db, `intervention-trial:${id}`); need(result, 'Trial not found.'); return result; }
-function process(db: DatabaseSync, id: string, revision: number): ProcessDoc { const row = db.prepare('SELECT body FROM processes WHERE id=? AND rev=?').get(id, revision) as { body: string } | undefined; need(row, 'Unknown process revision.'); return JSON.parse(row.body) as ProcessDoc; }
-function source(db: DatabaseSync, raw: unknown): { reference: VisitReference; snapshot: unknown; identity: string; continuous: boolean; quarantined: boolean } {
+function get<T>(db: RecordTransaction, key: string): T | null { const row = db.first('docs', { where: { key: key }, fields: ["body"] }) as { body: string } | undefined; return row ? JSON.parse(row.body) as T : null; }
+function put(db: RecordTransaction, key: string, value: unknown): void { db.insert('docs', { key: key, body: JSON.stringify(value), updated_at: now() }, { conflict: ["key"], update: ["body","updated_at"] }); }
+async function atomic<T>(root: string, fn: (db: RecordTransaction) => T): Promise<T> { return withRecords(root, fn); }
+function trial(db: RecordTransaction, id: string): InterventionTrial { const result = get<InterventionTrial>(db, `intervention-trial:${id}`); need(result, 'Trial not found.'); return result; }
+function process(db: RecordTransaction, id: string, revision: number): ProcessDoc { const row = db.first('processes', { where: { id: id, rev: revision }, fields: ["body"] }) as { body: string } | undefined; need(row, 'Unknown process revision.'); return JSON.parse(row.body) as ProcessDoc; }
+function source(db: RecordTransaction, raw: unknown): { reference: VisitReference; snapshot: unknown; identity: string; continuous: boolean; quarantined: boolean } {
   const ref = obj(raw);
   if (ref.kind === 'session') {
     const spot = words(ref.spot_id, 'Spot'), sid = words(ref.session_id, 'Session');
-    const row = db.prepare('SELECT analysis,created FROM sessions WHERE spot_id=? AND sid=?').get(spot, sid) as { analysis: string; created: string } | undefined; need(row, 'Session not found.');
+    const row = db.first('sessions', { where: { spot_id: spot, sid: sid }, fields: ["analysis","created"] }) as { analysis: string; created: string } | undefined; need(row, 'Session not found.');
     const analysis = JSON.parse(row.analysis) as Record<string, unknown>;
     const side = ref.side ?? 'after'; need(side === 'before' || side === 'after', 'Session side must be before or after.');
     const media = analysis.visit_evidence as { before?: { identity: string }; after?: { identity: string } } | undefined;
@@ -59,7 +59,7 @@ function source(db: DatabaseSync, raw: unknown): { reference: VisitReference; sn
   const interpretation = s.interpretations.find(i => i.id === ref.interpretation_id); need(interpretation, 'Interpretation not found.');
   return { reference: { kind: 'evidence', source_id: s.id, interpretation_id: interpretation.id }, snapshot: { checksum: s.checksum, media: s.media, recorded_at: s.recorded_at, interpretation }, identity: `${s.kind === 'video' ? 'media' : 'evidence'}:${s.checksum}`, continuous: interpretation.observations.some(o => o.coverage === 'continuous' && o.start_s !== null && o.end_s !== null && o.end_s > o.start_s), quarantined: false };
 }
-function visit(db: DatabaseSync, raw: unknown, spec: Pick<InterventionTrial, 'metrics' | 'workload_unit' | 'assessment'>, id: string = randomUUID(), revision = 1): TrialVisit {
+function visit(db: RecordTransaction, raw: unknown, spec: Pick<InterventionTrial, 'metrics' | 'workload_unit' | 'assessment'>, id: string = randomUUID(), revision = 1): TrialVisit {
   const v = obj(raw), s = source(db, v.reference), w = obj(v.workload), c = obj(v.context);
   const observed = instant(v.observed_at); need(observed <= now(), 'Observed work cannot be in the future.');
   const processId = words(v.process_id, 'Process ID'); need(processId === spec.assessment.candidate.process_id, 'Visit must reference the trial process.');
@@ -82,19 +82,19 @@ function visit(db: DatabaseSync, raw: unknown, spec: Pick<InterventionTrial, 'me
   return { id, revision, observed_at: observed, reference: s.reference, source_snapshot: s.snapshot, source_digest: hash(s.snapshot), source_identity: s.identity, continuous_coverage: s.continuous, quarantined: s.quarantined,
     process_id: processId, process_revision: v.process_revision, process_snapshot: processSnapshot, workload: { amount, unit, context: words(w.context, 'Workload context') }, context, measurements, notes: words(v.notes ?? '', 'Visit notes', true) };
 }
-function receipt(db: DatabaseSync, requestId: string, payload: unknown): { key: string; previous: string | null } {
+function receipt(db: RecordTransaction, requestId: string, payload: unknown): { key: string; previous: string | null } {
   words(requestId, 'Request ID'); const key = `outcome-request:${hash(requestId)}`, existing = get<{ digest: string; id: string }>(db, key);
   need(!existing || existing.digest === hash(payload), 'Request ID reused with different inputs.'); return { key, previous: existing?.id ?? null };
 }
 /** Freeze an accepted improvement, predicted effects, validation policy and baseline before the trial. */
-export function registerTrial(root: string, raw: unknown): InterventionTrial {
+export async function registerTrial(root: string, raw: unknown): Promise<InterventionTrial> {
   const v = obj(raw);
-  return atomic(root, db => {
+  return await atomic(root, db => {
     const req = receipt(db, v.request_id, v); if (req.previous) return trial(db, req.previous);
     const review = get<ImprovementReview>(db, `improvements:${words(v.review_id, 'Review ID')}`); need(review, 'Improvement review not found.');
     const assessment = review.assessments.find(a => a.candidate.id === v.candidate_id); need(assessment && assessment.decision === 'accepted' && assessment.feasibility === 'eligible', 'Accept an eligible improvement before registering a trial.');
     need(hash(get(db, 'workflow-context')) === hash(review.context), 'Stale improvement context. Regenerate the review.');
-    for (const b of review.process_basis) { const row = db.prepare('SELECT MAX(rev) AS rev FROM processes WHERE id=?').get(b.process_id) as { rev: number }; need(row.rev === b.rev, 'Stale improvement process. Regenerate the review.'); }
+    for (const b of review.process_basis) { const row = ({ rev: db.first('processes', { where: { id: b.process_id }, order: ["-rev"] })?.rev ?? null }) as { rev: number }; need(row.rev === b.rev, 'Stale improvement process. Regenerate the review.'); }
     need(Array.isArray(v.metrics) && v.metrics.length > 0 && v.metrics.length <= 20, 'Register one to twenty metrics.');
     const metrics: MetricSpec[] = v.metrics.map((x: unknown) => { const m = obj(x); need(['lower', 'higher'].includes(m.direction), 'Invalid metric direction.'); return { id: words(m.id, 'Metric ID'), label: words(m.label, 'Metric label'), unit: words(m.unit, 'Metric unit'), direction: m.direction, tolerance: number(m.tolerance, 'Unchanged tolerance') }; });
     need(new Set(metrics.map(m => m.id)).size === metrics.length, 'Duplicate metric IDs.');
@@ -110,9 +110,9 @@ export function registerTrial(root: string, raw: unknown): InterventionTrial {
   });
 }
 /** Add follow-up measurements or append an explicit correction, preserving every previous version. */
-export function recordTrialVisit(root: string, raw: unknown): InterventionTrial {
+export async function recordTrialVisit(root: string, raw: unknown): Promise<InterventionTrial> {
   const v = obj(raw);
-  return atomic(root, db => {
+  return await atomic(root, db => {
     const req = receipt(db, v.request_id, v); if (req.previous) return trial(db, req.previous);
     const t = trial(db, v.id); need(t.revision === v.revision, 'Stale trial revision. Reload before editing.');
     const reason = words(v.reason, 'Measurement rationale');
@@ -177,7 +177,7 @@ export function evaluateTrial(t: InterventionTrial, followupId?: string): TrialR
   return { trial_id: t.id, followup_id: f?.id ?? null, evidence_digest: evidenceDigest, status, metrics, context_differences: differences, reasons,
     source_warnings: [], causal_interpretation: 'Observed differences are not proof that the intervention caused them. Estimates and predictions remain separate.', latest_decision: latest, next_action: next };
 }
-function freshResult(db: DatabaseSync, t: InterventionTrial, followupId?: string): TrialResult {
+function freshResult(db: RecordTransaction, t: InterventionTrial, followupId?: string): TrialResult {
   const result = evaluateTrial(t, followupId), f = t.followups.find(f => f.id === result.followup_id) ?? null;
   for (const v of [t.baseline, f].filter((v): v is TrialVisit => !!v)) {
     try { if (hash(source(db, v.reference).snapshot) !== v.source_digest) result.source_warnings.push(`Source for visit ${v.id} changed; measurements need correction/review.`); }
@@ -187,16 +187,16 @@ function freshResult(db: DatabaseSync, t: InterventionTrial, followupId?: string
   const currentReview = get<ImprovementReview>(db, `improvements:${t.review_id}`);
   if (currentReview?.assessments.find(a => a.candidate.id === t.candidate_id)?.decision !== 'accepted') result.source_warnings.push('Original improvement approval is no longer accepted; review before reuse.');
   const expectedProcess = f?.process_revision ?? t.baseline?.process_revision ?? t.assessment.candidate.process_rev;
-  const current = db.prepare('SELECT MAX(rev) AS rev FROM processes WHERE id=?').get(t.assessment.candidate.process_id) as { rev: number | null };
+  const current = ({ rev: db.first('processes', { where: { id: t.assessment.candidate.process_id }, order: ["-rev"] })?.rev ?? null }) as { rev: number | null };
   if (get(db, `superseded-process:${t.assessment.candidate.process_id}`)) result.source_warnings.push('The process was superseded by new source analysis; review the new interpretation before reuse.');
   if (current.rev !== expectedProcess) result.source_warnings.push('Current process differs from the evaluated process revision; review before reusing this recommendation.');
   if (result.source_warnings.length) { if (result.latest_decision) result.latest_decision.current = false; result.next_action = (result.latest_decision?.decision === 'reject' ? 'Keep the previously rejected intervention stopped. ' : result.latest_decision?.decision === 'revise' ? `Revision remains pending: ${result.latest_decision.revision_plan}. ` : '') + result.source_warnings.join(' '); }
   return result;
 }
 /** Record a farmer decision tied to the exact evaluated evidence; later corrections invalidate it. */
-export function decideTrial(root: string, raw: unknown): InterventionTrial {
+export async function decideTrial(root: string, raw: unknown): Promise<InterventionTrial> {
   const v = obj(raw);
-  return atomic(root, db => {
+  return await atomic(root, db => {
     const req = receipt(db, v.request_id, v); if (req.previous) return trial(db, req.previous);
     const t = trial(db, v.id); need(t.revision === v.revision, 'Stale trial revision.');
     need(['keep', 'revise', 'reject'].includes(v.decision), 'Decision must be keep, revise or reject.');
@@ -208,37 +208,38 @@ export function decideTrial(root: string, raw: unknown): InterventionTrial {
   });
 }
 /** List trials with fresh comparisons and exact stored visit/process snapshots. */
-export function outcomeView(root: string): { trials: Array<{ trial: InterventionTrial; result: TrialResult }> } {
-  return withDb(root, db => ({ trials: (db.prepare("SELECT body FROM docs WHERE key LIKE 'intervention-trial:%' ORDER BY updated_at DESC,key").all() as unknown as { body: string }[]).map(r => { const t = JSON.parse(r.body) as InterventionTrial; return { trial: t, result: freshResult(db, t) }; }) }));
+export async function outcomeView(root: string): Promise<{ trials: Array<{ trial: InterventionTrial; result: TrialResult }> }> {
+  return await withRecords(root, db => ({ trials: (db.select('docs', { prefix: { key: "intervention-trial:" }, order: ["-updated_at","key"], fields: ["body"] }) as unknown as { body: string }[]).map(r => { const t = JSON.parse(r.body) as InterventionTrial; return { trial: t, result: freshResult(db, t) }; }) }));
 }
 /** Present stored compare sessions and exact reconciliation interpretations for attaching evidence. */
-export function outcomeSources(root: string): unknown {
-  return withDb(root, db => ({ sessions: db.prepare('SELECT s.spot_id,s.sid,s.created,p.name AS spot_name FROM sessions s LEFT JOIN spots p ON p.id=s.spot_id ORDER BY s.created DESC').all(),
-    evidence: (db.prepare("SELECT body FROM docs WHERE key LIKE 'evidence-source:%' ORDER BY updated_at DESC").all() as unknown as { body: string }[]).flatMap(r => { const s = JSON.parse(r.body) as EvidenceSource; return s.interpretations.map(i => ({ source_id: s.id, interpretation_id: i.id, recorded_at: s.recorded_at, uploaded_at: s.uploaded_at, origin: i.origin, media: s.media })); }),
-    processes: (db.prepare('SELECT id,rev,body FROM processes ORDER BY id,rev DESC').all() as unknown as Array<{ id: string; rev: number; body: string }>).map(p => ({ id: p.id, rev: p.rev, title: (JSON.parse(p.body) as ProcessDoc).title })) }));
+export async function outcomeSources(root: string): Promise<unknown> {
+  return await withRecords(root, db => ({ sessions: db.select('sessions', { order: ['-created'] }).map(r => ({ spot_id: r.spot_id, sid: r.sid, created: r.created, spot_name: db.first('spots', { where: { id: r.spot_id } })?.name ?? null })),
+    evidence: (db.select('docs', { prefix: { key: "evidence-source:" }, order: ["-updated_at"], fields: ["body"] }) as unknown as { body: string }[]).flatMap(r => { const s = JSON.parse(r.body) as EvidenceSource; return s.interpretations.map(i => ({ source_id: s.id, interpretation_id: i.id, recorded_at: s.recorded_at, uploaded_at: s.uploaded_at, origin: i.origin, media: s.media })); }),
+    processes: (db.select('processes', { order: ["id","-rev"], fields: ["id","rev","body"] }) as unknown as Array<{ id: string; rev: number; body: string }>).map(p => ({ id: p.id, rev: p.rev, title: (JSON.parse(p.body) as ProcessDoc).title })) }));
 }
 /** Deterministic briefing supplement: farmer decisions and unresolved canonical tasks, never inferred completion. */
-export function outcomeBriefing(root: string): { trials: Array<{ id: string; change: string; status: OutcomeStatus; decision: TrialResult['latest_decision']; next_action: string }>; next_actions: string[]; unresolved_tasks: Array<{ id: string; text: string; execution: string }> } {
-  const entries = outcomeView(root).trials, tasks = planningView(root).tasks.filter(t => !['done', 'cancelled'].includes(t.execution));
+export async function outcomeBriefing(root: string): Promise<{ trials: Array<{ id: string; change: string; status: OutcomeStatus; decision: TrialResult['latest_decision']; next_action: string }>; next_actions: string[]; unresolved_tasks: Array<{ id: string; text: string; execution: string }> }> {
+  const entries = (await outcomeView(root)).trials, tasks = (await planningView(root)).tasks.filter(t => !['done', 'cancelled'].includes(t.execution));
   return { trials: entries.map(({ trial: t, result: r }) => ({ id: t.id, change: t.assessment.candidate.change, status: r.status, decision: r.latest_decision, next_action: r.next_action })), next_actions: entries.map(e => e.result.next_action), unresolved_tasks: tasks.map(t => ({ id: t.id, text: t.text, execution: t.execution })) };
 }
 /** Overlay authoritative trial decisions on generated narrative; generated actions remain suggestions for review. */
-export function attachOutcomeBriefing(root: string, narrative: unknown): unknown {
-  const brief = outcomeBriefing(root); if (!brief.trials.length) return narrative;
+export async function attachOutcomeBriefing(root: string, narrative: unknown): Promise<unknown> {
+  const brief = await outcomeBriefing(root); if (!brief.trials.length) return narrative;
   const n = narrative && typeof narrative === 'object' && !Array.isArray(narrative) ? narrative as Record<string, unknown> : { overall: String(narrative ?? '') };
   return { ...n, intervention_outcomes: brief.trials, suggested_actions_for_review: n.next_actions ?? [], next_actions: [...brief.next_actions, ...brief.unresolved_tasks.map(t => `Unresolved (${t.execution}): ${t.text}`)], unresolved_tasks: brief.unresolved_tasks };
 }
 /** Shared JSON commands for the CLI and dashboard. */
-export function outcomeCommand(root: string, raw: unknown): unknown {
+export async function outcomeCommand(root: string, raw: unknown): Promise<unknown> {
   const v = obj(raw);
   switch (v.command) {
-    case 'view': return outcomeView(root);
-    case 'sources': return outcomeSources(root);
-    case 'register': return registerTrial(root, v);
-    case 'visit': return recordTrialVisit(root, v);
-    case 'decide': return decideTrial(root, v);
-    case 'briefing': return outcomeBriefing(root);
-    case 'evaluate': return withDb(root, db => freshResult(db, trial(db, v.id), v.followup_id));
+    case 'view': return await outcomeView(root);
+    case 'sources': return await outcomeSources(root);
+    case 'register': return await registerTrial(root, v);
+    case 'visit': return await recordTrialVisit(root, v);
+    case 'decide': return await decideTrial(root, v);
+    case 'briefing': return await outcomeBriefing(root);
+    case 'evaluate': return await withRecords(root, db => freshResult(db, trial(db, v.id), v.followup_id));
     default: throw new OutcomeError('Unknown outcome command.');
   }
 }
+

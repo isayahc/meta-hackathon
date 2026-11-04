@@ -23,7 +23,7 @@ import { addGoal, listGoals, setGoalStatus } from './lib/goals.js';
 import { fetchEco, normalizeSoil, ecoConstraints, summarizeEco, type WeatherDoc } from './lib/eco.js';
 import { type SpotBrief } from './lib/analyze-response.js';
 import { listSpotBriefs } from './lib/spot-state.js';
-import { setDoc } from './lib/db.js';
+import { setDoc } from './lib/records.js';
 import { listProcesses, readProcess, type ProcessDoc } from './lib/processes.js';
 import { loadEnvSync } from './lib/env.js';
 import { flagValue, flagAll } from './lib/args.js';
@@ -67,7 +67,7 @@ if (assign) {
     console.error(`Bad --set-status "${assign}": want <id>=<status>.`);
     process.exit(1);
   }
-  const g = await setGoalStatus(root, assign.slice(0, i), assign.slice(i + 1)).catch((e) => {
+  const g = await (setGoalStatus(root, assign.slice(0, i), assign.slice(i + 1))).catch((e) => {
     console.error(`set-status failed: ${e.message}`);
     process.exit(1);
   });
@@ -108,7 +108,7 @@ if (ecoLoc || ecoFile) {
   const ecoRules = ecoConstraints(weather, soil);
   constraints.push(...ecoRules);
   ecoSummary = summarizeEco(weather, soil, lat as number, lon as number);
-  setDoc(root, 'eco', { summary: ecoSummary, location: { lat, lon } });
+  await setDoc(root, 'eco', { summary: ecoSummary, location: { lat, lon } });
   console.error(`eco: ${lat},${lon} -> ${ecoRules.length} weather/soil constraints`);
 }
 
@@ -123,7 +123,7 @@ if (!spots.length && !goals.length && !suppliedCurrents.length) {
 const suppliedDocs: ProcessDoc[] = [];
 for (const c of suppliedCurrents) suppliedDocs.push(await readProcess(root, c.process_id, c.rev));
 const suppliedBasis = suppliedDocs.map((d) => ({ process_id: d.id, rev: d.rev }));
-const workflowContext = contextFile ? parseWorkflowContext(JSON.parse(await readFile(contextFile, 'utf8'))) : readWorkflowContext(root);
+const workflowContext = contextFile ? parseWorkflowContext(JSON.parse(await readFile(contextFile, 'utf8'))) : (await readWorkflowContext(root));
 workflowContext.constraints.notes = [...new Set([...workflowContext.constraints.notes, ...constraints])];
 const prompt = buildOptimizerPrompt(goals, spots, constraints, ecoSummary, suppliedDocs) +
   (suppliedDocs.length ? buildImprovementPrompt(workflowContext) : '');
@@ -133,7 +133,7 @@ if (offline) {
   process.exit(0);
 }
 
-if (suppliedDocs.length) writeWorkflowContext(root, workflowContext);
+if (suppliedDocs.length) await writeWorkflowContext(root, workflowContext);
 let analysis: unknown;
 if (candidatesFile) {
   // Explicit offline replay: no key resolution and no model request.
@@ -191,12 +191,13 @@ const planObj = {
     ...(moved.length || added.length ? [`process revisions changed during generation: ${[...moved.map((m) => m.process_id), ...added.map((a) => a.process_id)].join(', ')}`] : []),
     ...(improvementReview?.stale_reasons ?? []),
   ].join(' ') } : {}),
-  plan: improvementReview ? improvementPlan(improvementReview, root) : analysis,
+  plan: improvementReview ? (await improvementPlan(improvementReview, root)) : analysis,
   model_narrative: improvementReview ? analysis : null,
   improvement_review_id: improvementReview?.id ?? null,
   improvements: improvementReview,
 };
-setDoc(root, 'plan', planObj);
+await setDoc(root, 'plan', planObj);
 const text = JSON.stringify(planObj, null, 2);
 if (outPath) await writeFile(outPath, text + '\n');
 console.log(text);
+

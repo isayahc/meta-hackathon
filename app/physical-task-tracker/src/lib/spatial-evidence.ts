@@ -3,8 +3,8 @@ import { createHash, randomUUID } from 'node:crypto';
 import { lstat } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { join, basename } from 'node:path';
-import type { DatabaseSync } from 'node:sqlite';
-import { withDb } from './db.js';
+import type { RecordTransaction } from './record-model.js';
+import { withRecords } from './records.js';
 import { readProcess, listProcesses, type ProcessDoc } from './processes.js';
 import { oiReferenceReader, type OiReference, type OiReferenceInspection, type OiReferenceReader } from './oi-reference.js';
 
@@ -32,11 +32,11 @@ function object(value: unknown): Record<string, unknown> { check(value && typeof
 function words(value: unknown, label: string): string { check(typeof value === 'string' && !!value.trim() && value.length <= 2000, `${label} is required (up to 2000 characters).`); return value.trim(); }
 function revision(value: unknown): number { check(Number.isSafeInteger(value) && Number(value) > 0, 'A positive integer revision is required.'); return Number(value); }
 const hash = (value: unknown): string => createHash('sha256').update(JSON.stringify(value)).digest('hex');
-function doc<T>(db: DatabaseSync, key: string): T | null { const row=db.prepare('SELECT body FROM docs WHERE key=?').get(key) as {body:string}|undefined; return row ? JSON.parse(row.body) as T : null; }
-function saveDoc(db: DatabaseSync, key: string, value: unknown): void { db.prepare('INSERT INTO docs(key,body,updated_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET body=excluded.body,updated_at=excluded.updated_at').run(key,JSON.stringify(value),new Date().toISOString()); }
-function all(db: DatabaseSync): SpatialAssociation[] { return (db.prepare("SELECT body FROM docs WHERE key LIKE 'spatial-association:%' ORDER BY key").all() as Array<{body:string}>).map(r=>JSON.parse(r.body) as SpatialAssociation); }
+function doc<T>(db: RecordTransaction, key: string): T | null { const row=db.first('docs', { where: { key: key }, fields: ["body"] }) as {body:string}|undefined; return row ? JSON.parse(row.body) as T : null; }
+function saveDoc(db: RecordTransaction, key: string, value: unknown): void { db.insert('docs', { key: key, body: JSON.stringify(value), updated_at: new Date().toISOString() }, { conflict: ["key"], update: ["body","updated_at"] }); }
+function all(db: RecordTransaction): SpatialAssociation[] { return (db.select('docs', { prefix: { key: "spatial-association:" }, order: ["key"], fields: ["body"] }) as Array<{body:string}>).map(r=>JSON.parse(r.body) as SpatialAssociation); }
 /** Return durable association revisions and review history without querying OI. */
-export function listSpatialAssociations(root: string): SpatialAssociation[] { return withDb(root, all); }
+export async function listSpatialAssociations(root: string): Promise<SpatialAssociation[]> { return await withRecords(root, all); }
 /** Validate reference syntax only. OI remains responsible for entity resolution. */
 export function spatialTarget(raw: unknown): SpatialTarget {
   const t=object(raw);
@@ -70,8 +70,8 @@ async function validateSource(root: string, raw: unknown): Promise<SpatialSource
 /** Create, explicitly review, or re-anchor a link with optimistic revisions and retry receipts. */
 export async function spatialCommand(root: string, raw: unknown): Promise<SpatialAssociation> {
   const input=object(raw),request=words(input.request_id,'Request ID'),key='spatial-request:'+hash(request),digest=hash(input);
-  const receipt=():SpatialAssociation|null=>withDb(root,db=>{const r=doc<{digest:string;result:SpatialAssociation}>(db,key);if(!r)return null;check(r.digest===digest,'Request ID was already used with different input.');return r.result;});
-  const prior=receipt();if(prior)return prior;
+  const receipt=async ():Promise<SpatialAssociation|null>=>(await withRecords(root,db=>{const r=doc<{digest:string;result:SpatialAssociation}>(db,key);if(!r)return null;check(r.digest===digest,'Request ID was already used with different input.');return r.result;}));
+  const prior=await receipt();if(prior)return prior;
   check(['save','review'].includes(String(input.command)),'Use save or review.');
   const reason=words(input.reason,'Review reason');const review=input.review as AssociationReview;
   check(['proposed','ambiguous','confirmed','rejected'].includes(review),'Choose proposed, ambiguous, confirmed or rejected.');
@@ -81,28 +81,28 @@ export async function spatialCommand(root: string, raw: unknown): Promise<Spatia
   const target=input.command==='save'?spatialTarget(input.target):null;
   const origin=input.origin??'human';check(['human','model'].includes(String(origin)),'Invalid origin.');
   check(input.command!=='save'||origin!=='model'||review==='proposed'||review==='ambiguous','Automated associations must remain proposed or ambiguous until human review.');
-  return withDb(root,db=>{
-    db.exec('BEGIN IMMEDIATE');try {
-      const repeated=doc<{digest:string;result:SpatialAssociation}>(db,key);if(repeated){check(repeated.digest===digest,'Request ID was already used with different input.');db.exec('COMMIT');return repeated.result;}
+  return await withRecords(root,db=>{
+    try {
+      const repeated=doc<{digest:string;result:SpatialAssociation}>(db,key);if(repeated){check(repeated.digest===digest,'Request ID was already used with different input.');return repeated.result;}
       const existing=doc<SpatialAssociation>(db,'spatial-association:'+id);
       check(input.id===undefined||existing,'Association not found.');
       if(existing)check(existing.revision===input.revision,'Stale association revision. Reload before reviewing.','STALE_ASSOCIATION');
-      if(source){const latest=db.prepare('SELECT MAX(rev) AS rev FROM processes WHERE id=?').get(source.process_id) as {rev:number|null}|undefined;check(latest?.rev===source.process_revision,'Stale process revision. Reload before linking.','STALE_PROCESS');}
-      if(target?.kind==='spot')check(db.prepare('SELECT id FROM spots WHERE id=?').get(target.spot_id),'Work area no longer exists.');
+      if(source){const latest=({ rev: db.first('processes', { where: { id: source.process_id }, order: ["-rev"] })?.rev ?? null }) as {rev:number|null}|undefined;check(latest?.rev===source.process_revision,'Stale process revision. Reload before linking.','STALE_PROCESS');}
+      if(target?.kind==='spot')check(db.first('spots', { where: { id: target.spot_id }, fields: ["id"] }),'Work area no longer exists.');
       const now=new Date().toISOString();
       const result:SpatialAssociation={schema:'spatial-evidence/1',id,revision:(existing?.revision??0)+1,source:source??existing!.source,target:target??existing!.target,origin:existing?.origin??origin as 'human'|'model',review,reason,created_at:existing?.created_at??now,updated_at:now,
         history:existing?[...existing.history,{revision:existing.revision,source:existing.source,target:existing.target,review:existing.review,reason:existing.reason,at:existing.updated_at}]:[]};
-      if(!existing){const same=all(db).find(a=>hash([a.source,a.target])===hash([result.source,result.target]));if(same){check(same.review===result.review&&same.origin===result.origin,'This evidence/location link already exists. Review the existing association.');saveDoc(db,key,{digest,result:same});db.exec('COMMIT');return same;}}
-      saveDoc(db,'spatial-association:'+id,result);saveDoc(db,key,{digest,result});db.exec('COMMIT');return result;
-    }catch(e){db.exec('ROLLBACK');throw e;}
+      if(!existing){const same=all(db).find(a=>hash([a.source,a.target])===hash([result.source,result.target]));if(same){check(same.review===result.review&&same.origin===result.origin,'This evidence/location link already exists. Review the existing association.');saveDoc(db,key,{digest,result:same});return same;}}
+      saveDoc(db,'spatial-association:'+id,result);saveDoc(db,key,{digest,result});return result;
+    }catch(e){throw e;}
   });
 }
 /** Resolve reference freshness and evidence integrity separately from the human identity decision. */
 export async function spatialEvidenceView(root: string, reader: OiReferenceReader=oiReferenceReader(root)) {
-  const processes=await Promise.all((await listProcesses(root)).map(p=>readProcess(root,p.process_id)));
-  const spots=withDb(root,db=>db.prepare('SELECT id,name FROM spots ORDER BY name').all() as Array<{id:string;name:string}>);
-  const associations=listSpatialAssociations(root), inspections=new Map<string,Promise<OiReferenceInspection>>(), media=new Map<string,Promise<string>>();
-  const views:AssociationView[]=await Promise.all(associations.map(async a=>{
+  const processes=await await Promise.all((await listProcesses(root)).map(async p=>(await readProcess(root,p.process_id))));
+  const spots=await withRecords(root,db=>db.select('spots', { order: ["name"], fields: ["id","name"] }) as Array<{id:string;name:string}>);
+  const associations=await listSpatialAssociations(root), inspections=new Map<string,Promise<OiReferenceInspection>>(), media=new Map<string,Promise<string>>();
+  const views:AssociationView[]=await await Promise.all(associations.map(async a=>{
     const issues:AssociationView['issues']=[];let p:ProcessDoc|null=null;
     try{p=await readProcess(root,a.source.process_id,a.source.process_revision);}catch{issues.push({code:'process_missing',message:'The pinned process revision is unavailable.'});}
     const latest=processes.find(p=>p.id===a.source.process_id);
@@ -123,7 +123,8 @@ export async function spatialEvidenceView(root: string, reader: OiReferenceReade
     if(a.review!=='confirmed')issues.push({code:'identity_'+a.review,message:a.review==='ambiguous'?'Cross-visit identity is unresolved. No automatic relinking.':a.review==='rejected'?'This association was rejected and is retained only for history.':'This proposed association needs human review.'});
     return {association:a,process_title:p?.title??'Unavailable process',step_label:step?.label??'Unavailable step',target_label:targetLabel,issues,current:a.review==='confirmed'&&issues.every(i=>i.code==='scale_unknown'||i.code==='unscaled'),evidence_url:evidenceUrl,spatial};
   }));
-  const scenes=withDb(root,db=>db.prepare('SELECT DISTINCT scene_id,revision FROM oi_links ORDER BY scene_id,revision').all() as Array<{scene_id:string;revision:number}>);
+  const scenes=await withRecords(root,db=>[...new Map(db.select('oi_links', { order: ['scene_id','revision'], fields: ['scene_id','revision'] }).map(r => [JSON.stringify(r), r])).values()] as Array<{scene_id:string;revision:number}>);
   for(const a of associations){const target=a.target;if(target.kind==='oi'&&!scenes.some(s=>s.scene_id===target.scene_id&&s.revision===target.revision))scenes.push({scene_id:target.scene_id,revision:target.revision});}
   return {schema:'spatial-evidence-view/1' as const,processes:processes.map(p=>({id:p.id,revision:p.rev,title:p.title,steps:p.steps.map(s=>({id:s.id,label:s.label,media:s.evidence.media,spans:s.evidence.spans})),total_s:p.coverage.total_s})),spots,scenes,associations:views};
 }
+

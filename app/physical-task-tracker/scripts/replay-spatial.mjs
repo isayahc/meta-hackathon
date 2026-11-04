@@ -18,6 +18,7 @@ const transport=new OiMockTransport({inspect:()=>response});
 await applyCorrection(root,p.id,{steps:{[p.steps[0].id]:{label:'Corrected scoop step'}}},'Synthetic correction','operator');
 const changed=await spatialEvidenceView(root,oiReferenceReader(root,transport));assert.ok(changed.associations[0].issues.some(i=>i.code==='scene_stale'));assert.ok(changed.associations[0].issues.some(i=>i.code==='process_stale'));assert.equal(changed.associations[0].association.target.revision,1);
 response.head_entity_state='missing';const deleted=await spatialEvidenceView(root,oiReferenceReader(root,transport));assert.ok(deleted.associations[0].issues.some(i=>i.code==='entity_missing_at_head'));assert.ok(deleted.associations[0].evidence_url);
-assert.equal(listSpatialAssociations(root).length,1);assert.ok(transport.calls.every(c=>c.op==='inspect'));
+assert.equal((await listSpatialAssociations(root)).length,1);assert.ok(transport.calls.every(c=>c.op==='inspect'));
 await writeFile(join(root,'association-evidence.json'),JSON.stringify({mode:'synthetic OI/clip fixture; not live inference or spatial validation',changed,deleted},null,2));
 console.log(JSON.stringify({passed:true,canonical_associations:1,automatic_relinks:0,oi_mutations:0,mode:'synthetic OI and media; real SQLite persistence'}));
+

@@ -2,8 +2,8 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { readFileSync, existsSync } from 'node:fs';
 import { basename, resolve, sep } from 'node:path';
-import type { DatabaseSync } from 'node:sqlite';
-import { withDb } from './db.js';
+import type { RecordTransaction } from './record-model.js';
+import { withRecords } from './records.js';
 import { tasks, update, planningView, previewPlan, type Task } from './task-planning.js';
 import { validateProcess, normalizeProcess, validateCompletion, type ProcessDoc } from './processes.js';
 import { instant } from './planning-time.js';
@@ -56,17 +56,17 @@ function text(raw: unknown, label: string, empty = false): string { ensure(typeo
 function strings(raw: unknown): string[] { ensure(Array.isArray(raw) && raw.length <= 100 && raw.every(s => typeof s === 'string' && s.length > 0 && s.length <= 200) && new Set(raw).size === raw.length, 'Expected unique identifiers.'); return raw; }
 function digest(raw: unknown): string { return createHash('sha256').update(JSON.stringify(raw)).digest('hex'); }
 function now(): string { return new Date().toISOString(); }
-function get<T>(db: DatabaseSync, key: string): T | null { const row = db.prepare('SELECT body FROM docs WHERE key=?').get(key) as { body: string } | undefined; return row ? JSON.parse(row.body) as T : null; }
-function put(db: DatabaseSync, key: string, value: unknown): void { db.prepare('INSERT INTO docs VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET body=excluded.body,updated_at=excluded.updated_at').run(key, JSON.stringify(value), now()); }
-function atomic<T>(root: string, fn: (db: DatabaseSync) => T): T { return withDb(root, db => { db.exec('BEGIN IMMEDIATE'); try { const result = fn(db); db.exec('COMMIT'); return result; } catch (error) { db.exec('ROLLBACK'); throw error; } }); }
-function all(db: DatabaseSync): EvidenceSource[] { return (db.prepare("SELECT body FROM docs WHERE key LIKE 'evidence-source:%' ORDER BY key").all() as unknown as { body: string }[]).map(r => JSON.parse(r.body)); }
-function source(db: DatabaseSync, id: string): EvidenceSource { const s = get<EvidenceSource>(db, `evidence-source:${id}`); ensure(s, 'Evidence source not found.'); return s; }
-function save(db: DatabaseSync, s: EvidenceSource): void { put(db, `evidence-source:${s.id}`, s); }
+function get<T>(db: RecordTransaction, key: string): T | null { const row = db.first('docs', { where: { key: key }, fields: ["body"] }) as { body: string } | undefined; return row ? JSON.parse(row.body) as T : null; }
+function put(db: RecordTransaction, key: string, value: unknown): void { db.insert('docs', { key: key, body: JSON.stringify(value), updated_at: now() }, { conflict: ["key"], update: ["body","updated_at"] }); }
+async function atomic<T>(root: string, fn: (db: RecordTransaction) => T): Promise<T> { return withRecords(root, fn); }
+function all(db: RecordTransaction): EvidenceSource[] { return (db.select('docs', { prefix: { key: "evidence-source:" }, order: ["key"], fields: ["body"] }) as unknown as { body: string }[]).map(r => JSON.parse(r.body)); }
+function source(db: RecordTransaction, id: string): EvidenceSource { const s = get<EvidenceSource>(db, `evidence-source:${id}`); ensure(s, 'Evidence source not found.'); return s; }
+function save(db: RecordTransaction, s: EvidenceSource): void { put(db, `evidence-source:${s.id}`, s); }
 function checkRevision(s: EvidenceSource, revision: number): void { ensure(s.revision === revision, 'Stale evidence revision. Reload the review.'); }
 function status(s: EvidenceSource): void { s.stage = (s.related ?? []).some(c => ['proposed', 'deferred', 'pending_external'].includes(c.status)) || s.changes.some(c => ['proposed', 'deferred'].includes(c.status)) || !s.associations.some(a => a.decision === 'confirmed') ? 'needs_review' : (s.changes.some(c => ['accepted', 'corrected'].includes(c.status)) || (s.related ?? []).some(c => ['applied', 'recorded'].includes(c.status))) ? 'applied' : 'no_material_change'; }
 
 /** Register exact bytes once. Context is a suggestion; identity is confirmed separately. */
-export function ingestEvidence(root: string, raw: unknown): EvidenceSource {
+export async function ingestEvidence(root: string, raw: unknown): Promise<EvidenceSource> {
   const v = record(raw); ensure(['video', 'manual'].includes(v.kind), 'Invalid source kind.');
   const context = record(v.context ?? {}), taskIds = strings(context.task_ids ?? []), goalIds = strings(context.goal_ids ?? []);
   const place = text(context.place ?? '', 'Place', true), occurrence = text(context.occurrence ?? '', 'Occurrence', true);
@@ -80,12 +80,12 @@ export function ingestEvidence(root: string, raw: unknown): EvidenceSource {
   const uncertainty = text(v.time_uncertainty ?? (recordedAt ? 'Operator supplied' : 'Recording time unknown'), 'Time uncertainty');
   ensure(!recordedAt || recordedAt <= now(), 'Evidence cannot be recorded in the future.');
   const duration = v.duration_s ?? null; ensure(duration === null || typeof duration === 'number' && Number.isFinite(duration) && duration > 0, 'Invalid duration.');
-  return atomic(root, db => {
+  return await atomic(root, db => {
     const id = digest({ kind: v.kind, checksum }); const existing = get<EvidenceSource>(db, `evidence-source:${id}`);
     if (existing) return existing;
     if (v.kind === 'manual') { const prior = get<string>(db, `evidence-request:${digest(v.request_id)}`); ensure(!prior || prior === id, 'Request ID reused with different report.'); put(db, `evidence-request:${digest(v.request_id)}`, id); }
     const current = tasks(db); ensure(taskIds.every(id => current.some(t => t.id === id)), 'Unknown context task.');
-    const goals = new Set((db.prepare('SELECT id FROM goals').all() as unknown as { id: string }[]).map(g => g.id)); ensure(goalIds.every(id => goals.has(id)), 'Unknown context goal.');
+    const goals = new Set((db.select('goals', { fields: ["id"] }) as unknown as { id: string }[]).map(g => g.id)); ensure(goalIds.every(id => goals.has(id)), 'Unknown context goal.');
     const s: EvidenceSource = { schema: 'work-update/1', id, checksum, kind: v.kind, media, uploaded_at: now(), recorded_at: recordedAt, time_uncertainty: uncertainty, duration_s: duration,
       context: { task_ids: taskIds, goal_ids: goalIds, place, occurrence }, revision: 1, stage: 'received', processing: null, error: null,
       baseline: current, associations: [], interpretations: [], changes: [], history: [{ at: now(), action: 'received', reason: v.kind === 'manual' ? v.report : 'Source bytes retained; recorded time is separate from upload time.' }] };
@@ -93,12 +93,12 @@ export function ingestEvidence(root: string, raw: unknown): EvidenceSource {
   });
 }
 /** Claim a persisted processing attempt. Explicit retry invalidates an interrupted worker's token. */
-export function beginInterpretation(root: string, id: string, revision: number, retry = false): EvidenceSource {
-  return atomic(root, db => { const s = source(db, id); checkRevision(s, revision); ensure(!s.processing || retry, 'Processing already active; use explicit retry if interrupted.'); s.processing = { token: randomUUID(), started_at: now() }; s.stage = 'processing'; s.error = null; s.revision++; save(db, s); return s; });
+export async function beginInterpretation(root: string, id: string, revision: number, retry = false): Promise<EvidenceSource> {
+  return await atomic(root, db => { const s = source(db, id); checkRevision(s, revision); ensure(!s.processing || retry, 'Processing already active; use explicit retry if interrupted.'); s.processing = { token: randomUUID(), started_at: now() }; s.stage = 'processing'; s.error = null; s.revision++; save(db, s); return s; });
 }
 /** Store model failure without discarding the clip or accepted work. */
-export function failInterpretation(root: string, id: string, token: string, message: string): EvidenceSource {
-  return atomic(root, db => { const s = source(db, id); ensure(s.processing?.token === token, 'Stale processing attempt.'); s.processing = null; s.stage = 'failed_retryable'; s.error = text(message.slice(0, 4000), 'Failure'); s.revision++; save(db, s); return s; });
+export async function failInterpretation(root: string, id: string, token: string, message: string): Promise<EvidenceSource> {
+  return await atomic(root, db => { const s = source(db, id); ensure(s.processing?.token === token, 'Stale processing attempt.'); s.processing = null; s.stage = 'failed_retryable'; s.error = text(message.slice(0, 4000), 'Failure'); s.revision++; save(db, s); return s; });
 }
 function observation(raw: unknown, duration: number | null): Observation {
   const v = record(raw); const start = v.start_s ?? null, end = v.end_s ?? start;
@@ -108,9 +108,9 @@ function observation(raw: unknown, duration: number | null): Observation {
   return { id: text(v.id, 'Observation ID'), text: text(v.text, 'Observation'), start_s: start, end_s: end, confidence: v.confidence, coverage: v.coverage, uncertainty: text(v.uncertainty, 'Uncertainty', true) };
 }
 /** Finish an interpretation revision; reruns are interpretations of one source, never extra evidence. */
-export function finishInterpretation(root: string, id: string, token: string, raw: unknown): EvidenceSource {
+export async function finishInterpretation(root: string, id: string, token: string, raw: unknown): Promise<EvidenceSource> {
   const v = record(raw);
-  return atomic(root, db => {
+  return await atomic(root, db => {
     const s = source(db, id); ensure(s.processing?.token === token, 'Stale processing attempt.');
     ensure(['model', 'replay', 'human'].includes(v.origin), 'Invalid interpretation origin.');
     ensure(Array.isArray(v.observations) && v.observations.length <= 200, 'Expected observations.');
@@ -131,8 +131,8 @@ export function finishInterpretation(root: string, id: string, token: string, ra
   });
 }
 /** Associate an existing occurrence. Rejected identity cannot authorize dependent changes. */
-export function associateEvidence(root: string, id: string, revision: number, taskId: string, decision: 'confirmed' | 'rejected', reason: string): EvidenceSource {
-  return atomic(root, db => {
+export async function associateEvidence(root: string, id: string, revision: number, taskId: string, decision: 'confirmed' | 'rejected', reason: string): Promise<EvidenceSource> {
+  return await atomic(root, db => {
     const s = source(db, id); checkRevision(s, revision); ensure(['confirmed', 'rejected'].includes(decision), 'Invalid association decision.'); text(reason, 'Identity rationale');
     const task = tasks(db).find(t => t.id === taskId); ensure(task, 'Unknown task.');
     ensure((!s.changes.some(c => c.task_id === taskId && ['accepted', 'corrected'].includes(c.status)) && !(s.related ?? []).some(c => c.task_id === taskId && ['applied', 'recorded', 'pending_external'].includes(c.status))) || decision === 'confirmed', 'Applied identity must be corrected through a new reviewed correction; history cannot be detached.');
@@ -158,9 +158,9 @@ function checkedPatch(task: Task, raw: unknown, kind: Change['kind']): Record<st
   return patch;
 }
 /** Propose a task change against the ingestion snapshot; no operational mutation occurs here. */
-export function proposeChange(root: string, id: string, revision: number, raw: unknown): EvidenceSource {
+export async function proposeChange(root: string, id: string, revision: number, raw: unknown): Promise<EvidenceSource> {
   const v = record(raw);
-  return atomic(root, db => {
+  return await atomic(root, db => {
     const s = source(db, id); checkRevision(s, revision);
     const run = v.interpretation_id ? s.interpretations.find(r => r.id === v.interpretation_id) : s.interpretations.at(-1); ensure(run, 'Interpret source evidence first.');
     const obs = run.observations.find(o => o.id === v.observation_id); ensure(obs, 'Unknown observation reference.');
@@ -189,7 +189,7 @@ function applied(c: Change): boolean { return ['accepted', 'corrected'].includes
 function overlap(a: Observation, b: Observation): boolean { return a.start_s === null || b.start_s === null || a.start_s! <= b.end_s! && b.start_s! <= a.end_s!; }
 function obsFor(s: EvidenceSource, c: Change): Observation { return s.interpretations.find(r => r.id === c.interpretation_id)!.observations.find(o => o.id === c.observation_id)!; }
 /** Explain historical/ambiguous/duplicate claims without hiding the accepted value. */
-function warnings(db: DatabaseSync, s: EvidenceSource, c: Change): string[] {
+function warnings(db: RecordTransaction, s: EvidenceSource, c: Change): string[] {
   const current = tasks(db).find(t => t.id === c.task_id), result: string[] = [];
   if (!current || current.revision !== c.base_revision) result.push('Stale task revision: explicitly rebase before applying.');
   if (!s.associations.some(a => a.task_id === c.task_id && a.decision === 'confirmed')) result.push('Confirm which task occurrence this evidence concerns.');
@@ -204,8 +204,8 @@ function warnings(db: DatabaseSync, s: EvidenceSource, c: Change): string[] {
   return result;
 }
 /** Rebase explicitly; preserve original proposal and decisions, never overwrite the old before value. */
-export function rebaseChange(root: string, id: string, revision: number, changeId: string, reason: string): EvidenceSource {
-  return atomic(root, db => { const s = source(db, id); checkRevision(s, revision); const old = s.changes.find(c => c.id === changeId); ensure(old && !applied(old), 'Cannot rebase an applied/missing change.'); text(reason, 'Rebase rationale');
+export async function rebaseChange(root: string, id: string, revision: number, changeId: string, reason: string): Promise<EvidenceSource> {
+  return await atomic(root, db => { const s = source(db, id); checkRevision(s, revision); const old = s.changes.find(c => c.id === changeId); ensure(old && !applied(old), 'Cannot rebase an applied/missing change.'); text(reason, 'Rebase rationale');
     const task = tasks(db).find(t => t.id === old.task_id); ensure(task, 'Task missing.');
     ensure(task.revision !== old.base_revision, 'Proposal already uses current revision.');
     let patch = { ...old.patch }; if (old.quantity_mode === 'incremental') { ensure(task.quantity && task.quantity.unit === old.unit && task.quantity.remaining >= old.quantity_value!, 'Quantity no longer compatible.'); patch.quantity = { ...task.quantity, remaining: task.quantity.remaining - old.quantity_value! }; }
@@ -216,10 +216,10 @@ export function rebaseChange(root: string, id: string, revision: number, changeI
   });
 }
 /** Apply a coherent subset and its audit trail in one SQLite transaction. Retried keys are immutable. */
-export function reviewChanges(root: string, id: string, revision: number, requestId: string, raw: unknown): EvidenceSource {
+export async function reviewChanges(root: string, id: string, revision: number, requestId: string, raw: unknown): Promise<EvidenceSource> {
   text(requestId, 'Review request ID'); ensure(Array.isArray(raw) && raw.length > 0 && raw.length <= 100, 'Select changes to review.');
   const reviews = raw as ReviewInput[]; strings(reviews.map(r => r.change_id));
-  return atomic(root, db => {
+  return await atomic(root, db => {
     const key = `evidence-review:${digest({ id, requestId })}`, prior = get<{ digest: string }>(db, key), payload = digest(raw);
     if (prior) { ensure(prior.digest === payload, 'Review request ID reused with different decisions.'); return source(db, id); }
     const s = source(db, id); checkRevision(s, revision);
@@ -251,10 +251,10 @@ export function reviewChanges(root: string, id: string, revision: number, reques
   });
 }
 /** Persist an intentional operator update without a redundant approval round trip. */
-export function manualUpdate(root: string, raw: unknown): EvidenceSource {
+export async function manualUpdate(root: string, raw: unknown): Promise<EvidenceSource> {
   const v = record(raw); const requestId = text(v.request_id, 'Request ID');
   // One enclosing transaction, including ingest/proposal semantics, makes retries and failed edits safe.
-  return atomic(root, db => {
+  return await atomic(root, db => {
     const key = `manual-update:${digest(requestId)}`, prior = get<{ digest: string; id: string }>(db, key);
     if (prior) { ensure(prior.digest === digest(v), 'Request ID reused with different manual update.'); return source(db, prior.id); }
     const task = tasks(db).find(t => t.id === v.task_id); ensure(task && task.revision === v.task_revision, 'Stale task revision.');
@@ -269,9 +269,9 @@ export function manualUpdate(root: string, raw: unknown): EvidenceSource {
   });
 }
 /** Review queue with live stale/contradiction warnings and transitive downstream task references. */
-export function reconciliationView(root: string): { sources: Array<EvidenceSource & { review: Array<{ change_id: string; warnings: string[]; affected_tasks: string[]; goal_ids: string[]; block_ids: string[] }>; next_action: string }> } {
-  const planning = planningView(root);
-  return withDb(root, db => ({ sources: all(db).sort((a, b) => b.uploaded_at.localeCompare(a.uploaded_at)).map(s => ({ ...s,
+export async function reconciliationView(root: string): Promise<{ sources: Array<EvidenceSource & { review: Array<{ change_id: string; warnings: string[]; affected_tasks: string[]; goal_ids: string[]; block_ids: string[] }>; next_action: string }> }> {
+  const planning = await planningView(root);
+  return await withRecords(root, db => ({ sources: all(db).sort((a, b) => b.uploaded_at.localeCompare(a.uploaded_at)).map(s => ({ ...s,
     review: s.changes.map(c => {
       const affected = new Set([c.task_id]); let size = 0; while (affected.size !== size) { size = affected.size; planning.tasks.filter(t => t.dependencies.some(d => affected.has(d))).forEach(t => affected.add(t.id)); }
       return { change_id: c.id, warnings: applied(c) ? [] : warnings(db, s, c), affected_tasks: [...affected], goal_ids: [...new Set(planning.tasks.filter(t => affected.has(t.id)).flatMap(t => t.links.map(l => l.goal_id)))], block_ids: planning.schedule.blocks.filter(b => b.status === 'accepted' && affected.has(b.task_id)).map(b => b.id) };
@@ -279,14 +279,14 @@ export function reconciliationView(root: string): { sources: Array<EvidenceSourc
   })) }));
 }
 /** Preview effects without accepting a schedule; fixed/pinned work remains preserved. */
-export function reconciliationPlan(root: string, day: string, at: string): unknown {
-  const prior = planningView(root), plan = previewPlan(root, day, at);
+export async function reconciliationPlan(root: string, day: string, at: string): Promise<unknown> {
+  const prior = await planningView(root), plan = await previewPlan(root, day, at);
   return { plan, comparison: { preserved: plan.preserved.map(b => b.id), added: plan.blocks.map(b => b.id), moved: [], unscheduled: plan.deferred, conflicts: plan.conflicts, accepted_blocks_unchanged: true, previous_plan_id: prior.latest_plan?.id ?? null }, next_action: plan.next };
 }
 /** Record process/friction/spatial consequences with explicit owner boundaries and source references. */
-export function proposeRelated(root: string, id: string, revision: number, raw: unknown): EvidenceSource {
+export async function proposeRelated(root: string, id: string, revision: number, raw: unknown): Promise<EvidenceSource> {
   const v = record(raw);
-  return atomic(root, db => {
+  return await atomic(root, db => {
     const s = source(db, id); checkRevision(s, revision);
     ensure(['process_revision', 'friction', 'spatial'].includes(v.kind), 'Invalid related change kind.');
     const task = tasks(db).find(t => t.id === v.task_id); ensure(task, 'Unknown task context.');
@@ -295,7 +295,7 @@ export function proposeRelated(root: string, id: string, revision: number, raw: 
     let before: ProcessDoc | null = null;
     if (v.kind === 'process_revision') {
       ensure(task.process && task.process.id === v.process_id, 'Task must reference this canonical process.');
-      const row = db.prepare('SELECT body FROM processes WHERE id=? ORDER BY rev DESC LIMIT 1').get(v.process_id) as { body: string } | undefined;
+      const row = db.first('processes', { where: { id: v.process_id }, order: ["-rev"], fields: ["body"] }) as { body: string } | undefined;
       ensure(row, 'Process not found.'); before = JSON.parse(row.body) as ProcessDoc;
       ensure(before.rev === v.base_revision, 'Stale process revision.');
       const next = validateProcess(proposal);
@@ -308,9 +308,9 @@ export function proposeRelated(root: string, id: string, revision: number, raw: 
   });
 }
 /** Apply a reviewed process revision atomically; spatial operations remain an explicit external handoff. */
-export function reviewRelated(root: string, id: string, revision: number, raw: unknown): EvidenceSource {
+export async function reviewRelated(root: string, id: string, revision: number, raw: unknown): Promise<EvidenceSource> {
   const v = record(raw);
-  return atomic(root, db => {
+  return await atomic(root, db => {
     const s = source(db, id); checkRevision(s, revision); const c = s.related?.find(c => c.id === v.change_id); ensure(c, 'Related change not found.');
     ensure(['accepted', 'rejected', 'deferred'].includes(v.decision), 'Invalid related decision.'); text(v.reason, 'Decision rationale');
     ensure(!['applied', 'recorded', 'pending_external'].includes(c.status), 'Related change already reviewed.');
@@ -318,14 +318,14 @@ export function reviewRelated(root: string, id: string, revision: number, raw: u
       ensure(s.associations.some(a => a.task_id === c.task_id && a.decision === 'confirmed'), 'Confirm task occurrence first.');
       if (c.kind === 'process_revision') {
         ensure(v.current_confirmed === true, 'Confirm this process correction describes current work.');
-        const current = db.prepare('SELECT MAX(rev) AS rev FROM processes WHERE id=?').get(c.process_id!) as { rev: number };
+        const current = ({ rev: db.first('processes', { where: { id: c.process_id! }, order: ["-rev"] })?.rev ?? null }) as { rev: number };
         ensure(current.rev === c.base_revision, 'Stale process revision. Submit a revised proposal.');
         const next = normalizeProcess(validateProcess(c.proposal));
         validateCompletion(next, { mediaPresent: media => { if (!media) return false; const path = resolve(root, 'media', media); return path.startsWith(resolve(root, 'media') + sep) && existsSync(path); } });
         // The accepted revision keeps provenance from earlier clips and points to this reconciliation decision.
         next.updated_at = now(); next.created_at = c.before!.created_at;
         next.corrections = [...c.before!.corrections, { rev: next.rev, at: next.updated_at, rationale: `${v.reason} (evidence ${s.id}, observation ${c.observation_id})`, paths: ['reviewed_process_revision'] }];
-        db.prepare('INSERT INTO processes(id,rev,body,author,created) VALUES(?,?,?,?,?)').run(next.id, next.rev, JSON.stringify(next), 'farmer', now());
+        db.insert('processes', { id: next.id, rev: next.rev, body: JSON.stringify(next), author: 'farmer', created: now() });
         const plan = get<{ process_basis?: Array<{ process_id: string; rev: number }> }>(db, 'plan');
         if (plan?.process_basis?.some(b => b.process_id === next.id && b.rev < next.rev)) put(db, 'plan', { ...plan, stale: true, stale_reason: `process "${next.id}" updated from evidence ${s.id}` });
         c.status = 'applied';
@@ -335,30 +335,31 @@ export function reviewRelated(root: string, id: string, revision: number, raw: u
   });
 }
 /** Keep unrelated or insufficient evidence without changing operational state. */
-export function retainEvidence(root: string, id: string, revision: number, reason: string): EvidenceSource {
-  return atomic(root, db => { const s = source(db, id); checkRevision(s, revision); text(reason, 'No-change rationale');
+export async function retainEvidence(root: string, id: string, revision: number, reason: string): Promise<EvidenceSource> {
+  return await atomic(root, db => { const s = source(db, id); checkRevision(s, revision); text(reason, 'No-change rationale');
     ensure(!(s.related ?? []).some(c => ['proposed', 'deferred', 'pending_external'].includes(c.status)) && !s.processing && !s.changes.some(c => ['proposed', 'deferred'].includes(c.status)), 'Resolve pending changes/processing before retaining with no change.');
     s.stage = s.changes.some(applied) || (s.related ?? []).some(c => ['applied', 'recorded'].includes(c.status)) ? 'applied' : 'no_material_change'; s.history.push({ at: now(), action: 'retain_without_change', reason }); s.revision++; save(db, s); return s;
   });
 }
 /** Shared JSON command boundary for CLI and HTTP clients. */
-export function reconciliationCommand(root: string, raw: unknown): unknown {
+export async function reconciliationCommand(root: string, raw: unknown): Promise<unknown> {
   const v = record(raw);
   switch (v.command) {
-    case 'view': return reconciliationView(root);
-    case 'ingest': return ingestEvidence(root, v.source);
-    case 'begin': return beginInterpretation(root, v.id, v.revision, v.retry === true);
-    case 'finish': return finishInterpretation(root, v.id, v.token, v.interpretation);
-    case 'fail': return failInterpretation(root, v.id, v.token, v.error);
-    case 'associate': return associateEvidence(root, v.id, v.revision, v.task_id, v.decision, v.reason);
-    case 'propose': return proposeChange(root, v.id, v.revision, v.change);
-    case 'review': return reviewChanges(root, v.id, v.revision, v.request_id, v.decisions);
-    case 'rebase': return rebaseChange(root, v.id, v.revision, v.change_id, v.reason);
-    case 'propose_related': return proposeRelated(root, v.id, v.revision, v.change);
-    case 'review_related': return reviewRelated(root, v.id, v.revision, v.review);
-    case 'retain': return retainEvidence(root, v.id, v.revision, v.reason);
-    case 'manual': return manualUpdate(root, v);
-    case 'plan': return reconciliationPlan(root, v.day, v.now);
+    case 'view': return await reconciliationView(root);
+    case 'ingest': return await ingestEvidence(root, v.source);
+    case 'begin': return await beginInterpretation(root, v.id, v.revision, v.retry === true);
+    case 'finish': return await finishInterpretation(root, v.id, v.token, v.interpretation);
+    case 'fail': return await failInterpretation(root, v.id, v.token, v.error);
+    case 'associate': return await associateEvidence(root, v.id, v.revision, v.task_id, v.decision, v.reason);
+    case 'propose': return await proposeChange(root, v.id, v.revision, v.change);
+    case 'review': return await reviewChanges(root, v.id, v.revision, v.request_id, v.decisions);
+    case 'rebase': return await rebaseChange(root, v.id, v.revision, v.change_id, v.reason);
+    case 'propose_related': return await proposeRelated(root, v.id, v.revision, v.change);
+    case 'review_related': return await reviewRelated(root, v.id, v.revision, v.review);
+    case 'retain': return await retainEvidence(root, v.id, v.revision, v.reason);
+    case 'manual': return await manualUpdate(root, v);
+    case 'plan': return await reconciliationPlan(root, v.day, v.now);
     default: throw new ReconciliationError('Unknown reconciliation command.');
   }
 }
+

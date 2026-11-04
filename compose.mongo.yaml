@@ -1,0 +1,65 @@
+# Opt-in live MongoDB records. Media remains on the project volume.
+services:
+  mongo:
+    image: mongo:8.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: fieldops-admin
+      MONGO_INITDB_ROOT_PASSWORD: ${FIELDOPS_MONGO_PASSWORD:?Set FIELDOPS_MONGO_PASSWORD}
+    entrypoint: ["bash", "-ec"]
+    command:
+      - |
+        if [ ! -f /keys/replica ]; then
+          umask 077
+          openssl rand -base64 756 > /keys/replica
+        fi
+        chown mongodb:mongodb /keys/replica
+        chmod 400 /keys/replica
+        exec docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --keyFile /keys/replica
+    volumes:
+      - mongo-data:/data/db
+      - mongo-key:/keys
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --quiet --username "$$MONGO_INITDB_ROOT_USERNAME" --password "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin --eval
+          'try { if (!rs.status().ok) quit(1); } catch (e) { rs.initiate({_id:"rs0",members:[{_id:0,host:"mongo:27017"}]}); quit(1); } if (!db.hello().isWritablePrimary) quit(1);'
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+    restart: unless-stopped
+  fieldops:
+    build: .
+    init: true
+    depends_on:
+      mongo: { condition: service_healthy }
+    environment:
+      MONGODB_URI: mongodb://fieldops-admin:${FIELDOPS_MONGO_PASSWORD:?Set FIELDOPS_MONGO_PASSWORD}@mongo:27017/fieldops?replicaSet=rs0&authSource=admin
+      MONGODB_DATABASE: fieldops
+      FIELDOPS_RECORD_BACKEND: mongodb
+      META_API_KEY: ${META_API_KEY:-}
+    ports:
+      - "127.0.0.1:${FIELDOPS_PORT:-8123}:8123"
+    volumes:
+      - project:/data
+      - credentials:/config
+    stop_grace_period: 30s
+    restart: unless-stopped
+  mongo-tests:
+    profiles: [test]
+    build: .
+    init: true
+    depends_on:
+      mongo: { condition: service_healthy }
+    environment:
+      MONGODB_URI: mongodb://fieldops-admin:${FIELDOPS_MONGO_PASSWORD:?Set FIELDOPS_MONGO_PASSWORD}@mongo:27017/fieldops?replicaSet=rs0&authSource=admin
+      MONGODB_DATABASE: fieldops-test
+      FIELDOPS_TEST_MONGO: '1'
+    command: [node, --test, app/physical-task-tracker/dist/lib/mongo-records.test.js]
+volumes:
+  mongo-data:
+  mongo-key:
+  project:
+    name: ${FIELDOPS_MONGO_DATA_VOLUME:-fieldops-mongo-project}
+  credentials:

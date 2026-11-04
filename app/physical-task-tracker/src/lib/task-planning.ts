@@ -1,7 +1,7 @@
 /** Single-person task planning over the existing actions/events/goals store. */
 import { createHash, randomUUID } from 'node:crypto';
-import type { DatabaseSync } from 'node:sqlite';
-import { withDb } from './db.js';
+import type { RecordTransaction } from './record-model.js';
+import { withRecords } from './records.js';
 import { instant, localParts, validDay, validZone, zonedInstant } from './planning-time.js';
 
 export class PlanningError extends Error {}
@@ -42,15 +42,15 @@ function minutes(n: unknown, nullable = false): void { check(nullable && n === n
 function uniqueStrings(value: unknown): asserts value is string[] { check(Array.isArray(value) && value.length <= 100 && value.every(v => typeof v === 'string' && !!v.trim() && v.length <= 200) && new Set(value).size === value.length, 'Expected unique short identifiers.'); }
 function interval(raw: unknown): Interval { const r = object(raw); const start = instant(r.start as string), end = instant(r.end as string); check(start < end, 'Interval end must follow start.'); return { start, end }; }
 function hash(value: unknown): string { return createHash('sha256').update(JSON.stringify(value)).digest('hex'); }
-function doc<T>(db: DatabaseSync, key: string, fallback: T): T { const row = db.prepare('SELECT body FROM docs WHERE key=?').get(key) as { body: string } | undefined; return row ? JSON.parse(row.body) as T : fallback; }
-function saveDoc(db: DatabaseSync, key: string, value: unknown): void { db.prepare('INSERT INTO docs VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET body=excluded.body,updated_at=excluded.updated_at').run(key, JSON.stringify(value), new Date().toISOString()); }
-function atomic<T>(root: string, fn: (db: DatabaseSync) => T): T {
-  return withDb(root, db => { db.exec('BEGIN IMMEDIATE'); try { const result = fn(db); db.exec('COMMIT'); return result; } catch (e) { db.exec('ROLLBACK'); throw e; } });
+function doc<T>(db: RecordTransaction, key: string, fallback: T): T { const row = db.first('docs', { where: { key: key }, fields: ["body"] }) as { body: string } | undefined; return row ? JSON.parse(row.body) as T : fallback; }
+function saveDoc(db: RecordTransaction, key: string, value: unknown): void { db.insert('docs', { key: key, body: JSON.stringify(value), updated_at: new Date().toISOString() }, { conflict: ["key"], update: ["body","updated_at"] }); }
+async function atomic<T>(root: string, fn: (db: RecordTransaction) => T): Promise<T> {
+  return withRecords(root, fn);
 }
 /** Extend old checklist rows lazily without changing IDs, media or done state. */
 /** Read canonical tasks on an existing transaction for evidence reconciliation. */
-export function tasks(db: DatabaseSync): Task[] {
-  return (db.prepare('SELECT * FROM actions ORDER BY id').all() as unknown as Array<{ id: string; event_id: string; text: string; status: string; task_rev: number; task_json: string | null }>).map(row => {
+export function tasks(db: RecordTransaction): Task[] {
+  return (db.select('actions', { order: ["id"] }) as unknown as Array<{ id: string; event_id: string; text: string; status: string; task_rev: number; task_json: string | null }>).map(row => {
     const base: Task = { id: row.id, event_id: row.event_id, text: row.text, revision: row.task_rev, execution: row.status === 'done' ? 'done' : 'open',
       review: row.status === 'done' ? 'confirmed' : 'proposed', links: [], dependencies: [], active_minutes: null, remaining_minutes: null, original_minutes: null,
       setup_minutes: 0, travel_minutes: 0, passive_minutes: 0, estimate_source: '', splittable: false, resources: [], preconditions: [], person: 'operator', location: '', completion_criteria: '', deadline: null, window: null, process: null, quantity: null, defer_until: null, actuals: [], history: [] };
@@ -59,13 +59,13 @@ export function tasks(db: DatabaseSync): Task[] {
     return t;
   });
 }
-function snapshot(db: DatabaseSync): Snapshot {
-  const events = (db.prepare('SELECT id,title,timing_json FROM events WHERE timing_json IS NOT NULL ORDER BY id').all() as unknown as Array<{ id: string; title: string; timing_json: string | null }>).map(e => ({ id: e.id, title: e.title, timing: e.timing_json ? JSON.parse(e.timing_json) : null }));
-  return { tasks: tasks(db), goals: db.prepare('SELECT id,text,weight,deadline,status,success_criteria FROM goals ORDER BY id').all() as unknown as GoalRow[], events,
-    schedule: doc(db, 'human-schedule', defaultSchedule()), superseded_process_ids: (db.prepare("SELECT key FROM docs WHERE key LIKE 'superseded-process:%' ORDER BY key").all() as unknown as {key:string}[]).map(r=>r.key.slice('superseded-process:'.length)), process_revisions: Object.fromEntries((db.prepare('SELECT id,MAX(rev) as rev FROM processes GROUP BY id ORDER BY id').all() as unknown as Array<{ id: string; rev: number }>).map(p => [p.id, p.rev])) };
+function snapshot(db: RecordTransaction): Snapshot {
+  const events = (db.select('events', { notNull: ["timing_json"], order: ["id"], fields: ["id","title","timing_json"] }) as unknown as Array<{ id: string; title: string; timing_json: string | null }>).map(e => ({ id: e.id, title: e.title, timing: e.timing_json ? JSON.parse(e.timing_json) : null }));
+  return { tasks: tasks(db), goals: db.select('goals', { order: ["id"], fields: ["id","text","weight","deadline","status","success_criteria"] }) as unknown as GoalRow[], events,
+    schedule: doc(db, 'human-schedule', defaultSchedule()), superseded_process_ids: (db.select('docs', { prefix: { key: "superseded-process:" }, order: ["key"], fields: ["key"] }) as unknown as {key:string}[]).map(r=>r.key.slice('superseded-process:'.length)), process_revisions: Object.fromEntries((db.latestProcesses().map(r => ({ id: r.id, rev: r.rev })) as unknown as Array<{ id: string; rev: number }>).map(p => [p.id, p.rev])) };
 }
-function saveTask(db: DatabaseSync, task: Task): void { db.prepare('UPDATE actions SET text=?,status=?,task_json=?,task_rev=?,updated_at=? WHERE id=?').run(task.text, task.execution === 'done' ? 'done' : 'open', JSON.stringify(task), task.revision, new Date().toISOString(), task.id); }
-function validateTask(db: DatabaseSync, task: Task, all: Task[]): void {
+function saveTask(db: RecordTransaction, task: Task): void { db.update('actions', { id: task.id }, { text: task.text, status: task.execution === 'done' ? 'done' : 'open', task_json: JSON.stringify(task), task_rev: task.revision, updated_at: new Date().toISOString() }); }
+function validateTask(db: RecordTransaction, task: Task, all: Task[]): void {
   words(task.text, 'Task title'); words(task.completion_criteria, 'Completion criteria', true); words(task.estimate_source, 'Estimate source', true); words(task.person, 'Person'); words(task.location, 'Location', true);
   check(['open', 'in_progress', 'paused', 'blocked', 'done', 'cancelled'].includes(task.execution), 'Invalid execution state.');
   check(['proposed', 'confirmed', 'rejected'].includes(task.review), 'Invalid task review.');
@@ -79,14 +79,14 @@ function validateTask(db: DatabaseSync, task: Task, all: Task[]): void {
   if (task.window !== null) task.window = interval(task.window);
   if (task.defer_until !== null) task.defer_until = instant(task.defer_until);
   check(Array.isArray(task.links), 'Goal links must be an array.');
-  const goals = new Set((db.prepare('SELECT id FROM goals').all() as unknown as Array<{ id: string }>).map(g => g.id));
+  const goals = new Set((db.select('goals', { fields: ["id"] }) as unknown as Array<{ id: string }>).map(g => g.id));
   uniqueStrings(task.links.map(l => l.goal_id));
   for (const l of task.links) { check(goals.has(l.goal_id), 'Unknown goal reference.'); words(l.explanation, 'Goal contribution'); check(['human', 'model'].includes(l.origin) && ['proposed', 'confirmed', 'rejected'].includes(l.review), 'Invalid goal link review.'); }
   check(Array.isArray(task.preconditions) && task.preconditions.length <= 100, 'Invalid preconditions.');
   for (const p of task.preconditions) { words(p.text, 'Precondition'); check(['met', 'unmet', 'unknown'].includes(p.status), 'Invalid precondition state.'); }
   if (task.quantity !== null) { const q = task.quantity; check(Number.isFinite(q.total) && q.total > 0 && Number.isFinite(q.remaining) && q.remaining >= 0 && q.remaining <= q.total, 'Invalid quantity.'); words(q.unit, 'Quantity unit'); }
   if (task.process !== null) {
-    const p = task.process; const row = db.prepare('SELECT body FROM processes WHERE id=? AND rev=?').get(p.id, p.revision) as { body: string } | undefined;
+    const p = task.process; const row = db.first('processes', { where: { id: p.id, rev: p.revision }, fields: ["body"] }) as { body: string } | undefined;
     check(row && JSON.parse(row.body).steps.some((s: { id: string }) => s.id === p.step_id), 'Unknown process revision or step.');
   }
   const edges = new Map(all.map(t => [t.id, t.id === task.id ? task.dependencies : t.dependencies])); edges.set(task.id, task.dependencies);
@@ -95,7 +95,7 @@ function validateTask(db: DatabaseSync, task: Task, all: Task[]): void {
 }
 const EDITABLE = new Set(['text', 'execution', 'review', 'links', 'dependencies', 'active_minutes', 'remaining_minutes', 'setup_minutes', 'travel_minutes', 'passive_minutes', 'estimate_source', 'splittable', 'resources', 'preconditions', 'person', 'location', 'completion_criteria', 'deadline', 'window', 'process', 'quantity', 'defer_until']);
 /** Apply a validated task patch within the caller’s transaction. */
-export function update(db: DatabaseSync, task: Task, raw: unknown, reason: string): Task {
+export function update(db: RecordTransaction, task: Task, raw: unknown, reason: string): Task {
   const patch = object(raw); check(Object.keys(patch).every(k => EDITABLE.has(k)), 'Unknown or immutable task field.'); words(reason, 'Change reason');
   const next = { ...task, ...patch, revision: task.revision + 1 } as Task;
   if (task.original_minutes === null && next.active_minutes !== null) next.original_minutes = next.active_minutes;
@@ -105,28 +105,28 @@ export function update(db: DatabaseSync, task: Task, raw: unknown, reason: strin
   validateTask(db, next, tasks(db)); saveTask(db, next); return next;
 }
 /** Create one manual/reviewed proposal in the existing action table; a caller key makes retries idempotent. */
-export function createTask(root: string, raw: unknown, requestId: string): Task {
-  return atomic(root, db => createTaskInDb(db, raw, requestId));
+export async function createTask(root: string, raw: unknown, requestId: string): Promise<Task> {
+  return await atomic(root, db => createTaskInDb(db, raw, requestId));
 }
 /** Create a canonical task inside an enclosing workflow transaction. */
-export function createTaskInDb(db: DatabaseSync, raw: unknown, requestId: string): Task {
+export function createTaskInDb(db: RecordTransaction, raw: unknown, requestId: string): Task {
   words(requestId, 'Request ID'); const patch = object(raw);
   const key = `task-create:${hash(requestId)}`, prior = doc<{ id: string; digest: string } | null>(db, key, null);
   if (prior) { check(prior.digest === hash(patch), 'Request ID already used with different task input.'); return tasks(db).find(t => t.id === prior.id)!; }
   const id = randomUUID(), now = new Date().toISOString(), eventId = `manual-${id}`;
-  db.prepare('INSERT INTO events(id,title,date,kind,created_at) VALUES(?,?,?,?,?)').run(eventId, 'Manual task', now.slice(0, 10), 'note', now);
-  db.prepare('INSERT INTO actions(id,event_id,idx,text,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?)').run(id, eventId, 0, String(patch.text ?? ''), 'open', now, now);
+  db.insert('events', { id: eventId, title: 'Manual task', date: now.slice(0, 10), kind: 'note', created_at: now });
+  db.insert('actions', { id: id, event_id: eventId, idx: 0, text: String(patch.text ?? ''), status: 'open', created_at: now, updated_at: now });
   const initial = tasks(db).find(t => t.id === id)!; initial.review = 'confirmed';
   const task = update(db, initial, patch, 'Task created'); saveDoc(db, key, { id, digest: hash(patch) }); return task;
 }
 
 /** Revision-checked correction; links never create duplicate task records. */
-export function editTask(root: string, id: string, revision: number, patch: unknown, reason: string): Task {
-  return atomic(root, db => { const task = tasks(db).find(t => t.id === id); check(task, 'Task not found.'); check(task.revision === revision, 'Stale task revision.'); return update(db, task, patch, reason); });
+export async function editTask(root: string, id: string, revision: number, patch: unknown, reason: string): Promise<Task> {
+  return await atomic(root, db => { const task = tasks(db).find(t => t.id === id); check(task, 'Task not found.'); check(task.revision === revision, 'Stale task revision.'); return update(db, task, patch, reason); });
 }
 /** Append actual work once, record explicit remaining estimates, and retire this task's unpinned future reservations. */
-export function recordWork(root: string, id: string, revision: number, raw: unknown): Task {
-  return atomic(root, db => {
+export async function recordWork(root: string, id: string, revision: number, raw: unknown): Promise<Task> {
+  return await atomic(root, db => {
     const task = tasks(db).find(t => t.id === id); check(task, 'Task not found.'); const input = object(raw); words(input.id, 'Work log ID');
     const entry: WorkLog = { ...interval(input), id: input.id, outcome: String(input.outcome ?? ''), quantity: input.quantity === undefined ? null : input.quantity as number };
     words(entry.outcome, 'Work outcome'); if (entry.quantity !== null) check(Number.isFinite(entry.quantity) && entry.quantity >= 0, 'Invalid completed quantity.');
@@ -146,8 +146,8 @@ export function recordWork(root: string, id: string, revision: number, raw: unkn
   });
 }
 /** Replace explicitly supplied work windows/preferences with optimistic concurrency. */
-export function configurePlanning(root: string, revision: number, raw: unknown): Schedule {
-  return atomic(root, db => {
+export async function configurePlanning(root: string, revision: number, raw: unknown): Promise<Schedule> {
+  return await atomic(root, db => {
     const schedule = doc(db, 'human-schedule', defaultSchedule()); check(schedule.revision === revision, 'Stale schedule revision.');
     const v = object(raw); words(v.timezone, 'Timezone'); validZone(v.timezone); words(v.person, 'Person'); minutes(v.max_minutes); check((v.max_minutes as number) > 0, 'Work limit must be positive.');
     check(Array.isArray(v.availability) && v.availability.length <= 100, 'Provide up to 100 working intervals.');
@@ -159,12 +159,12 @@ export function configurePlanning(root: string, revision: number, raw: unknown):
   });
 }
 /** Store fixed commitments/breaks as timed versions of existing calendar events. */
-export function saveCommitment(root: string, raw: unknown): TimedEvent {
+export async function saveCommitment(root: string, raw: unknown): Promise<TimedEvent> {
   const v = object(raw); words(v.id, 'Commitment ID'); words(v.title, 'Commitment title'); check(typeof v.blocking === 'boolean', 'Blocking must be true or false.'); uniqueStrings(v.resources ?? []);
   const timing = { ...interval(v), blocking: v.blocking, resources: (v.resources ?? []) as string[] };
-  return atomic(root, db => {
+  return await atomic(root, db => {
     const id = `commitment-${v.id}`, schedule = doc(db, 'human-schedule', defaultSchedule()); const p = localParts(timing.start, schedule.config.timezone);
-    db.prepare('INSERT INTO events(id,title,date,time,kind,created_at,timing_json) VALUES(?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title,date=excluded.date,time=excluded.time,timing_json=excluded.timing_json').run(id, v.title as string, p.day, p.time, 'note', new Date().toISOString(), JSON.stringify(timing));
+    db.insert('events', { id: id, title: v.title as string, date: p.day, time: p.time, kind: 'note', created_at: new Date().toISOString(), timing_json: JSON.stringify(timing) }, { conflict: ["id"], update: ["title","date","time","timing_json"] });
     return { id, title: v.title as string, timing };
   });
 }
@@ -264,10 +264,10 @@ function calculate(s: Snapshot, day: string, now: string): TaskPlan {
   return plan;
 }
 /** Generate an immutable proposal; unchanged inputs/time yield the same plan identity. */
-export function proposePlan(root: string, day: string, now: string): TaskPlan { return atomic(root, db => { const plan = calculate(snapshot(db), day, now); saveDoc(db, `human-plan:${plan.id}`, plan); saveDoc(db, 'human-plan-latest', plan.id); return plan; }); }
+export async function proposePlan(root: string, day: string, now: string): Promise<TaskPlan> { return await atomic(root, db => { const plan = calculate(snapshot(db), day, now); saveDoc(db, `human-plan:${plan.id}`, plan); saveDoc(db, 'human-plan-latest', plan.id); return plan; }); }
 /** Accept/reject atomically. Retry is idempotent; changed inputs or elapsed proposed starts require replanning. */
-export function decidePlan(root: string, id: string, decision: 'accepted' | 'rejected', reason: string, now = new Date().toISOString()): Schedule {
-  return atomic(root, db => {
+export async function decidePlan(root: string, id: string, decision: 'accepted' | 'rejected', reason: string, now = new Date().toISOString()): Promise<Schedule> {
+  return await atomic(root, db => {
     words(reason, 'Decision reason'); check(['accepted', 'rejected'].includes(decision), 'Invalid plan decision.');
     const s = snapshot(db), prior = s.schedule.decisions.find(d => d.plan_id === id && ['accepted', 'rejected'].includes(d.decision));
     if (prior) { check(prior.decision === decision, 'Plan already decided differently; make a new proposal.'); return s.schedule; }
@@ -282,20 +282,20 @@ export function decidePlan(root: string, id: string, decision: 'accepted' | 'rej
   });
 }
 /** Explicitly pin or release an accepted block; historical blocks/decisions are retained. */
-export function changeBlock(root: string, id: string, revision: number, action: 'pin' | 'release', reason: string): Schedule {
-  return atomic(root, db => { words(reason, 'Change reason'); const s = doc(db, 'human-schedule', defaultSchedule()); check(s.revision === revision, 'Stale schedule revision.'); const block = s.blocks.find(b => b.id === id); check(block && block.status === 'accepted', 'Accepted block not found.'); check(['pin', 'release'].includes(action), 'Invalid block action.'); if (action === 'pin') block.pinned = true; else block.status = 'released'; s.decisions.push({ plan_id: block.plan_id, decision: action === 'pin' ? 'pinned' : 'released', reason, at: new Date().toISOString() }); s.revision++; saveDoc(db, 'human-schedule', s); return s; });
+export async function changeBlock(root: string, id: string, revision: number, action: 'pin' | 'release', reason: string): Promise<Schedule> {
+  return await atomic(root, db => { words(reason, 'Change reason'); const s = doc(db, 'human-schedule', defaultSchedule()); check(s.revision === revision, 'Stale schedule revision.'); const block = s.blocks.find(b => b.id === id); check(block && block.status === 'accepted', 'Accepted block not found.'); check(['pin', 'release'].includes(action), 'Invalid block action.'); if (action === 'pin') block.pinned = true; else block.status = 'released'; s.decisions.push({ plan_id: block.plan_id, decision: action === 'pin' ? 'pinned' : 'released', reason, at: new Date().toISOString() }); s.revision++; saveDoc(db, 'human-schedule', s); return s; });
 }
 /** Shared UI/CLI view: confirmed goal relationships, separate outcome status and calendar reservations. */
-export function planningView(root: string): Snapshot & { latest_plan: TaskPlan | null; goal_progress: Array<{ goal_id: string; total: number; completed: number; outcome: string }> } {
-  return withDb(root, db => {
+export async function planningView(root: string): Promise<Snapshot & { latest_plan: TaskPlan | null; goal_progress: Array<{ goal_id: string; total: number; completed: number; outcome: string }> }> {
+  return await withRecords(root, db => {
     const s = snapshot(db), id = doc<string | null>(db, 'human-plan-latest', null), plan = id ? doc<TaskPlan | null>(db, `human-plan:${id}`, null) : null;
     if (plan) plan.stale = plan.input_digest !== hash(s);
     return { ...s, latest_plan: plan, goal_progress: s.goals.map(g => { const linked = s.tasks.filter(t => t.links.some(l => l.goal_id === g.id && l.review === 'confirmed')); return { goal_id: g.id, total: linked.length, completed: linked.filter(t => t.execution === 'done').length, outcome: g.status === 'done' ? 'operator marked outcome complete' : 'outcome not verified' }; }) };
   });
 }
 /** Add accepted/proposed task blocks to the existing calendar without hiding commitments. */
-export function planningCalendar(root: string): Array<Record<string, unknown>> {
-  const view = planningView(root), accepted = view.schedule.blocks.filter(b => b.status === 'accepted');
+export async function planningCalendar(root: string): Promise<Array<Record<string, unknown>>> {
+  const view = await planningView(root), accepted = view.schedule.blocks.filter(b => b.status === 'accepted');
   const proposed = view.latest_plan && !view.latest_plan.stale ? view.latest_plan.blocks.filter(b => !accepted.some(a => a.id === b.id)) : [];
   return [...accepted.map(b => ({ ...b, scheduling: 'accepted' })), ...proposed.map(b => ({ ...b, scheduling: 'proposed' }))].map(b => {
     const task = view.tasks.find(t => t.id === b.task_id)!; const p = localParts(b.start, view.schedule.config.timezone);
@@ -303,29 +303,30 @@ export function planningCalendar(root: string): Array<Record<string, unknown>> {
   });
 }
 /** Versioned command boundary shared by the terminal and HTTP handler. */
-export function planningCommand(root: string, raw: unknown): unknown {
+export async function planningCommand(root: string, raw: unknown): Promise<unknown> {
   const v = object(raw);
-  if (v.command === 'view') return planningView(root);
-  if (v.command === 'plan') return withDb(root, db => { words(v.id, 'Plan ID'); const p = doc<TaskPlan | null>(db, `human-plan:${v.id}`, null); check(p, 'Plan not found.'); return { ...p, stale: p.input_digest !== hash(snapshot(db)) }; });
-  if (v.command === 'goal') return atomic(root, db => {
+  if (v.command === 'view') return await planningView(root);
+  if (v.command === 'plan') return await withRecords(root, db => { words(v.id, 'Plan ID'); const p = doc<TaskPlan | null>(db, `human-plan:${v.id}`, null); check(p, 'Plan not found.'); return { ...p, stale: p.input_digest !== hash(snapshot(db)) }; });
+  if (v.command === 'goal') return await atomic(root, db => {
     const current = snapshot(db).goals.find(g => g.id === v.id); check(current, 'Goal not found.'); check(hash(current) === hash(v.expected), 'Stale goal; reload before changing.');
     const patch = object(v.patch); check(Object.keys(patch).every(k => ['text', 'deadline', 'weight', 'success_criteria'].includes(k)), 'Unsupported goal field.');
     const next = { ...current, ...patch } as GoalRow; words(next.text, 'Goal title'); words(next.success_criteria, 'Success criteria', true); words(v.reason, 'Goal change reason');
     if (next.deadline !== null) validDay(next.deadline); check(Number.isInteger(next.weight) && next.weight >= 1 && next.weight <= 5, 'Priority must be 1–5.');
-    db.prepare('UPDATE goals SET text=?,deadline=?,weight=?,success_criteria=? WHERE id=?').run(next.text, next.deadline, next.weight, next.success_criteria, current.id);
+    db.update('goals', { id: current.id }, { text: next.text, deadline: next.deadline, weight: next.weight, success_criteria: next.success_criteria });
     const history = doc<unknown[]>(db, `goal-history:${current.id}`, []); history.push({ before: current, after: next, reason: v.reason, at: new Date().toISOString() }); saveDoc(db, `goal-history:${current.id}`, history); return next;
   });
-  if (v.command === 'create') return createTask(root, v.task, v.request_id as string);
-  if (v.command === 'edit') return editTask(root, v.id as string, v.revision as number, v.patch, v.reason as string);
-  if (v.command === 'work') return recordWork(root, v.id as string, v.revision as number, v.work);
-  if (v.command === 'configure') return configurePlanning(root, v.revision as number, v.config);
-  if (v.command === 'commitment') return saveCommitment(root, v.event);
-  if (v.command === 'propose') return proposePlan(root, v.day as string, v.now as string);
-  if (v.command === 'decide') return decidePlan(root, v.id as string, v.decision as 'accepted' | 'rejected', v.reason as string);
-  if (v.command === 'block') return changeBlock(root, v.id as string, v.revision as number, v.action as 'pin' | 'release', v.reason as string);
+  if (v.command === 'create') return await createTask(root, v.task, v.request_id as string);
+  if (v.command === 'edit') return await editTask(root, v.id as string, v.revision as number, v.patch, v.reason as string);
+  if (v.command === 'work') return await recordWork(root, v.id as string, v.revision as number, v.work);
+  if (v.command === 'configure') return await configurePlanning(root, v.revision as number, v.config);
+  if (v.command === 'commitment') return await saveCommitment(root, v.event);
+  if (v.command === 'propose') return await proposePlan(root, v.day as string, v.now as string);
+  if (v.command === 'decide') return await decidePlan(root, v.id as string, v.decision as 'accepted' | 'rejected', v.reason as string);
+  if (v.command === 'block') return await changeBlock(root, v.id as string, v.revision as number, v.action as 'pin' | 'release', v.reason as string);
   if (v.command === 'time') return { instant: zonedInstant(v.local as string, v.timezone as string, v.fold as 'earlier' | 'later' | undefined) };
   throw new PlanningError('Unknown planning command.');
 }
 
 /** Preview current feasibility without saving a new proposal or replacing accepted work. */
-export function previewPlan(root: string, day: string, now: string): TaskPlan { return withDb(root, db => calculate(snapshot(db), day, now)); }
+export async function previewPlan(root: string, day: string, now: string): Promise<TaskPlan> { return await withRecords(root, db => calculate(snapshot(db), day, now)); }
+

@@ -40,14 +40,14 @@ if (!root) {
 }
 
 if (args.includes('--offline')) {
-  const briefing = outcomeBriefing(root);
+  const briefing = await outcomeBriefing(root);
   const output = JSON.stringify({ mode: 'offline verified-state briefing', ...briefing, next_actions: [...briefing.next_actions, ...briefing.unresolved_tasks.map(t => `Unresolved (${t.execution}): ${t.text}`)] }, null, 2);
   if (outPath) await writeFile(outPath, output + '\n'); console.log(output); process.exit(0);
 }
 const KEY = await resolveApiKey();
 
 const spots: SpotBrief[] = await listSpotBriefs(root);
-const trialContext = outcomeBriefing(root);
+const trialContext = await outcomeBriefing(root);
 if (!spots.length && !trialContext.trials.length) {
   console.error('No spots to brief on (run a compare with --spot first).');
   process.exit(1);
@@ -79,8 +79,9 @@ if (!result.ok) {
     console.error(`--- raw response ---\n${JSON.stringify(result.detail).slice(0, 1000)}`);
   process.exit(1);
 }
-const currentTrialContext = outcomeBriefing(root);
-const enriched = attachOutcomeBriefing(root, result.analysis);
+const currentTrialContext = await outcomeBriefing(root);
+const enriched = await attachOutcomeBriefing(root, result.analysis);
 const text = JSON.stringify(trialContext.trials.length || currentTrialContext.trials.length ? { ...(enriched as Record<string, unknown>), model_narrative_stale: JSON.stringify(trialContext) !== JSON.stringify(currentTrialContext) } : enriched, null, 2);
 if (outPath) await writeFile(outPath, text + '\n');
 console.log(text);
+

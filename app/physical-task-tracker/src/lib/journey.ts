@@ -1,8 +1,8 @@
 /** Resumable video-first journeys. These records link canonical evidence/processes/goals/tasks;
  * they do not own another planner, task database, or spatial model. */
 import { createHash, randomUUID } from 'node:crypto';
-import type { DatabaseSync } from 'node:sqlite';
-import { withDb } from './db.js';
+import type { RecordTransaction } from './record-model.js';
+import { withRecords } from './records.js';
 import { addGoalInDb, type NewGoal } from './goals.js';
 import { createTaskInDb, tasks, planningView, previewPlan } from './task-planning.js';
 import { buildProcessFromScan, correctProcessInDb, normalizeProcess, validateProcess, type ProcessDoc, type CorrectionPatch } from './processes.js';
@@ -31,16 +31,16 @@ function check(ok: unknown, message: string): asserts ok { if (!ok) throw new Jo
 function object(raw: unknown): Record<string, any> { check(raw && typeof raw === 'object' && !Array.isArray(raw), 'Expected an object.'); return raw as Record<string, any>; }
 function text(raw: unknown, label: string, empty = false): string { check(typeof raw === 'string' && (empty || !!raw.trim()) && raw.length <= 2000, `${label} must be short text.`); return raw.trim(); }
 function hash(raw: unknown): string { return createHash('sha256').update(JSON.stringify(raw)).digest('hex'); }
-function get<T>(db: DatabaseSync, key: string): T | null { const row = db.prepare('SELECT body FROM docs WHERE key=?').get(key) as { body: string } | undefined; return row ? JSON.parse(row.body) : null; }
-function put(db: DatabaseSync, key: string, value: unknown): void { db.prepare('INSERT INTO docs VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET body=excluded.body,updated_at=excluded.updated_at').run(key, JSON.stringify(value), new Date().toISOString()); }
-function all(db: DatabaseSync): Journey[] { return (db.prepare("SELECT body FROM docs WHERE key LIKE 'journey:%' ORDER BY updated_at DESC,key").all() as unknown as { body: string }[]).map(r => JSON.parse(r.body)); }
-function read(db: DatabaseSync, id: string): Journey { const j = get<Journey>(db, `journey:${id}`); check(j, 'Workflow not found.'); return j; }
-function source(db: DatabaseSync, id: string): EvidenceSource { const s = get<EvidenceSource>(db, `evidence-source:${id}`); check(s, 'Retained evidence not found.'); return s; }
-function processDoc(db: DatabaseSync, id: string): ProcessDoc { const row = db.prepare('SELECT body FROM processes WHERE id=? ORDER BY rev DESC LIMIT 1').get(id) as { body: string } | undefined; check(row, 'Process not found.'); return JSON.parse(row.body); }
-function basis(db: DatabaseSync, j: Journey): string { return hash({ processes: j.clips.filter(c => c.role !== 'followup').map(c => ({ id: c.process_id, rev: c.process_id ? processDoc(db, c.process_id).rev : null, interpretation: source(db, c.source_id).interpretations.at(-1)?.id ?? null })), goals: j.goal_ids.map(id => db.prepare('SELECT * FROM goals WHERE id=?').get(id)), desire: j.desired_improvement }); }
-function reviewed(db: DatabaseSync, j: Journey): boolean { return j.clips.filter(c => c.role !== 'followup').every(c => c.process_id && c.reviewed_revision === processDoc(db, c.process_id).rev && c.interpretation_id === source(db, c.source_id).interpretations.at(-1)?.id && !source(db,c.source_id).processing); }
+function get<T>(db: RecordTransaction, key: string): T | null { const row = db.first('docs', { where: { key: key }, fields: ["body"] }) as { body: string } | undefined; return row ? JSON.parse(row.body) : null; }
+function put(db: RecordTransaction, key: string, value: unknown): void { db.insert('docs', { key: key, body: JSON.stringify(value), updated_at: new Date().toISOString() }, { conflict: ["key"], update: ["body","updated_at"] }); }
+function all(db: RecordTransaction): Journey[] { return (db.select('docs', { prefix: { key: "journey:" }, order: ["-updated_at","key"], fields: ["body"] }) as unknown as { body: string }[]).map(r => JSON.parse(r.body)); }
+function read(db: RecordTransaction, id: string): Journey { const j = get<Journey>(db, `journey:${id}`); check(j, 'Workflow not found.'); return j; }
+function source(db: RecordTransaction, id: string): EvidenceSource { const s = get<EvidenceSource>(db, `evidence-source:${id}`); check(s, 'Retained evidence not found.'); return s; }
+function processDoc(db: RecordTransaction, id: string): ProcessDoc { const row = db.first('processes', { where: { id: id }, order: ["-rev"], fields: ["body"] }) as { body: string } | undefined; check(row, 'Process not found.'); return JSON.parse(row.body); }
+function basis(db: RecordTransaction, j: Journey): string { return hash({ processes: j.clips.filter(c => c.role !== 'followup').map(c => ({ id: c.process_id, rev: c.process_id ? processDoc(db, c.process_id).rev : null, interpretation: source(db, c.source_id).interpretations.at(-1)?.id ?? null })), goals: j.goal_ids.map(id => db.first('goals', { where: { id: id } })), desire: j.desired_improvement }); }
+function reviewed(db: RecordTransaction, j: Journey): boolean { return j.clips.filter(c => c.role !== 'followup').every(c => c.process_id && c.reviewed_revision === processDoc(db, c.process_id).rev && c.interpretation_id === source(db, c.source_id).interpretations.at(-1)?.id && !source(db,c.source_id).processing); }
 /** A revisable suggestion, never a claim that unobserved work happened or a calendar booking. */
-function nextProposal(db: DatabaseSync, j: Journey) {
+function nextProposal(db: RecordTransaction, j: Journey) {
   const stamp = basis(db, j);
   const clip = [...j.clips].reverse().find(c => c.role !== 'followup' && c.process_id);
   const p = clip?.process_id ? processDoc(db, clip.process_id) : null;
@@ -51,13 +51,13 @@ function nextProposal(db: DatabaseSync, j: Journey) {
     text: draft?.text ?? suggested?.label ?? 'Check the result of the recorded work',
     origin: draft ? 'human' : 'proposed', correction_needs_review: !!draft && draft.basis !== stamp, decision: j.next_decision?.basis === stamp ? j.next_decision : null };
 }
-function atomic<T>(root: string, fn: (db: DatabaseSync) => T): T { return withDb(root, db => { db.exec('BEGIN IMMEDIATE'); try { const result = fn(db); db.exec('COMMIT'); return result; } catch (error) { db.exec('ROLLBACK'); throw error; } }); }
-function save(db: DatabaseSync, j: Journey, action: string, reason: string, before: unknown): Journey { j.revision++; j.updated_at = new Date().toISOString(); j.history.push({ at: j.updated_at, action, reason, before }); put(db, `journey:${j.id}`, j); return j; }
+async function atomic<T>(root: string, fn: (db: RecordTransaction) => T): Promise<T> { return withRecords(root, fn); }
+function save(db: RecordTransaction, j: Journey, action: string, reason: string, before: unknown): Journey { j.revision++; j.updated_at = new Date().toISOString(); j.history.push({ at: j.updated_at, action, reason, before }); put(db, `journey:${j.id}`, j); return j; }
 
 /** Attach retained evidence before inference. Identical bytes resume the original workflow. */
-export function attachJourneySource(root: string, sourceId: string, raw: unknown = {}): Journey {
+export async function attachJourneySource(root: string, sourceId: string, raw: unknown = {}): Promise<Journey> {
   const v = object(raw);
-  return atomic(root, db => {
+  return await atomic(root, db => {
     const s = source(db, sourceId); check(s.kind === 'video', 'Capture requires video evidence.');
     const existing = all(db).find(j => j.clips.some(c => c.source_id === sourceId));
     if (existing) { check(!v.workflow_id || existing.id === v.workflow_id, 'This clip already belongs to another workflow. Resume its review.'); return existing; }
@@ -75,8 +75,8 @@ export function attachJourneySource(root: string, sourceId: string, raw: unknown
 }
 
 /** Materialize a process once per initial interpretation. Recovery reuses stored analysis. */
-export function syncJourneySource(root: string, workflowId: string, sourceId: string): Journey {
-  return atomic(root, db => {
+export async function syncJourneySource(root: string, workflowId: string, sourceId: string): Promise<Journey> {
+  return await atomic(root, db => {
     const j = read(db, workflowId), clip = j.clips.find(c => c.source_id === sourceId); check(clip, 'Clip is not in this workflow.');
     const s = source(db, sourceId), interpretation = s.interpretations.at(-1);
     if (clip.role === 'followup' || !interpretation || clip.interpretation_id === interpretation.id) return j;
@@ -85,7 +85,7 @@ export function syncJourneySource(root: string, workflowId: string, sourceId: st
     const raw = object(interpretation.raw ?? {});
     const p = normalizeProcess(validateProcess(buildProcessFromScan({ id, media: s.media, model: interpretation.model, promptVersion: interpretation.prompt_version, recordedAt: s.recorded_at, duration_s: s.duration_s,
       analysis: { ...raw, per_frame: Array.isArray(raw.per_frame) ? raw.per_frame : interpretation.observations.map(o => o.text), frame_times_s: Array.isArray(raw.frame_times_s) ? raw.frame_times_s : interpretation.observations.map(o => o.start_s) } })));
-    db.prepare('INSERT OR IGNORE INTO processes(id,rev,body,author,created) VALUES(?,?,?,?,?)').run(id, p.rev, JSON.stringify(p), interpretation.origin, p.created_at);
+    db.insert('processes', { id: id, rev: p.rev, body: JSON.stringify(p), author: interpretation.origin, created: p.created_at }, { ignore: true });
     const before = structuredClone(clip);
     if (clip.process_id && clip.process_id !== id) put(db, `superseded-process:${clip.process_id}`, { by: id, source_id: sourceId, reason: 'Explicit source reanalysis requires a new process review.' });
     clip.process_id = id; clip.interpretation_id = interpretation.id; clip.reviewed_revision = null;
@@ -97,20 +97,20 @@ export function syncJourneySource(root: string, workflowId: string, sourceId: st
 export interface JourneyCaptureInput { media?: string; source_id?: string; workflow_id?: string; revision?: number; role?: 'baseline' | 'additional' | 'followup'; task_id?: string; recorded_at?: string | null; retry?: boolean; source_revision?: number; frames?: number }
 /** Shared upload/CLI orchestration. Failures retain source and retry state without replaying mutations. */
 export async function captureJourney(root: string, input: JourneyCaptureInput, run: ScanRunner, origin: 'model' | 'replay' = 'model'): Promise<Journey> {
-  if (input.workflow_id) withDb(root, db => { const j = read(db, input.workflow_id!); if (!input.source_id) check(j.revision === input.revision, 'Stale workflow revision.'); if (input.role === 'followup') check(j.task_ids.includes(input.task_id!), 'Choose a task in this workflow.'); });
-  const s = input.source_id ? reconciliationView(root).sources.find(s => s.id === input.source_id) : ingestEvidence(root, { kind: 'video', media: input.media, recorded_at: input.recorded_at ?? null, context: { task_ids: input.role === 'followup' && input.task_id ? [input.task_id] : [] } });
+  if (input.workflow_id) await withRecords(root, db => { const j = read(db, input.workflow_id!); if (!input.source_id) check(j.revision === input.revision, 'Stale workflow revision.'); if (input.role === 'followup') check(j.task_ids.includes(input.task_id!), 'Choose a task in this workflow.'); });
+  const s = input.source_id ? (await reconciliationView(root)).sources.find(s => s.id === input.source_id) : (await ingestEvidence(root, { kind: 'video', media: input.media, recorded_at: input.recorded_at ?? null, context: { task_ids: input.role === 'followup' && input.task_id ? [input.task_id] : [] } }));
   check(s, 'Retained source not found.');
-  const j = attachJourneySource(root, s.id, input);
+  const j = await attachJourneySource(root, s.id, input);
   // Reviewed initial analysis is stable. Reanalysis is explicit and makes its review pending.
   await reconcileVideo(root, { source_id: s.id, retry: input.retry, revision: input.source_revision, frames: input.frames }, run, origin);
-  return syncJourneySource(root, j.id, s.id);
+  return await syncJourneySource(root, j.id, s.id);
 }
 
 /** Revision/receipt-protected transitions; side effects and references commit together. */
-export function journeyCommand(root: string, raw: unknown): unknown {
+export async function journeyCommand(root: string, raw: unknown): Promise<unknown> {
   const v = object(raw);
-  if (v.command === 'view') return journeyView(root, v.now);
-  return atomic(root, db => {
+  if (v.command === 'view') return await journeyView(root, v.now);
+  return await atomic(root, db => {
     const request = text(v.request_id, 'Request ID'), key = `journey-request:${hash(request)}`, digest = hash(v);
     const receipt = get<{ digest: string; id: string }>(db, key);
     if (receipt) { check(receipt.digest === digest, 'Request ID reused with different input.'); return read(db, receipt.id); }
@@ -153,7 +153,7 @@ export function journeyCommand(root: string, raw: unknown): unknown {
       check(reviewed(db, j), 'Review the observed work before clarifying intent.');
       const desire = text(v.desired_improvement, 'Desired improvement (or explicitly none)');
       let id: string;
-      if (v.goal_id) { id = text(v.goal_id, 'Goal ID'); const goal = db.prepare('SELECT * FROM goals WHERE id=?').get(id); check(goal, 'Goal not found.'); }
+      if (v.goal_id) { id = text(v.goal_id, 'Goal ID'); const goal = db.first('goals', { where: { id: id } }); check(goal, 'Goal not found.'); }
       else { const g = object(v.goal); text(g.text, 'Desired outcome'); text(g.success_criteria, 'Success criteria'); check(Number.isInteger(g.weight) && g.weight >= 1 && g.weight <= 5, 'Priority must be 1–5.'); id = addGoalInDb(db, g as unknown as NewGoal).id; }
       j.goal_ids = [...new Set([...j.goal_ids, id])]; j.desired_improvement = desire; j.intent_confirmed = true;
     } else if (v.command === 'unassigned') {
@@ -190,10 +190,10 @@ export function journeyCommand(root: string, raw: unknown): unknown {
 }
 
 /** Read a resumable journey plus live references; corrections invalidate reviews/choices without losing history. */
-export function journeyView(root: string, at = new Date().toISOString()) {
-  const now = instant(at), planning = planningView(root), updates = reconciliationView(root), outcomes = outcomeView(root), improvements = listImprovementReviews(root);
-  const preview = previewPlan(root, localParts(now, planning.schedule.config.timezone).day, now);
-  const workflows = withDb(root, db => all(db).map(j => {
+export async function journeyView(root: string, at = new Date().toISOString()) {
+  const now = instant(at), planning = await planningView(root), updates = await reconciliationView(root), outcomes = await outcomeView(root), improvements = await listImprovementReviews(root);
+  const preview = await previewPlan(root, localParts(now, planning.schedule.config.timezone).day, now);
+  const workflows = await withRecords(root, db => all(db).map(j => {
     const clips = j.clips.map(c => ({ ...c, source: source(db,c.source_id), process: c.process_id ? processDoc(db,c.process_id) : null }));
     const currentTasks = planning.tasks.filter(t => j.task_ids.includes(t.id));
     const reviews = improvements.filter(r => r.assessments.some(a => clips.some(c => c.process_id === a.candidate.process_id)));
