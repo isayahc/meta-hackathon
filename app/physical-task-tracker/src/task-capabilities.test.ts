@@ -12,7 +12,7 @@ const execute = promisify(execFile);
 
 test('headless process, improvement and mock-OI scenarios produce retained reports', async t => {
   const root = await mkdtemp(join(tmpdir(), 'capabilities-')); t.after(() => rm(root, { recursive: true, force: true }));
-  for (const id of ['reconciliation', 'planning', 'process', 'improvements', 'floorplan']) {
+  for (const id of ['outcomes', 'reconciliation', 'planning', 'process', 'improvements', 'floorplan']) {
     const out = join(root, id);
     const report = await testCapabilities(id, out);
     assert.equal(report.status, 'passed', JSON.stringify(report));
@@ -26,7 +26,7 @@ test('headless command lists capabilities, refuses existing directories, and ret
   const root = await mkdtemp(join(tmpdir(), 'capabilities-errors-')); t.after(() => rm(root, { recursive: true, force: true }));
   const cli = fileURLToPath(new URL('./task-capabilities.js', import.meta.url));
   const listed = await execute(process.execPath, [cli, 'list']);
-  assert.equal(JSON.parse(listed.stdout).capabilities.length, 6);
+  assert.equal(JSON.parse(listed.stdout).capabilities.length, 7);
   await writeFile(join(root, 'keep.txt'), 'keep');
   await assert.rejects(() => testCapabilities('process', root), /EEXIST/);
   assert.equal(await readFile(join(root, 'keep.txt'), 'utf8'), 'keep');

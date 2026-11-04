@@ -350,3 +350,7 @@ Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Harvesting_c
 ## Follow-up evidence and review
 
 Open a task → Record follow-up evidence → review **What this changes** in Plan. Correct/accept/reject/defer source-backed updates without duplicating tasks or replacing accepted calendar blocks. Manual progress reports apply directly with history. See [evidence reconciliation](../../doc/evidence-reconciliation.md) for the typed JSON/CLI contract and headless replay.
+
+## Measure improvement outcomes
+
+Plan → **Did the improvement help?** registers an accepted improvement, preserves baseline evidence, compares follow-up measurements per workload unit, and records keep/revise/reject decisions. Predictions remain separate from measurements; uncertain/changed conditions remain inconclusive. See [intervention outcomes](../../doc/intervention-outcomes.md). Test without the app using the `outcomes` capability; get verified-state actions using `task-briefing.js <absolute-project> --offline`.

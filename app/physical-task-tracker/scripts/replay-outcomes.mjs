@@ -1,0 +1,26 @@
+/** Synthetic baseline/follow-up benchmark using actual stores; no live model, server or farm-result claim. */
+import assert from 'node:assert/strict';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { resolve, join } from 'node:path';
+import { buildProcessFromScan, saveRevision, applyCorrection } from '../dist/lib/processes.js';
+import { saveImprovementReview, decideImprovement, improvementPlan } from '../dist/lib/improvements.js';
+import { appendSession } from '../dist/lib/spot-state.js';
+import { createTask, planningView } from '../dist/lib/task-planning.js';
+import { registerTrial, recordTrialVisit, evaluateTrial, decideTrial, outcomeView, outcomeBriefing } from '../dist/lib/outcomes.js';
+const target=process.argv[2];if(!target)throw Error('Pass a new absolute project directory.');const root=resolve(target);await mkdir(root);
+const fixture=JSON.parse(await readFile(new URL('../dist/samples/workflow-improvements.json',import.meta.url),'utf8'));
+const proc=buildProcessFromScan(fixture.scan);await saveRevision(root,proc);const {doc}=await applyCorrection(root,proc.id,{steps:Object.fromEntries(proc.steps.map(s=>[s.id,{requires_unknown:false}]))},'Synthetic farmer review');
+let review=await saveImprovementReview(root,[doc],[],fixture.context,fixture.candidates,'replay');review=decideImprovement(root,review.id,fixture.candidates[0].id,'accepted','Synthetic trial');
+await appendSession(root,'bench',{same_location:true,changed:['Synthetic baseline'],unknowns:['Sparse frames cannot measure duration']},'baseline');await appendSession(root,'bench',{same_location:true,changed:['Synthetic follow-up']},'followup');
+const task=createTask(root,{text:'Prepare remaining trays'},'unfinished');
+const visit=(session,value,amount)=>({reference:{kind:'session',spot_id:'bench',session_id:session},observed_at:session==='baseline'?'2026-01-01T08:00:00Z':'2026-01-02T08:00:00Z',process_id:doc.id,process_revision:doc.rev,workload:{amount,unit:'tray',context:'72-cell trays, same soil'},context:{intervention_applied:true,implementation_note:'Synthetic fixture confirms selected method was used',staffing:1,equipment:'Existing scoop',conditions:'Same soil and bench',quality_criteria:'Correct fill depth',quality_passed:true,coverage:'full',coverage_note:'Synthetic stopwatch covered entire batch; video only provides context'},measurements:[{metric_id:'time',value,unit:'min',kind:'measured',method:'operator',source:'Labeled synthetic stopwatch fixture'}],notes:'Not a real farmer outcome'});
+let trial=registerTrial(root,{request_id:'register',review_id:review.id,candidate_id:fixture.candidates[0].id,started_at:'2026-01-01T12:00:00Z',retrospective:true,metrics:[{id:'time',label:'Active time',unit:'min',direction:'lower',tolerance:0.01}],workload_unit:'tray',baseline:visit('baseline',20,10)});
+await writeFile(join(root,'registration.json'),JSON.stringify(trial,null,2));
+trial=recordTrialVisit(root,{request_id:'followup',id:trial.id,revision:trial.revision,role:'followup',visit:visit('followup',30,20),reason:'Synthetic 20-tray trial'});let result=evaluateTrial(trial);assert.equal(result.metrics[0].improvement_percent,25);assert.equal(trial.assessment.comparisons[0].reduction_percent,40);assert.equal(result.status,'improved');
+await writeFile(join(root,'measured-comparison.json'),JSON.stringify(result,null,2));
+trial=decideTrial(root,{request_id:'keep',id:trial.id,revision:trial.revision,evidence_digest:result.evidence_digest,decision:'keep',reason:'Synthetic operator accepts observed result'});
+const corrected=visit('followup',50,20);trial=recordTrialVisit(root,{request_id:'correct',id:trial.id,revision:trial.revision,role:'followup',visit_id:trial.followups[0].id,visit:corrected,reason:'Synthetic timer correction reveals slower result'});result=evaluateTrial(trial);assert.equal(result.status,'worse');assert.equal(result.latest_decision.current,false);
+trial=decideTrial(root,{request_id:'reject',id:trial.id,revision:trial.revision,evidence_digest:result.evidence_digest,decision:'reject',reason:'Synthetic farmer rejects slower method'});assert.match(outcomeBriefing(root).next_actions[0],/Stop using/);assert.equal(improvementPlan(review,root).ranked_actions.length,0);assert.equal(planningView(root).tasks.find(t=>t.id===task.id).execution,'open');
+const occluded=structuredClone(trial);occluded.followups[0].context.coverage='partial';assert.equal(evaluateTrial(occluded).status,'inconclusive');
+await writeFile(join(root,'outcomes.json'),JSON.stringify(outcomeView(root),null,2));await writeFile(join(root,'briefing.json'),JSON.stringify(outcomeBriefing(root),null,2));
+console.log(JSON.stringify({passed:true,mode:'synthetic replay; no live inference or real farmer result',predicted_reduction_percent:40,initial_measured_reduction_percent:25,corrected_status:'worse',decision:'reject',occluded_status:'inconclusive',unfinished_task_preserved:true,artifacts:root}));

@@ -191,7 +191,7 @@ const planObj = {
     ...(moved.length || added.length ? [`process revisions changed during generation: ${[...moved.map((m) => m.process_id), ...added.map((a) => a.process_id)].join(', ')}`] : []),
     ...(improvementReview?.stale_reasons ?? []),
   ].join(' ') } : {}),
-  plan: improvementReview ? improvementPlan(improvementReview) : analysis,
+  plan: improvementReview ? improvementPlan(improvementReview, root) : analysis,
   model_narrative: improvementReview ? analysis : null,
   improvement_review_id: improvementReview?.id ?? null,
   improvements: improvementReview,
