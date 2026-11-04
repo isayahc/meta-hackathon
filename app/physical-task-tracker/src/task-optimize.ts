@@ -23,6 +23,7 @@ import { fetchEco, normalizeSoil, ecoConstraints, summarizeEco, type WeatherDoc 
 import { type SpotBrief } from './lib/analyze-response.js';
 import { listSpotBriefs } from './lib/spot-state.js';
 import { setDoc } from './lib/db.js';
+import { listProcesses, readProcess, type ProcessDoc } from './lib/processes.js';
 import { loadEnvSync } from './lib/env.js';
 import { flagValue, flagAll } from './lib/args.js';
 
@@ -113,7 +114,11 @@ if (!spots.length && !goals.length) {
   console.error('Nothing to optimize: no spot state and no goals (add --goal to start).');
   process.exit(1);
 }
-const prompt = buildOptimizerPrompt(goals, spots, constraints, ecoSummary);
+const suppliedCurrents = await listProcesses(root);
+const suppliedDocs: ProcessDoc[] = [];
+for (const c of suppliedCurrents) suppliedDocs.push(await readProcess(root, c.process_id, c.rev));
+const suppliedBasis = suppliedDocs.map((d) => ({ process_id: d.id, rev: d.rev }));
+const prompt = buildOptimizerPrompt(goals, spots, constraints, ecoSummary, suppliedDocs);
 
 if (offline) {
   console.log(prompt);
@@ -144,10 +149,19 @@ if (!result.ok) {
   if (result.detail) console.error(`--- raw response ---\n${JSON.stringify(result.detail).slice(0, 1000)}`);
   process.exit(1);
 }
+// A correction landing mid-generation must not save as current against a
+// revision the model never saw: re-read and mark stale instead of current.
+const freshBasis = await listProcesses(root);
+const moved = suppliedBasis.filter((b) => (freshBasis.find((f) => f.process_id === b.process_id)?.rev ?? -1) !== b.rev);
+const added = freshBasis.filter((f) => !suppliedBasis.some((b) => b.process_id === f.process_id));
+const wentStale = moved.length > 0 || added.length > 0;
 const planObj = {
   goals_open: goals.filter((g) => g.status !== 'done').length,
   goals_total: goals.length,
   spots: spots.length,
+  process_basis: suppliedBasis,
+  stale: wentStale,
+  ...(wentStale ? { stale_reason: `process revisions changed during generation: ${[...moved.map((m) => m.process_id), ...added.map((a) => a.process_id)].join(', ')}` } : {}),
   plan: result.analysis,
 };
 setDoc(root, 'plan', planObj);

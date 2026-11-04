@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { listGoals, setGoalStatus, addGoal } from './lib/goals.js';
 import { listStoredEvents, getStoredEvent, addEvent, dayOf, isDay, type CalendarEvent } from './lib/events.js';
 import { listActions, syncActions, setActionStatus } from './lib/actions.js';
+import { buildProcessFromScan, saveRevision } from './lib/processes.js';
 import { listSpotBriefs, recentSessions } from './lib/spot-state.js';
 import { readOiLinks } from './lib/oi-links.js';
 import { getDoc } from './lib/db.js';
@@ -141,9 +142,11 @@ function isBlockedIp(ip: string): boolean {
 }
 
 async function assertPublicHost(hostname: string): Promise<void> {
+  // URL.hostname retains IPv6 brackets; DNS lookup expects the bare address.
+  const host = hostname.startsWith('[') && hostname.endsWith(']') ? hostname.slice(1, -1) : hostname;
   let addrs: Array<{ address: string }>;
   try {
-    addrs = await lookup(hostname, { all: true });
+    addrs = await lookup(host, { all: true });
   } catch {
     throw new Error(`Could not resolve host "${hostname}".`);
   }
@@ -393,6 +396,17 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
             const rawSteps = ((analysis ?? {}) as { suggested_next_steps?: unknown }).suggested_next_steps;
             const steps = Array.isArray(rawSteps) ? rawSteps.filter((s): s is string => typeof s === 'string') : [];
             await syncActions(root, eventId, steps);
+            try {
+              const proc = buildProcessFromScan({
+                id: `proc-${eventId}`,
+                analysis: (analysis ?? {}) as { suggested_next_steps?: unknown },
+                media,
+                eventId,
+                recordedAt: typeof a.recorded_at === 'string' ? (a.recorded_at as string) : null,
+              });
+              await saveRevision(root, proc);
+              (a as { process?: unknown }).process = proc.id;
+            } catch (e) { console.error(`process build failed: ${(e as Error).message}`); }
           }
         } catch (e) { console.error(`calendar record failed: ${(e as Error).message}`); }
         json(200, { ok: true, analysis });

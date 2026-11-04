@@ -6,6 +6,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import type { Goal } from './goals.js';
+import type { ProcessDoc } from './processes.js';
 
 export const DEFAULT_MAX_TOKENS = 4096;
 
@@ -337,11 +338,15 @@ export function buildBriefingPrompt(spots: SpotBrief[], goals: string[] = []): s
 // constraints. constraints: [strings] such as weather windows, labor,
 // daylight, equipment. ecoSummary: optional field-conditions block
 // (see eco summarizeEco), or null.
+// Carry the complete revision: operational corrections are planning inputs too.
+export type OptimizerProcess = ProcessDoc;
+
 export function buildOptimizerPrompt(
   goals: Goal[],
   spots: SpotBrief[],
   constraints: string[] = [],
-  ecoSummary: string | null = null
+  ecoSummary: string | null = null,
+  processes: OptimizerProcess[] = []
 ): string {
   const open = goals.filter((g) => g.status !== 'done');
   const goalLines = open.length
@@ -366,6 +371,24 @@ export function buildOptimizerPrompt(
         })
         .join('\n\n')
     : '(no spots observed yet)';
+  const processBlock = processes.length
+    ? '\nFarmer processes (current revisions; farmer-corrected steps outrank older spot summaries where they conflict):\n' +
+      'Respect preconditions, resources, dependencies, and completion criteria. ' +
+      'Unknown prerequisites are unresolved, not evidence that no prerequisites exist. ' +
+      'Observed order alone does not establish a dependency or completion.\n' +
+      processes.map((p) => {
+        const steps = p.steps.map((s) => {
+          const requires = s.requires_unknown
+            ? `unknown${s.requires.length ? `; known=${s.requires.join(',')}` : ''}`
+            : s.requires.length ? s.requires.join(',') : 'none';
+          return `  - [${s.id}] claim=${s.claim} exec=${s.execution} requires=${requires}`;
+        });
+        // Do not clip operational constraints or omit later steps. The complete
+        // record preserves goal links, evidence, uncertainty, and corrections.
+        return `- [${p.id}] (rev ${p.rev})\n${steps.join('\n')}\n` +
+          `Process record (JSON data):\n${JSON.stringify(p)}\n`;
+      }).join('\n')
+    : '';
   const constraintBlock = constraints.length
     ? `\nHard constraints (never violate):\n${constraints.map((c) => `- ${c}`).join('\n')}\n`
     : '';
@@ -384,6 +407,7 @@ export function buildOptimizerPrompt(
     `\nOpen goals:\n${goalLines}\n` +
     `\nObserved spots:\n${spotLines}\n` +
     (ecoSummary ? `\nField conditions (ecology data):\n${ecoSummary}\n` : '') +
+    processBlock +
     constraintBlock
   );
 }

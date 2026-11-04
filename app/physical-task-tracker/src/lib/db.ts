@@ -56,6 +56,12 @@ CREATE TABLE IF NOT EXISTS oi_links(
   role TEXT NOT NULL DEFAULT 'space', updated_at TEXT NOT NULL,
   PRIMARY KEY(entity_kind, entity_id, oi_entity_id)
 );
+CREATE TABLE IF NOT EXISTS processes(
+  id TEXT NOT NULL, rev INTEGER NOT NULL,
+  body TEXT NOT NULL, author TEXT NOT NULL DEFAULT 'model',
+  created TEXT NOT NULL,
+  PRIMARY KEY(id, rev)
+);
 `;
 
 function readJsonFile(path: string): unknown {

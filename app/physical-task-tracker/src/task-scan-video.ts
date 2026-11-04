@@ -134,6 +134,8 @@ if (!st) {
 }
 
 let framePaths: string[] = [];
+let frameTimes: Array<number | null> = [];
+let frameTimesEstimated = false;
 let tmpDir: string | null = null;
 let containerTime: string | null = null;
 if (classifySource(st.isDirectory(), extname(input)) === 'image') {
@@ -148,6 +150,18 @@ if (classifySource(st.isDirectory(), extname(input)) === 'image') {
     process.exit(1);
   }
   framePaths = pickEven(files, FRAME_COUNT);
+  {
+    // Frames dirs carry no per-frame timestamps: with --duration the sample
+    // instants are uniform estimates (flagged); otherwise unknown (nulls).
+    const dArg = args.find((a) => a.startsWith('--duration'));
+    const dVal = dArg ? (dArg.includes('=') ? dArg.split('=')[1] : args[args.indexOf(dArg) + 1]) : null;
+    const dNum = Number.parseFloat(dVal ?? '');
+    if (Number.isFinite(dNum) && dNum > 0) {
+      videoDuration = dNum;
+      frameTimes = framePaths.map((_, i) => (dNum * (i + 0.5)) / framePaths.length);
+      frameTimesEstimated = true;
+    }
+  }
   if (SRT_MODE) {
     const dArg = args.find((a) => a.startsWith('--duration'));
     const dVal = dArg
@@ -182,6 +196,7 @@ if (classifySource(st.isDirectory(), extname(input)) === 'image') {
   tmpDir = await mkdtemp(join(tmpdir(), 'task-scan-frames-'));
   for (let i = 0; i < FRAME_COUNT; i++) {
     const t = duration > 0 ? (duration * (i + 0.5)) / FRAME_COUNT : i * 2;
+    frameTimes.push(duration > 0 ? t : null);
     const out = join(tmpDir, `frame-${String(i).padStart(3, '0')}.jpg`);
     await execFileAsync('ffmpeg', [
       '-v', 'error',
@@ -332,6 +347,10 @@ if (SRT_MODE) {
     recorded_at: recorded.at,
     recorded_source: recorded.source,
     recorded_estimate: recorded.source === 'mtime',
+    video_duration_s: videoDuration,
+    frame_times_s: framePaths.map((_, i) => frameTimes[i] ?? null),
+    frame_times_estimated: frameTimesEstimated,
+    frame_files: framePaths.map((p) => basename(p)),
   };
   console.log(JSON.stringify(out, null, 2));
   console.error(`(via frames: ${framePaths.map((p) => basename(p)).join(', ')})`);
