@@ -1,0 +1,34 @@
+/** Single-workflow synthetic demonstration using production services and durable SQLite records. */
+import assert from 'node:assert/strict';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve, join } from 'node:path';
+import { captureJourney, journeyCommand, journeyView } from '../dist/lib/journey.js';
+import { planningView, configurePlanning, proposePlan, decidePlan, recordWork, editTask, saveCommitment } from '../dist/lib/task-planning.js';
+import { associateEvidence, reviewChanges, reconciliationView } from '../dist/lib/reconciliation.js';
+const root=resolve(process.argv[2]);await mkdir(root);await mkdir(join(root,'media'));
+const save=(name,value)=>writeFile(join(root,name),JSON.stringify(value,null,2));
+await writeFile(join(root,'media','example.mp4'),'Synthetic byte fixture, NOT playable farmer footage.');
+const inference={observed_task:'Synthetic tray preparation',per_frame:['Fill tray with shovel','Carry filled tray'],frame_times_s:[1,5],video_duration_s:10,confidence:'medium',suggested_next_steps:['Seed trays'],unknowns:['Sparse frames; no completion or total duration established'],model:'synthetic-replay',prompt_version:'journey-demo/1'};
+let j=await captureJourney(root,{media:'example.mp4'},async()=>inference,'replay');
+let counter=0;const command=body=>{j=journeyCommand(root,{id:j.id,revision:j.revision,request_id:`demo-${++counter}`,reason:'Synthetic example operator review',...body});return j;};
+const clip=journeyView(root).workflows[0].clips[0];
+assert.equal(planningView(root).tasks.length,0);assert.equal(planningView(root).goals.length,0);
+command({command:'correct',source_id:clip.source_id,process_revision:1,patch:{steps:{[clip.process.steps[0].id]:{label:'Fill tray using the existing scoop'}}}});
+command({command:'review',source_id:clip.source_id,process_revision:2});await save('01-reviewed-work.json',journeyView(root));
+command({command:'goal',goal:{text:'Prepare 50 trays',success_criteria:'50 trays pass inspection',weight:3},desired_improvement:'Reduce carrying; no supported intervention yet'});
+command({command:'method',decision:'retain'});
+command({command:'task',future_confirmed:true,task:{text:'Fill 50 trays',completion_criteria:'Inspect all 50 filled trays',active_minutes:60,estimate_source:'Synthetic operator estimate',quantity:{total:50,remaining:50,unit:'trays'},process:{id:clip.process.id,revision:2,step_id:clip.process.steps[0].id},links:[{goal_id:j.goal_ids[0],origin:'human',review:'confirmed',explanation:'Produces required trays'}]}});
+let task=planningView(root).tasks[0];
+configurePlanning(root,1,{timezone:'UTC',person:'operator',resources:{},max_minutes:180,availability:[{start:'2030-01-10T09:00:00Z',end:'2030-01-10T12:00:00Z'}]});
+saveCommitment(root,{id:'break',title:'Fixed break',start:'2030-01-10T10:00:00Z',end:'2030-01-10T10:15:00Z',blocking:true,resources:[]});
+const plan=proposePlan(root,'2030-01-10','2030-01-10T08:00:00Z');decidePlan(root,plan.id,'accepted','Synthetic operator accepts','2030-01-10T08:00:00Z');await save('02-accepted-plan.json',journeyView(root,'2030-01-10T09:00:00Z'));
+// Synthetic clock domains are explicit: historical actuals, future planning windows.
+task=recordWork(root,task.id,task.revision,{id:'partial',start:'2026-01-01T09:00:00Z',end:'2026-01-01T09:20:00Z',quantity:20,remaining_minutes:40,done:false,outcome:'Synthetic interruption after 20 trays'});
+await writeFile(join(root,'media','later.mp4'),'Distinct synthetic follow-up fixture, NOT playable farmer footage.');
+j=await captureJourney(root,{media:'later.mp4',workflow_id:j.id,revision:j.revision,role:'followup',task_id:task.id},async()=>({...inference,work_update:{frame_index:0,remaining_quantity:30,unit:'trays',evidence:'Synthetic remaining-count claim'}}),'replay');
+let s=reconciliationView(root).sources.find(s=>s.context.task_ids.includes(task.id));s=associateEvidence(root,s.id,s.revision,task.id,'confirmed','Same example batch');
+s=reviewChanges(root,s.id,s.revision,'followup-decision',[{change_id:s.changes[0].id,decision:'corrected',correction:{quantity:{total:50,remaining:28,unit:'trays'}},reason:'Synthetic person confirms 28 remain now',current_confirmed:true}]);
+task=planningView(root).tasks[0];assert.equal(task.quantity.remaining,28);editTask(root,task.id,task.revision,{execution:'open',remaining_minutes:35},'Synthetic operator resumes');
+const next=proposePlan(root,'2030-01-10','2030-01-10T08:00:00Z');decidePlan(root,next.id,'accepted','Synthetic changed remaining work','2030-01-10T08:00:00Z');
+const view=journeyView(root,'2030-01-10T09:00:00Z');assert.equal(view.planning.tasks.length,1);assert.equal(view.workflows.length,1);assert.equal(view.workflows[0].clips.length,2);assert.equal(view.planning.goals[0].status,'open');assert.match(view.workflows[0].outcome_status,/Unknown/);assert.equal(view.today.accepted,true);await save('03-followup-replan.json',view);
+const report={passed:true,mode:'synthetic replay; injected interpretation; non-playable byte fixtures; no live inference or farmer validation',workflow_id:j.id,canonical_tasks:1,remaining:28,goal_status:'open',outcome_status:'unknown',correction_persisted:true,context_preserved:true,artifact_directory:root};await save('report.json',report);console.log(JSON.stringify(report));

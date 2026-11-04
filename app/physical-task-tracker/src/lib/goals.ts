@@ -1,6 +1,7 @@
 // Goals model: operator goals live in the project's fieldops.db and steer
 // the optimizer. Status moves open -> at-risk -> done (or back) as
 // briefings report. No dependencies beyond node:sqlite (via lib/db).
+import type { DatabaseSync } from 'node:sqlite';
 import { withDb } from './db.js';
 import { validDay } from './planning-time.js';
 
@@ -64,33 +65,35 @@ function slugify(text: string, n: number): string {
   return `${slug}-${n}`;
 }
 
-export async function addGoal(root: string, { text, deadline = null, weight = 3, success_criteria = '' }: NewGoal): Promise<Goal> {
+export async function addGoal(root: string, input: NewGoal): Promise<Goal> {
+  return withDb(root, db => addGoalInDb(db, input));
+}
+/** Create an ordinary goal within a workflow transaction. */
+export function addGoalInDb(db: DatabaseSync, { text, deadline = null, weight = 3, success_criteria = '' }: NewGoal): Goal {
   if (!text?.trim()) throw new Error('Goal text is required.');
   if (deadline !== null) validDay(deadline);
   if (typeof success_criteria !== 'string' || success_criteria.length > 2000) throw new Error('Invalid success criteria.');
   const w = Math.min(5, Math.max(1, Number(weight) || 3));
-  return withDb(root, (db) => {
-    const n = (db.prepare('SELECT COUNT(*) AS n FROM goals').get() as unknown as { n: number }).n;
-    const goal: Goal = {
-      id: slugify(text, n + 1),
-      text: text.trim(),
-      deadline,
-      weight: w,
-      status: 'open',
-      created: new Date().toISOString(),
-      success_criteria,
-    };
-    db.prepare('INSERT INTO goals(id, text, deadline, weight, status, created, success_criteria) VALUES(?, ?, ?, ?, ?, ?, ?)').run(
-      goal.id,
-      goal.text,
-      goal.deadline,
-      goal.weight,
-      goal.status,
-      goal.created,
-      success_criteria
-    );
-    return goal;
-  });
+  const n = (db.prepare('SELECT COUNT(*) AS n FROM goals').get() as unknown as { n: number }).n;
+  const goal: Goal = {
+    id: slugify(text, n + 1),
+    text: text.trim(),
+    deadline,
+    weight: w,
+    status: 'open',
+    created: new Date().toISOString(),
+    success_criteria,
+  };
+  db.prepare('INSERT INTO goals(id, text, deadline, weight, status, created, success_criteria) VALUES(?, ?, ?, ?, ?, ?, ?)').run(
+    goal.id,
+    goal.text,
+    goal.deadline,
+    goal.weight,
+    goal.status,
+    goal.created,
+    success_criteria
+  );
+  return goal;
 }
 
 const ALLOWED: ReadonlySet<string> = new Set(['open', 'at-risk', 'done']);

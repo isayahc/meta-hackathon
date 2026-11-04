@@ -1,8 +1,9 @@
 # Field Ops — physical task tracker
 
-Phone-first farm-operations app: photograph work, diff visits into tracked
-spots, briefings, goals + optimizer, weather/soil fusion, all in one
-tabbed browser UI backed by small Node scripts (one runtime dependency:
+Phone-first farm operations: record work, review the evidence, confirm goals,
+organize future tasks, accept a calendar plan, and reconcile follow-up results.
+The existing comparison, spatial, briefing and ecology tools remain available.
+Node scripts and the dashboard share one SQLite project (one runtime dependency:
 the SAM parser).
 
 ## Start here
@@ -24,7 +25,12 @@ npm start
 
 That builds (if needed), starts the server on `./my-farm`, and loads
 http://localhost:8123 in your browser. (First time only: `npm install`.)
-Add your first goal right in the app under Plan, or ahead of time with:
+Today leads with **Record or upload your work**, followed by a resumable source
+review, purpose, method and future-task flow. Viewing/reviewing saved records
+needs no API key; interpreting new video uses the configured Meta model. See
+[the video-first journey](../../doc/video-first-journey.md) for its contracts,
+headless commands and verification limits. Manual/goal-first entry remains
+available under Plan, or ahead of time with:
 
 ```bash
 node dist/task-optimize.js ./my-farm --goal "Transplant bed 3 by Friday" --weight 5 --offline

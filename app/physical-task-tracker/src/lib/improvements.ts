@@ -1,3 +1,4 @@
+import type { DatabaseSync } from 'node:sqlite';
 /** Evidence-backed workflow proposals. Model narrative never decides feasibility. */
 import { outcomeView } from './outcomes.js';
 import { randomUUID } from 'node:crypto';
@@ -373,20 +374,23 @@ export async function saveImprovementReview(root: string, processes: ProcessDoc[
 
 /** Read-time freshness checks include corrections written by other processes. */
 export function readImprovementReview(root: string, id: string): ImprovementReview {
-  return withDb(root, (db) => {
-    const row = db.prepare('SELECT body FROM docs WHERE key = ?').get(`improvements:${id}`) as { body: string } | undefined;
-    requireValue(row, 'No improvement review with that ID.');
-    const review = JSON.parse(row.body) as ImprovementReview;
-    review.stale_reasons = review.process_basis.flatMap((b) => {
-      const current = db.prepare('SELECT MAX(rev) AS rev FROM processes WHERE id = ?').get(b.process_id) as { rev: number | null };
-      return current.rev === b.rev ? [] : [`Process ${b.process_id} changed from revision ${b.rev} to ${current.rev ?? 'missing'}.`];
-    });
-    const currentContext = db.prepare('SELECT body FROM docs WHERE key = ?').get('workflow-context') as { body: string } | undefined;
-    if (!currentContext || currentContext.body !== JSON.stringify(review.context)) review.stale_reasons.push('Farmer constraints or evidence inputs changed; regenerate the review.');
-    review.stale = review.stale_reasons.length > 0;
-    for (const a of review.assessments) a.actionable = !review.stale && a.feasibility === 'eligible' && a.decision === 'accepted';
-    return review;
+  return withDb(root, db => readImprovementReviewInDb(db, id));
+}
+/** Read current review validity inside a caller's workflow transaction. */
+export function readImprovementReviewInDb(db: DatabaseSync, id: string): ImprovementReview {
+  const row = db.prepare('SELECT body FROM docs WHERE key = ?').get(`improvements:${id}`) as { body: string } | undefined;
+  requireValue(row, 'No improvement review with that ID.');
+  const review = JSON.parse(row.body) as ImprovementReview;
+  review.stale_reasons = review.process_basis.flatMap((b) => {
+    const current = db.prepare('SELECT MAX(rev) AS rev FROM processes WHERE id = ?').get(b.process_id) as { rev: number | null };
+    if (db.prepare('SELECT key FROM docs WHERE key=?').get(`superseded-process:${b.process_id}`)) return [`Process ${b.process_id} was superseded by a new interpretation; review the new evidence.`];
+    return current.rev === b.rev ? [] : [`Process ${b.process_id} changed from revision ${b.rev} to ${current.rev ?? 'missing'}.`];
   });
+  const currentContext = db.prepare('SELECT body FROM docs WHERE key = ?').get('workflow-context') as { body: string } | undefined;
+  if (!currentContext || currentContext.body !== JSON.stringify(review.context)) review.stale_reasons.push('Farmer constraints or evidence inputs changed; regenerate the review.');
+  review.stale = review.stale_reasons.length > 0;
+  for (const a of review.assessments) a.actionable = !review.stale && a.feasibility === 'eligible' && a.decision === 'accepted';
+  return review;
 }
 
 /** Return saved reviews with current process freshness, preserving all decisions. */
@@ -413,6 +417,7 @@ export function decideImprovement(root: string, reviewId: string, candidateId: s
         requireValue(currentContext?.body === JSON.stringify(review.context), 'Stale improvement: farmer constraints or evidence changed.');
         for (const b of review.process_basis) {
           const current = db.prepare('SELECT MAX(rev) AS rev FROM processes WHERE id = ?').get(b.process_id) as { rev: number | null };
+          requireValue(!db.prepare('SELECT key FROM docs WHERE key=?').get(`superseded-process:${b.process_id}`), 'Stale improvement: process was superseded by new source analysis.');
           requireValue(current.rev === b.rev, 'Stale improvement: regenerate against the corrected process.');
         }
       }
