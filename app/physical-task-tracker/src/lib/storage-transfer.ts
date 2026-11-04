@@ -87,6 +87,11 @@ function verifyManifest(m: TransferManifest): void {
 export async function transfer(root: string, manifest: TransferManifest, blobs: BlobStore, client: MongoClient, database: string): Promise<void> {
   verifyManifest(manifest);
   const store=client.db(database),key=`${scope(manifest.project)}:${manifest.generation}`;
+  if(await store.collection('transfer_manifests').findOne({_id:key as any,ready:true})){
+    const committed=await readTransfer(client,database,manifest.project,manifest.generation);
+    for(const asset of committed.assets)await blobs.verify(asset);
+    return;
+  }
   for(const asset of manifest.assets){asset.version=await blobs.put(join(root,safePath(asset.path)),asset);await blobs.verify(asset);}
   const session=client.startSession();
   try {await session.withTransaction(async()=>{
@@ -107,7 +112,8 @@ export async function readTransfer(client: MongoClient, database: string, projec
   if(!metadata)throw Error('Committed generation not found in this project');
   const tables: TransferManifest['tables']={};
   for(const table of TABLES){tables[table]=(await db.collection('transfer_records').find({project,generation,table}).sort({ordinal:1}).toArray()).map(r=>r.row);if(tables[table].length!==metadata.counts[table])throw Error('Record count mismatch');}
-  return {format:'fieldops-transfer/1',project,generation,database_version:metadata.database_version,tables,assets:metadata.assets};
+  const result: TransferManifest={format:'fieldops-transfer/1',project,generation,database_version:metadata.database_version,tables,assets:metadata.assets};
+  verifyManifest(result);return result;
 }
 /** Restore into a new local project for cutover validation; never overwrite existing work. */
 export async function restoreTransfer(manifest: TransferManifest, destination: string, blobs: BlobStore): Promise<void> {
