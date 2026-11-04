@@ -2,6 +2,7 @@
 // the optimizer. Status moves open -> at-risk -> done (or back) as
 // briefings report. No dependencies beyond node:sqlite (via lib/db).
 import type { DatabaseSync } from 'node:sqlite';
+import { requestOnce } from './request-once.js';
 import { withDb } from './db.js';
 import { validDay } from './planning-time.js';
 
@@ -65,8 +66,8 @@ function slugify(text: string, n: number): string {
   return `${slug}-${n}`;
 }
 
-export async function addGoal(root: string, input: NewGoal): Promise<Goal> {
-  return withDb(root, db => addGoalInDb(db, input));
+export async function addGoal(root: string, input: NewGoal, requestId?: unknown): Promise<Goal> {
+  return withDb(root, db => requestOnce(db, 'goal', requestId, input, () => addGoalInDb(db, input)));
 }
 /** Create an ordinary goal within a workflow transaction. */
 export function addGoalInDb(db: DatabaseSync, { text, deadline = null, weight = 3, success_criteria = '' }: NewGoal): Goal {

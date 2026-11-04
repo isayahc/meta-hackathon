@@ -454,3 +454,15 @@ test('improvement API persists decisions, validates context, and refreshes plan 
   assert.equal(overview.plan.improvements.stale, true);
   assert.equal((await call(root, 'POST', url, { candidate_id, status: 'accepted', rationale: 'Ignore new revision.' })).status, 400);
 });
+
+test('goal and dated-note HTTP retries create one canonical record each', async t => {
+  const root=await scratch(t);
+  const goal={text:'Retry-safe outcome',success_criteria:'Inspected',request_id:'goal-ui'};
+  const first=await call(root,'POST','/api/goals',goal);
+  assert.equal(first.status,200);assert.equal((await call(root,'POST','/api/goals',goal)).json.goal.id,first.json.goal.id);
+  const note={title:'Retry-safe note',date:'2030-01-10',request_id:'note-ui'};
+  const saved=await call(root,'POST','/api/events',note);
+  assert.equal(saved.status,200);assert.equal((await call(root,'POST','/api/events',note)).json.event.id,saved.json.event.id);
+  assert.equal((await listGoals(root)).filter(g=>g.text===goal.text).length,1);
+  const events=await call(root,'GET','/api/events');assert.equal(events.json.events.filter((e:{title:string})=>e.title===note.title).length,1);
+});

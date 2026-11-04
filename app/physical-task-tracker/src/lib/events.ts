@@ -3,6 +3,7 @@
 // also overlay goal deadlines and spot updates derived at read time.
 // No dependencies beyond node:sqlite (via lib/db).
 
+import { requestOnce } from './request-once.js';
 import { withDb } from './db.js';
 
 export type CalendarEventKind = 'scan' | 'spot' | 'goal' | 'note';
@@ -98,7 +99,8 @@ function slugify(text: string, n: number): string {
 
 export async function addEvent(
   root: string,
-  { title, date, time = null, kind = 'note', detail = null, payload = null, media = null }: NewCalendarEvent
+  { title, date, time = null, kind = 'note', detail = null, payload = null, media = null }: NewCalendarEvent,
+  requestId?: unknown
 ): Promise<CalendarEvent> {
   if (!title?.trim()) throw new Error('Event title is required.');
   if (!isDay(date)) throw new Error(`Bad event date "${String(date)}": use YYYY-MM-DD.`);
@@ -107,7 +109,7 @@ export async function addEvent(
   }
   const payloadText = payload === null || payload === undefined ? null : typeof payload === 'string' ? payload : JSON.stringify(payload);
   const mediaName = typeof media === 'string' && media && !media.includes('/') && !media.includes('\\') ? media : null;
-  return withDb(root, (db) => {
+  return withDb(root, (db) => requestOnce(db, 'event', requestId, { title, date, time, kind, detail, payload, media }, () => {
     const n = (db.prepare('SELECT COUNT(*) AS n FROM events').get() as unknown as { n: number }).n;
     const event: CalendarEvent = {
       id: slugify(title, n + 1),
@@ -132,5 +134,5 @@ export async function addEvent(
       event.created_at
     );
     return event;
-  });
+  }));
 }
