@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import { assetName, putAsset, withAssetWorkspace, stageAsset, readAsset } from './assets.js';
 import { byteRange } from './asset-http.js';
 import { createServer } from '../serve-dashboard.js';
+import { EventEmitter } from 'node:events';
 
 test('single byte ranges include suffixes and reject malformed or unsatisfiable requests',()=>{
   assert.deepEqual(byteRange('bytes=2-4',10),{start:2,end:4});assert.deepEqual(byteRange('bytes=8-',10),{start:8,end:9});assert.deepEqual(byteRange('bytes=-3',10),{start:7,end:9});
@@ -31,4 +32,23 @@ test('actual HTTP media route streams ranges, HEAD and conditional responses',as
   assert.equal((await request('HEAD')).body.length,0);assert.equal((await request('GET',{range:'bytes=50-'})).status,416);
   assert.equal((await request('GET',{'if-none-match':`"${asset.sha256}"`})).status,304);
   assert.equal((await request('GET',{range:'bytes=2-5','if-range':'"old"'})).body.toString(),'0123456789');
+});
+
+test('streaming resumes after backpressure and releases disconnected clients',{timeout:3000},async t=>{
+  const root=await mkdtemp(join(tmpdir(),'assets-pressure-'));t.after(()=>rm(root,{recursive:true,force:true}));
+  const file=join(root,'input.mp4');await writeFile(file,Buffer.alloc(128*1024,7));await putAsset(root,file,'clip.mp4');
+  const handler=createServer(root).listeners('request')[0];
+  for(const disconnect of [false,true]){
+    const events=new EventEmitter();
+    const res=Object.assign(events,{
+      headersSent:false,destroyed:false,ended:false,bytes:0,
+      writeHead(){this.headersSent=true;},
+      write(chunk:Buffer){this.bytes+=chunk.length;queueMicrotask(()=>{if(disconnect){this.destroyed=true;events.emit('close');}else events.emit('drain');});return false;},
+      end(){this.ended=true;},destroy(){this.destroyed=true;},
+    });
+    await handler({method:'GET',url:'/media/clip.mp4',headers:{}},res);
+    assert.equal(res.ended,!disconnect);assert.equal(res.destroyed,disconnect);
+    if(!disconnect)assert.equal(res.bytes,128*1024);
+    assert.equal(res.listenerCount('drain'),0);assert.equal(res.listenerCount('close'),0);
+  }
 });

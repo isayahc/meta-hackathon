@@ -56,7 +56,11 @@ export function assetInRecords(tx: RecordTransaction, name: string): Asset | nul
 }
 /** Completion validation uses previously verified immutable evidence; auditing detects later storage loss. */
 export function retainedMediaPresent(root: string, tx: RecordTransaction, name: string | null): boolean {
-  try { if(!name)return false;assetName(name);return assetConfig(root) ? assetInRecords(tx,name)?.state==='ready' && assetInRecords(tx,name)?.availability!=='unavailable' : existsSync(join(root,'media',name)); } catch { return false; }
+  try {
+    if(!name)return false;assetName(name);
+    if(!assetConfig(root))return existsSync(join(root,'media',name));
+    const asset=assetInRecords(tx,name);return asset?.state==='ready' && asset.availability!=='unavailable';
+  } catch { return false; }
 }
 /** Persist an asset state without allowing a filename to be rebound to different bytes. */
 async function saveAsset(root: string, asset: Asset): Promise<Asset> {

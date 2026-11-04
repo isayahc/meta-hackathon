@@ -1,6 +1,5 @@
 import { assetInfo, assetConfig, withAssetWorkspace, stageAsset, retainGenerated } from './assets.js';
 import { createHash } from 'node:crypto';
-import { stat } from 'node:fs/promises';
 import { join, basename, resolve } from 'node:path';
 import { getDoc, setDoc } from './records.js';
 import { reconciliationView } from './reconciliation.js';
