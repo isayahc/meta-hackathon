@@ -496,7 +496,7 @@ export async function readOiIdentity(oiRoot: string): Promise<OiIdentity> {
   };
 }
 
-export type OiOp = 'validate' | 'compile' | 'commit' | 'head' | 'inspect' | 'reconstruction';
+export type OiOp = 'validate' | 'compile' | 'commit' | 'head' | 'inspect' | 'reconstruction' | 'route-assessment';
 
 export interface OiTransport {
   request<T>(op: OiOp, payload: Record<string, unknown>): Promise<T>;
@@ -603,6 +603,7 @@ export class OiMockTransport implements OiTransport {
   constructor(private readonly script: OiMockScript = {}) {}
   async request<T>(op: OiOp, payload: Record<string, unknown>): Promise<T> {
     this.calls.push({ op, payload });
+    if (op === 'route-assessment') throw new OiError('OI_ROUTE_UNSUPPORTED', 'Route assessments require the real pinned OI runtime.');
     if (op === 'reconstruction') throw new OiError('OI_RECONSTRUCTION_UNSUPPORTED', 'Reconstruction tests require the pinned real OI runtime.');
     if (op === 'inspect') {
       if (!this.script.inspect) throw new OiError('OI_INSPECTION_UNSUPPORTED', 'Mock reference inspection needs an explicit fixture.');

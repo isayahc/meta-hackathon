@@ -10,6 +10,7 @@
 // This file wires stdin/stdout to OI validation, compilation, persistence and
 // scene links. The provider-neutral reconstruction module adds the missing
 // reviewed-transform/lineage seam while reusing upstream mutation validation.
+import { routeOperation } from './oi-route-assessment.mjs';
 import { reconstructionOperation } from './oi-reconstruction.mjs';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
@@ -155,7 +156,8 @@ async function main() {
   }
   try {
     const { op, payload } = request;
-    if (op === 'reconstruction') console.log(JSON.stringify({ ok: true, result: await reconstructionOperation(ROOT, payload.action, payload) }));
+    if (op === 'route-assessment') console.log(JSON.stringify({ ok: true, result: await routeOperation(ROOT, payload.action, payload) }));
+    else if (op === 'reconstruction') console.log(JSON.stringify({ ok: true, result: await reconstructionOperation(ROOT, payload.action, payload) }));
     else if (op === 'validate') console.log(JSON.stringify({ ok: true, result: await opValidate(payload) }));
     else if (op === 'compile') console.log(JSON.stringify({ ok: true, result: await opCompile(payload) }));
     else if (op === 'commit') console.log(JSON.stringify({ ok: true, result: await opCommit(payload) }));

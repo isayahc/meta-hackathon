@@ -12,6 +12,7 @@ persists actual test state so you can inspect what happened afterward.
 
 Or give it a narrower task:
 
+- “Test routes with pinned OI: compare an 8 m bent path and a straight proposal, reject obstructions and retain unknown physical clearance.”
 - “Test reviewed reconstruction against pinned OI: preview, import, retry, correct, and reopen the original evidence.”
 - “Test spatial associations: link a source timestamp to a location, review ambiguous identity, and prove moved/deleted objects never silently relink.”
 - “Test the video-first journey: correction → confirmed goal → accepted plan → partial work → reviewed follow-up → replan, preserving the same task.”
@@ -54,6 +55,7 @@ executable if it is not named `python3`.
 
 | Scenario | What runs | What it proves |
 | --- | --- | --- |
+| `routes` | Real pinned OI with deterministic two-station geometry | Declared bent-route arithmetic, repeatability, conservative checks and baseline/proposal comparison with zero scene/asset writes; physical walkability remains unsupported |
 | `reconstruction` | Deterministic fixture with **real pinned OI** | Explicit transforms, calibration/holdout, preview/commit, retries and revisioned identity/lineage; blocked without OI setup, no model inference |
 | `spatial` | Synthetic source/identity review → moved/deleted OI responses → separate CLI reopen | Durable source spans/checksums, review history and stale states, no automatic relinking or scene writes; OI responses are mocked |
 | `journey` | Synthetic retained capture → reviewed process → confirmed purpose → future task → accepted plan → partial actuals → reviewed follow-up → replan | One canonical workflow/task, correction persistence, resumable identity, explicit unknown outcomes; see [journey contract](video-first-journey.md) |
@@ -171,3 +173,9 @@ correction and lineage inspection. Missing OI setup is **blocked**, never a mock
 For supplied evidence, standalone use, and the reviewed walkthrough adapter, see
 [reconstruction-import.md](reconstruction-import.md). No app/server/model inference
 is needed; unsupported raw geometry is reported explicitly.
+
+## Route and clearance queries
+
+Use `task-capabilities test routes --out /absolute/new-directory` with pinned
+`OI_ROOT`. For supplied routes, source/scale requirements, standalone use and
+intervention-review integration, see [route-assessment.md](route-assessment.md).

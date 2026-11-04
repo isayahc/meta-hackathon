@@ -5,6 +5,7 @@ organize future tasks, accept a calendar plan, and reconcile follow-up results.
 Navigate **Today**, **Goals**, **Calendar**, and **Workspace**; **Record work** is available throughout. The existing comparison, spatial, briefing and ecology tools remain available.
 Process actions can now link their clip timestamps to named work areas or pinned OI objects; see [spatial evidence](../../doc/spatial-evidence.md) for the UI, headless commands and supported OI boundary.
 Reviewed reconstruction can now be prepared, previewed, committed and tested headlessly against pinned OI. Run `node dist/task-capabilities.js test reconstruction --out /absolute/new-directory`; see [the import contract and standalone fixture](../../doc/reconstruction-import.md) for setup and supported geometry.
+Route assessments are available through `task-routes` and the `routes` headless scenario; see [route/clearance checks and limitations](../../doc/route-assessment.md). Geometric distance stays separate from verified walking routes.
 See [the screen/state inventory and UI verification guide](../../doc/field-ops-ui.md).
 Node scripts and the dashboard share one SQLite project (one runtime dependency:
 the SAM parser).

@@ -14,5 +14,6 @@ for (const entry of ['dashboard', 'samples', 'workers']) {
 await mkdir(join(distDir, 'lib'), { recursive: true });
 await cp(join(appDir, 'src', 'lib', 'oi-runner.mjs'), join(distDir, 'lib', 'oi-runner.mjs'));
 await cp(join(appDir, 'src', 'lib', 'oi-reconstruction.mjs'), join(distDir, 'lib', 'oi-reconstruction.mjs'));
+await cp(join(appDir, 'src', 'lib', 'oi-route-assessment.mjs'), join(distDir, 'lib', 'oi-route-assessment.mjs'));
 await cp(join(appDir, 'src', 'example.env'), join(distDir, 'example.env'));
 console.log('assets copied to dist/');

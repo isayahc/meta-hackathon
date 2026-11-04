@@ -1,3 +1,4 @@
+import { readRouteAssessment, type RouteAssessment, type RouteAssessmentRequest } from './route-assessment.js';
 import type { DatabaseSync } from 'node:sqlite';
 /** Evidence-backed workflow proposals. Model narrative never decides feasibility. */
 import { outcomeView } from './outcomes.js';
@@ -43,7 +44,7 @@ export interface WorkflowContext {
     notes: string[];
   };
   spatial_options: Array<{
-    id: string; scene_id: string; revision: number; entity_ids: string[]; space_ir: OiSpaceIrDoc;
+    id: string; scene_id: string; revision: number; entity_ids: string[]; space_ir: OiSpaceIrDoc; route_assessment?: RouteAssessmentRequest;
   }>;
 }
 export interface ImprovementCandidate {
@@ -84,7 +85,7 @@ export interface Assessment {
   unvalidated: string[];
   comparisons: Comparison[];
   unknown_metrics: string[];
-  spatial: { status: 'not_requested' | 'unvalidated' | 'invalid' | 'checked'; scene_id?: string; revision?: number; findings: unknown[] };
+  spatial: { status: 'not_requested' | 'unvalidated' | 'invalid' | 'checked'; scene_id?: string; revision?: number; findings: unknown[]; route_assessment?: RouteAssessment };
   priority: number;
   rank: number;
   actionable: boolean;
@@ -253,14 +254,23 @@ function covered(span: TimeSpan, doc: ProcessDoc): boolean {
 }
 
 /** Run only OI read/validate operations; validation is not proof of physical accessibility. */
-async function checkSpatial(context: WorkflowContext, candidate: ImprovementCandidate, transport?: OiTransport): Promise<Assessment['spatial']> {
+async function checkSpatial(root: string, context: WorkflowContext, candidate: ImprovementCandidate, transport?: OiTransport): Promise<Assessment['spatial']> {
   if (candidate.spatial_option_id === null) return { status: 'not_requested', findings: [] };
   const option = context.spatial_options.find((o) => o.id === candidate.spatial_option_id);
   requireValue(option, 'Unknown spatial option.');
   const identity = { scene_id: option.scene_id, revision: option.revision };
   if (!transport) return { ...identity, status: 'unvalidated', findings: ['OI runtime unavailable.'] };
   try {
-    const head = await transport.request<{ scene_id: string; revision: number }>('head', { sceneId: option.scene_id });
+    const dataDir = process.env.OI_SCENE_DATA_DIR || join(root, 'oi-scenes');
+    if (option.route_assessment) {
+      const request = option.route_assessment;
+      requireValue(request.scene_id === option.scene_id && request.revision === option.revision &&
+        Array.isArray(request.station_ids) && request.station_ids.every(id => option.entity_ids.includes(id)), 'Route assessment references differ from the spatial option.');
+      requireValue(request.space !== null && JSON.stringify(request.space.document) === JSON.stringify(option.space_ir), 'Route SpaceIR must match the reviewed option.');
+      const result = readRouteAssessment(await transport.request('route-assessment', {action:'assess',dataDir,request}), request);
+      return {...identity,status:result.stale || result.checks.some(c=>c.status==='failed') ? 'invalid' : 'unvalidated', findings:result.checks,route_assessment:result};
+    }
+    const head = await transport.request<{ scene_id: string; revision: number }>('head', { sceneId: option.scene_id, dataDir });
     if (head.scene_id !== option.scene_id || head.revision !== option.revision) {
       return { ...identity, status: 'invalid', findings: ['OI scene revision changed; review the spatial references.'] };
     }
@@ -335,7 +345,7 @@ export async function assessImprovements(root: string, processes: ProcessDoc[], 
       }
     }
     const comparisons = candidate.comparisons.map((pair) => compareMeasurements(measurement(pair.baseline_id), measurement(pair.proposed_id)));
-    const spatial = await checkSpatial(context, candidate, transport);
+    const spatial = await checkSpatial(root, context, candidate, transport);
     if (candidate.spatial_change && candidate.spatial_option_id === null) unvalidated.push('Spatial change has no linked OI alternative to validate.');
     for (const c of comparisons) {
       if (c.metric === 'quality' && c.reduction_per_unit !== null && c.reduction_per_unit > 0) {
@@ -347,7 +357,7 @@ export async function assessImprovements(root: string, processes: ProcessDoc[], 
     }
     if (spatial.status === 'invalid') blocked.push('OI rejected the alternative or its source revision changed.');
     if (spatial.status !== 'not_requested') {
-      unvalidated.push('Spatial entity linkage, clearance, access, and load/quality constraints need explicit validation; an OI schema check alone does not establish them.');
+      unvalidated.push(spatial.route_assessment ? 'Route assessment retains its supported checks; physical access, turning radius, headroom and load/quality remain unverified.' : 'Spatial entity linkage, clearance, access, and load/quality constraints need explicit validation; an OI schema check alone does not establish them.');
     }
     const priority = Math.max(1, ...goals.filter((g) => candidate.goal_ids.includes(g.id) && g.status !== 'done').map((g) => g.weight));
     assessments.push({ candidate, evidence: { status: supported.length ? supported.some((o) => o.basis === 'farmer_confirmed') ? 'farmer_confirmed' : 'observed' : 'hypothesis', observations: supported, steps, requests },
