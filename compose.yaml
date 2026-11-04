@@ -1,0 +1,21 @@
+services:
+  fieldops:
+    build: .
+    image: fieldops:local
+    init: true
+    ports:
+      - "127.0.0.1:${FIELDOPS_PORT:-8123}:8123"
+    environment:
+      META_API_KEY: ${META_API_KEY:-}
+      META_API_BASE: ${META_API_BASE:-}
+      META_MODEL: ${META_MODEL:-}
+    volumes:
+      - project:/data
+      - credentials:/config
+    stop_grace_period: 30s
+    restart: unless-stopped
+volumes:
+  project:
+    name: ${FIELDOPS_DATA_VOLUME:-fieldops-project}
+  credentials:
+    name: ${FIELDOPS_CONFIG_VOLUME:-fieldops-credentials}

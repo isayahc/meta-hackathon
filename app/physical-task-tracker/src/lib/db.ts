@@ -176,10 +176,18 @@ function migrateLegacyJson(db: DatabaseSync, root: string): void {
   }
 }
 
+export const DATABASE_VERSION = 1;
+
+/** Upgrade legacy stores atomically; refuse stores from a newer application. */
 export function openDb(root: string): DatabaseSync {
   mkdirSync(root, { recursive: true });
   const db = new DatabaseSync(dbPath(root));
-  db.exec('PRAGMA journal_mode = WAL');
+  try {
+  const version = (db.prepare('PRAGMA user_version').get() as { user_version: number }).user_version;
+  if (version > DATABASE_VERSION) throw new Error(`Database version ${version} is newer than supported version ${DATABASE_VERSION}. Use a compatible image; restore a backup for rollback.`);
+  db.exec('PRAGMA busy_timeout = 5000');
+  if (version === DATABASE_VERSION) { db.exec('PRAGMA journal_mode = WAL'); return db; }
+  db.exec('BEGIN IMMEDIATE');
   db.exec(SCHEMA);
   // Column upgrades for DBs created before the column existed.
   for (const [table, column, decl] of [
@@ -190,8 +198,30 @@ export function openDb(root: string): DatabaseSync {
     const cols = (db.prepare(`PRAGMA table_info(${table})`).all() as unknown as Array<{ name: string }>).map((c) => c.name);
     if (!cols.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
   }
+  const required: Record<string, string[]> = {
+    goals: ['id','text','deadline','weight','status','created','success_criteria'],
+    spots: ['id','name','stage','summary','open_issues','session_ids','updated_at','created'],
+    sessions: ['sid','spot_id','analysis','created'],
+    events: ['id','title','date','time','kind','detail','created_at','payload','media','timing_json'],
+    docs: ['key','body','updated_at'],
+    actions: ['id','event_id','idx','text','status','created_at','updated_at','task_json','task_rev'],
+    oi_links: ['entity_kind','entity_id','scene_id','revision','oi_entity_id','oi_revision','role','updated_at'],
+    processes: ['id','rev','body','author','created'],
+  };
+  for (const [table, requiredColumns] of Object.entries(required)) {
+    const actual = new Set((db.prepare(`PRAGMA table_info(${table})`).all() as Array<{name:string}>).map(c => c.name));
+    if (requiredColumns.some(column => !actual.has(column))) throw new Error(`Incompatible legacy table ${table}; migration rolled back.`);
+  }
   migrateLegacyJson(db, root);
+  db.exec(`PRAGMA user_version = ${DATABASE_VERSION}`);
+  db.exec('COMMIT');
+  db.exec('PRAGMA journal_mode = WAL');
   return db;
+  } catch (error) {
+    try { db.exec('ROLLBACK'); } catch { /* no active migration */ }
+    db.close();
+    throw error;
+  }
 }
 
 // Short-lived use: open, migrate, run, close. Never throws on close.
@@ -237,3 +267,4 @@ export function initDb(root: string): string {
 export function dbExists(root: string): boolean {
   return existsSync(dbPath(root));
 }
+
