@@ -188,15 +188,23 @@ export function reviewWalkthrough(root: string, id: string, expectedRevision: nu
   });
 }
 
+/** Read a current reviewed run and recheck retained artifact bytes before handoff. */
+export async function verifiedWalkthrough(root: string, id: string): Promise<WalkthroughRun> {
+  const run = readWalkthrough(root, id);
+  await verifyArtifacts(directory(root, id), run.report);
+  check(readWalkthrough(root, id).revision === run.revision, 'Walkthrough changed during evidence verification.');
+  return run;
+}
+
 /** Export consumer evidence for #53; no import, transform or feasibility claim is made. */
 export function walkthroughHandoff(root: string, id: string): Record<string, unknown> {
   const run = readWalkthrough(root, id);
   const latest = new Map(run.reviews.map((r) => [r.observation_id, r]));
   return { schema: 'fieldops-walkthrough-handoff/1', run_id: id, run_revision: run.revision, source: run.report.source,
-    status: 'awaiting_oi_contract', coordinates: run.report.coordinates, scale_status: 'unverified', measurements: run.measurements,
+    status: 'requires_reviewed_import_plan', import_contract: 'oi-reviewed-reconstruction/1', coordinates: run.report.coordinates, scale_status: 'unverified', measurements: run.measurements,
     stations: run.report.observations.filter((o) => latest.get(o.id)?.decision === 'confirmed').map((o) => ({ observation: o, review: latest.get(o.id) })),
     artifacts: run.report.artifacts, frames: run.report.frames, stats: run.report.stats,
-    unresolved: ['OI transform/import and stable entity bindings: #53', 'Route/clearance checks: #54', 'Process interval links: #41', 'Scale fit and independent validation pending; distances remain unverified'],
+    unresolved: ['Supply explicit source-to-OI transform, 3D measurement anchors and immutable asset correspondences; preview with task-reconstruction', 'Route/clearance checks: #54', 'Link committed scene revision/instance IDs with task-spatial', 'Scale fit and independent validation pending; distances remain unverified'],
   };
 }
 

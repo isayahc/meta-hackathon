@@ -1,4 +1,6 @@
 /** Offline artifact, review, API and CLI contract tests. No model or Python dependency. */
+import { prepareWalkthroughReconstruction, reconstructionCommand, type ReconstructionRequest } from './reconstruction.js';
+import { OiMockTransport } from './oi-connector.js';
 import { test, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -52,7 +54,7 @@ test('replay preserves frame identity and forces honest replay provenance', asyn
   assert.equal(run.report.frames[1].timestamp_s, 2);
   assert.equal(readWalkthrough(root, run.id).report.scale.status, 'unverified');
   const exportData = walkthroughHandoff(root, run.id);
-  assert.equal(exportData.status, 'awaiting_oi_contract');
+  assert.equal(exportData.status, 'requires_reviewed_import_plan');
   assert.deepEqual(exportData.stations, []);
 });
 
@@ -141,4 +143,32 @@ test('real CLI replay/show/handoff round trip emits JSON without model inference
   assert.equal(run.report.source, 'replay');
   const handoff = await exec(process.execPath, [cli, 'handoff', '--root', root, '--id', run.id]);
   assert.equal(JSON.parse(handoff.stdout).run_revision, 1);
+});
+
+
+test('reconstruction preparation retains reviewed evidence and requires explicit geometry and measurement plan', async t => {
+  const { root, manifest } = await fixture(t); const run = await replayWalkthrough(root, manifest);
+  const plan: Omit<ReconstructionRequest, 'source'> = {
+    schema: 'oi-reviewed-reconstruction/1', request_id: run.id, scene_id: run.id, base_revision: 1,
+    frame: {id:'mapanything-world',units:'predicted_m',axes:'X right, Y down, Z forward',handedness:'right',direction:'source-to-oi',layout:'row-major',target:'oi-world-m-Y-up',matrix:[1,0,0,0,0,-1,0,0,0,0,-1,0,0,0,0,1]},
+    scale: {predicted_m_per_unit:null,calibration:null,holdout:null,holdout_independence:'not-established'},
+    candidates: [{id:'station',observation_ids:['o0'],frame_id:'mapanything-world',name:'Reviewed workbench',status:'confirmed',epistemic_status:'surveyed',confidence:1,unknowns:[],identity:{action:'create',entity_id:null},
+      geometry:{kind:'oi-asset-placement',asset_version:run.id,position:[4,0,2],rotation_degrees:[0,0,0]}}],
+  };
+  await assert.rejects(()=>prepareWalkthroughReconstruction(root,run.id,1,plan), /confirmed static review/);
+  reviewWalkthrough(root,run.id,1,confirm);
+  await assert.rejects(()=>prepareWalkthroughReconstruction(root,run.id,1,plan), /changed/);
+  const request = await prepareWalkthroughReconstruction(root,run.id,2,plan);
+  assert.equal(request.source.revision,2); assert.equal(request.source.schema,'walkthrough-observations/1');
+  assert.equal(request.source.artifacts.length,3); assert.equal(request.candidates[0].confidence,.8);
+  assert.equal(request.candidates[0].epistemic_status,'inferred'); assert.equal(request.scale.calibration,null);
+  assert.deepEqual(request.candidates[0].geometry.position,[4,0,2]); // Never substitute predicted centroid [1,2,3].
+  assert.match(request.candidates[0].unknowns.join(' '),/Source mode: replay/);
+  const mock = new OiMockTransport();
+  await assert.rejects(()=>reconstructionCommand('commit',{request},mock),/projectRoot/);
+  reviewWalkthrough(root,run.id,2,{...confirm,decision:'rejected'});
+  await assert.rejects(()=>reconstructionCommand('commit',{projectRoot:root,request},mock),/changed/);
+  assert.equal(mock.calls.length,0);
+  await writeFile(join(root,'walkthroughs',run.id,'image.png'),'tampered');
+  await assert.rejects(()=>prepareWalkthroughReconstruction(root,run.id,3,plan),/digest mismatch/);
 });

@@ -12,6 +12,7 @@ persists actual test state so you can inspect what happened afterward.
 
 Or give it a narrower task:
 
+- “Test reviewed reconstruction against pinned OI: preview, import, retry, correct, and reopen the original evidence.”
 - “Test spatial associations: link a source timestamp to a location, review ambiguous identity, and prove moved/deleted objects never silently relink.”
 - “Test the video-first journey: correction → confirmed goal → accepted plan → partial work → reviewed follow-up → replan, preserving the same task.”
 - “Test process corrections and prove the original revision survives.”
@@ -53,6 +54,7 @@ executable if it is not named `python3`.
 
 | Scenario | What runs | What it proves |
 | --- | --- | --- |
+| `reconstruction` | Deterministic fixture with **real pinned OI** | Explicit transforms, calibration/holdout, preview/commit, retries and revisioned identity/lineage; blocked without OI setup, no model inference |
 | `spatial` | Synthetic source/identity review → moved/deleted OI responses → separate CLI reopen | Durable source spans/checksums, review history and stale states, no automatic relinking or scene writes; OI responses are mocked |
 | `journey` | Synthetic retained capture → reviewed process → confirmed purpose → future task → accepted plan → partial actuals → reviewed follow-up → replan | One canonical workflow/task, correction persistence, resumable identity, explicit unknown outcomes; see [journey contract](video-first-journey.md) |
 | `planning` | Goal-linked tray workflow → accepted schedule → actual overrun → revised plan | Shared tasks counted once, dependencies/breaks, retained actuals, explicit downstream conflicts |
@@ -136,7 +138,7 @@ Configure the pinned `OI_ROOT` and `OI_STRICT_PIN=true` per
 [oi-boundary.md](oi-boundary.md). This writes test scenes through OI; use a new
 project and unset any shared `OI_SCENE_DATA_DIR` override. Omitting `--mock-oi`
 is intentional: unavailable OI is an error, not a reason to call a mock test live.
-This tests the existing floor-plan contract, not #53's pending reconstruction import.
+This tests the existing floor-plan contract. Use the `reconstruction` scenario for #53's reviewed import contract.
 
 ## Regression tests versus capability checks
 
@@ -159,3 +161,13 @@ Run `task-capabilities.js test reconciliation --out <new absolute directory>` af
 ### Intervention outcomes
 
 Run `task-capabilities.js test outcomes --out <new absolute directory>`. The synthetic scenario retains the baseline, prediction, normalized measured comparison, later correction, farmer rejection and updated real briefing output. It preserves unfinished tasks. Use `task-outcomes.js --root <absolute-project> --command <absolute-json-file>` for individual operations, or `task-briefing.js <absolute-project> --offline` for current verified-state actions. See [intervention outcomes](intervention-outcomes.md) for contracts and verification limits.
+
+## Reviewed reconstruction import
+
+`node dist/task-capabilities.js test reconstruction --out /absolute/new-directory`
+uses the real pinned OI runtime from `OI_ROOT`, with a provider-neutral deterministic
+fixture. It exercises metric placement, preview/commit, retries, identity-preserving
+correction and lineage inspection. Missing OI setup is **blocked**, never a mock pass.
+For supplied evidence, standalone use, and the reviewed walkthrough adapter, see
+[reconstruction-import.md](reconstruction-import.md). No app/server/model inference
+is needed; unsupported raw geometry is reported explicitly.
