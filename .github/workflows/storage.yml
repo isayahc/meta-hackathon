@@ -1,0 +1,22 @@
+name: MongoDB and S3 migration
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  migration:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    env:
+      STORAGE_ACCESS_KEY: test-only-access
+      STORAGE_SECRET_KEY: test-only-secret-not-production
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose -f compose.storage.yaml --profile tools build
+      - run: docker builder prune --all --force
+      - run: docker compose -f compose.storage.yaml run --rm transfer
+      - if: failure()
+        run: docker compose -f compose.storage.yaml logs --tail 100
+      - if: always()
+        run: docker compose -f compose.storage.yaml down -v
