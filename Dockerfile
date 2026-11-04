@@ -19,7 +19,9 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/app/physical-task-tracker/package.json ./app/physical-task-tracker/package.json
 COPY --from=build /app/app/physical-task-tracker/dist ./app/physical-task-tracker/dist
 COPY docker /app/docker
-RUN mkdir -p /data /config && chown node:node /data /config
+# Existing Windows worktrees may still supply CRLF bytes to the build context.
+RUN sed -i 's/\r$//' /app/docker/entrypoint.sh \
+    && mkdir -p /data /config && chown node:node /data /config
 ENV NODE_ENV=production APPDATA=/config
 USER node
 EXPOSE 8123
