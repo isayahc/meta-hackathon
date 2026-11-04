@@ -108,6 +108,7 @@ summary { min-height:44px; padding:10px 0; cursor:pointer; font-weight:550; colo
 .spot .st { font-size:13px; color:var(--muted); margin-top:8px; }
 .dot { width:8px; height:8px; border-radius:50%; background:var(--green); margin-top:6px; }
 .dot.warn { background:var(--amber); }
+.calendar-layout>* { min-width:0; }
 .calendar-layout { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(270px,1fr); gap:24px; align-items:start; }
 .calendar-layout>div>section { background:#fff; padding:24px; border-radius:var(--radius); border:1px solid var(--line); }
 .calbar { margin:16px 0; justify-content:space-between; }
@@ -150,7 +151,20 @@ img { max-width:100%; height:auto; }
 #journeydetail>section { border:1px solid var(--line); background:#fff; border-radius:var(--radius); padding:24px; margin-top:20px; }
 .journey-steps { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
 .journey-steps button[aria-current=step] { background:var(--green); color:white; border-color:var(--green); }
-.journey-stage[hidden] { display:none; }
+.journey-stage[hidden], .evidence-steps li[hidden] { display:none; }
+.journey-guidance { padding:16px; background:var(--soft); border-radius:12px; margin:12px 0; }
+.journey-guidance { scroll-margin-top:0; }
+#journeydetail>section>details { margin:0; }
+#journeydetail>section>h2 { margin-bottom:4px; }
+.journey-guidance h3,.journey-guidance p { margin:0 0 8px; }
+.review-actions { position:sticky; top:0; z-index:3; background:white; border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:12px; }
+.review-actions form { display:flex; flex-wrap:wrap; align-items:end; gap:12px; }
+.review-actions label { flex:1 1 180px; }
+.observation-nav { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+.observation-nav button[aria-current=true] { background:var(--green); color:white; }
+.evidence-media video { height: min(34vh,320px); object-fit:contain; }
+.carslide img { display:block; height:min(34vh,320px); width:100%; object-fit:contain; }
+@media(max-width:900px) { .evidence-media { position:static; } .review-actions { top:76px; } .journey-steps { flex-wrap:nowrap; overflow-x:auto; } .journey-steps button { flex:none; } }
 .carview { overflow:hidden; border:1px solid var(--line); border-radius:12px; }
 .cartrack { display:flex; transition:transform .2s ease; }
 .carslide { min-width:100%; padding:16px; }
@@ -165,7 +179,7 @@ dialog::backdrop { background:#11271dcc; }
 .capture-choices>* { flex:1; }
 #journeycapture { margin:0; }
 @media(min-width:1400px) { .calendar-layout { grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr); } }
-@media(max-width:1150px) { .calendar-layout { grid-template-columns:1fr; } .calendar-tools { display:grid; grid-template-columns:1fr; } }
+@media(max-width:1150px) { .calendar-layout { grid-template-columns:minmax(0,1fr); } .calendar-tools { display:grid; grid-template-columns:minmax(0,1fr); } }
 @media(max-width:900px) {
  .app-header { inset:0 0 auto; width:auto; height:76px; padding:12px 20px; flex-direction:row; align-items:center; justify-content:space-between; border-bottom:1px solid #496354; }
  .brand small { display:none; } #globalrecordwork { margin:0; }
@@ -180,7 +194,7 @@ dialog::backdrop { background:#11271dcc; }
  .detail-panel { position:static; max-height:none; }
  .detail-panel:has(#planningtaskdetail:empty) { display:none; }
  .evidence-review { grid-template-columns:1fr; }
- .evidence-media { position:sticky; top:84px; z-index:2; background:#fff; border-bottom:1px solid var(--line); padding-bottom:8px; }
+ .evidence-media { position:static; top:84px; z-index:2; background:#fff; border-bottom:1px solid var(--line); padding-bottom:8px; }
  .evidence-media video { max-height:220px; }
  .evidence-media p { display:none; }
 }
@@ -1075,7 +1089,7 @@ document.addEventListener('click', e => {
   if (b.dataset.goaldetail) readAction(() => showPlanningGoal(b.dataset.goaldetail));
   if (b.dataset.opentask) readAction(() => openTask(b.dataset.opentask));
   if (b.dataset.taskcalendar) readAction(async () => { await loadPlanning(); const id=b.dataset.taskcalendar; const block = planningState.schedule.blocks.find(b=>b.task_id===id && b.status==='accepted') ?? planningState.latest_plan?.blocks.find(b=>b.task_id===id); if(block) { const date = new Intl.DateTimeFormat('en-CA', { timeZone: planningState.schedule.config.timezone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(block.start)); calCursor=parseDay(date); } document.querySelector('[data-view="cal"]').click(); await loadCal(); });
-  if (b.dataset.taskevidence) readAction(async () => { const linked=journeyState?.workflows.find(w=>w.tasks.some(t=>t.event_id===b.dataset.taskevidence)); if(linked){selectedJourney=linked.workflow.id;setDestination('space');journeyRoute('space','workflow',selectedJourney);await loadJourneys();$('journeydetail').focus();return;} const detail=await api(`/api/events/${encodeURIComponent(b.dataset.taskevidence)}`); document.querySelector('[data-view="cal"]').click(); $('caldetailwrap').hidden=false; await renderCalDetail($('caldetail'),detail.event,detail.actions); });
+  if (b.dataset.taskevidence) readAction(async () => { const linked=journeyState?.workflows.find(w=>w.tasks.some(t=>t.event_id===b.dataset.taskevidence)); if(linked){selectedJourney=linked.workflow.id;setDestination('space');journeyRoute('space','workflow',selectedJourney);await loadJourneys();$('journeydetail').focus({preventScroll:true});$('journeydetail .journey-guidance')?.scrollIntoView({block:'start'});return;} const detail=await api(`/api/events/${encodeURIComponent(b.dataset.taskevidence)}`); document.querySelector('[data-view="cal"]').click(); $('caldetailwrap').hidden=false; await renderCalDetail($('caldetail'),detail.event,detail.actions); });
 });
 $('newtaskform').addEventListener('submit', e => { e.preventDefault(); const f=e.currentTarget; planningAction(async () => { const goal=$('taskgoalfilter').value; f.dataset.requestId ||= crypto.randomUUID();saveFormDraft(f); const task=await planningPost({ command:'create', request_id:f.dataset.requestId, task:{ text:f.text.value,completion_criteria:f.criteria.value,links:goal && goal!=='unassigned' ? [{goal_id:goal,origin:'human',review:'proposed',explanation:'Confirm the contribution when reviewing this task'}] : [] } }); f.reset(); delete f.dataset.requestId; selectedPlanningTask=task.id; await loadPlanning(); }); });
 $('availabilityform').addEventListener('submit', e => { e.preventDefault(); const f=e.currentTarget; planningAction(async () => { const resources={}; for(const line of f.resources.value.split('\n').filter(x=>x.trim())) { const [name,status]=line.split('=').map(s=>s.trim()); resources[name]=status; } const window={ start:await localPlanningTime(f.start.value),end:await localPlanningTime(f.end.value) }; await planningPost({command:'configure',revision:planningState.schedule.revision,config:{timezone:f.timezone.value,person:f.person.value,max_minutes:Number(f.limit.value),resources,availability:f.replace.checked?[window]:[...planningState.schedule.config.availability,window]}}); await loadPlanning(); }); });
@@ -1210,24 +1224,34 @@ function refreshWorkspaceContext(){
 }
 function presentJourneyStages(w){
   const root=$('journeydetail'),sections=[...root.children].filter(x=>x.tagName==='SECTION');if(!sections.length)return;
-  const names={review:'Review work',goals:'Confirm purpose',improvements:'Choose method',tasks:'Organize tasks',adapt:'Review outcomes'};
+  const names={review:'Review',goals:'Choose a goal',improvements:'Improve',tasks:'Schedule',adapt:'Check results'};
   for(const [index,section]of sections.entries()){
     const heading=section.querySelector('h2')?.textContent||'';
     const stage=index===0?'review':heading.startsWith('What are')?'goals':heading.startsWith('Choose how')?'improvements':heading.startsWith('Organize')?'tasks':'adapt';
     section.dataset.stage=stage;section.classList.add('journey-stage');
   }
-  const wanted=uiState.stage||({today:'adapt',followup:'adapt',schedule:'tasks'})[w.stage]||w.stage;
+  const wanted=uiState.stage||({today:'adapt',followup:'adapt',schedule:'tasks',saved:'goals'})[w.stage]||w.stage;
   const stage=sections.some(s=>s.dataset.stage===wanted)?wanted:'review';
   const nav=document.createElement('div');nav.className='journey-steps';nav.setAttribute('role','group');nav.setAttribute('aria-label','Workflow review steps');
   nav.innerHTML=Object.entries(names).map(([key,label])=>`<button class="ghost" type="button" data-stage="${key}" ${sections.some(s=>s.dataset.stage===key)?'':'disabled'} ${stage===key?'aria-current="step"':''}>${label}</button>`).join('');
-  root.prepend(nav);for(const section of sections)section.hidden=section.dataset.stage!==stage;
+  const guidance=document.createElement('div');guidance.className='journey-guidance';
+  guidance.innerHTML=`<p class="eyebrow">Record → Review → Improve → Schedule → Check results</p><h3>${esc(w.stage==='review'?'Your task is ready to review':w.stage==='saved'?'Observation saved':names[stage])}</h3><p>${esc(stage==='review'?'Check each step and the inferred outcome, then confirm your review. Unseen work remains unknown.':w.next)}</p>`;
+  root.prepend(guidance,nav);guidance.tabIndex=-1;for(const section of sections)section.hidden=section.dataset.stage!==stage;
   for(const article of sections[0].querySelectorAll(':scope > article')){
+    const review=article.querySelector('[data-jcommand=review]');
+    if(review){const actions=document.createElement('div');actions.className='review-actions';actions.appendChild(review);article.querySelector('h3').after(actions);}
+
     const video=article.querySelector(':scope > video');if(!video)continue;
     const grid=document.createElement('div');grid.className='evidence-review';const media=document.createElement('div');media.className='evidence-media';const steps=document.createElement('div');steps.className='evidence-steps';
     const heading=article.querySelector(':scope > h3');media.appendChild(video);
-    for(const child of [...article.children])if(child!==heading)steps.appendChild(child);
+    for(const child of [...article.children])if(child!==heading&&!child.classList.contains('review-actions'))steps.appendChild(child);
     grid.append(media,steps);article.appendChild(grid);
-    const items=[...steps.querySelectorAll(':scope > ol > li')];if(items.length>1){const label=document.createElement('label');label.textContent='Jump to an observation';const select=document.createElement('select');items.forEach((li,i)=>{li.id=`review-${w.workflow.id}-${article.parentElement.children.length}-${i}-${Math.random().toString(36).slice(2,6)}`;li.tabIndex=-1;const option=document.createElement('option');option.value=li.id;option.textContent=`${i+1}. ${li.querySelector('strong')?.textContent||'Observation'}`;select.appendChild(option);});select.addEventListener('change',()=>{const target=$(select.value);target.scrollIntoView({block:'center'});target.focus();});label.appendChild(select);steps.prepend(label);}
+    const items=[...steps.querySelectorAll(':scope > ol > li')];
+    const controls=document.createElement('div');controls.className='observation-nav';controls.setAttribute('aria-label','Observed steps');
+    const show=index=>{items.forEach((li,i)=>li.hidden=i!==index);[...controls.children].forEach((b,i)=>b.setAttribute('aria-current',String(i===index)));};
+    items.forEach((li,i)=>{const b=document.createElement('button');b.type='button';b.className='ghost';b.textContent=String(i+1);b.setAttribute('aria-label','Review step '+(i+1)+': '+(li.querySelector('strong')?.textContent||'Observation'));b.addEventListener('click',()=>{show(i);const seek=li.querySelector('[data-seek]');if(seek)video.currentTime=Number(seek.dataset.seek);});controls.appendChild(b);});
+    steps.prepend(controls);show(0);
+
   }
   const purpose=root.querySelector('[data-jcommand=goal]');if(purpose&&!purpose.text.value){const proposed=w.clips.find(c=>c.process)?.process.title;if(proposed){const b=document.createElement('button');b.type='button';b.className='ghost';b.textContent='Use observed work as a starting point: '+proposed;b.addEventListener('click',()=>{purpose.text.value=proposed;saveJourneyDraft(purpose);purpose.criteria.focus();});purpose.prepend(b);}}
 }
@@ -1374,23 +1398,22 @@ function renderJourney(){
   const w=journeyEntry();if(!w){$('journeydetail').innerHTML='';return;}const j=w.workflow;
   const reason='<label>Reason<input name="reason" required></label>';
   const goalOptions=w.goals.map(g=>`<option value="${esc(g.id)}">${esc(g.text)}</option>`).join('');
-  $('journeydetail').innerHTML=`<section><h2>${esc(j.title)}</h2><button type="button" class="ghost" data-journey-refresh="true">Refresh saved workflow</button><p><strong>${esc(w.next)}</strong></p><p>Review → purpose → method → future tasks → calendar → progress → follow-up</p>
-    <button type="button" class="ghost" data-journey-add="${esc(j.id)}">Add a related clip</button>
+  $('journeydetail').innerHTML=`<section><h2>${esc(j.title)}</h2><details><summary>Recording options</summary><button type="button" class="ghost" data-journey-refresh="true">Refresh saved workflow</button><button type="button" class="ghost" data-journey-add="${esc(j.id)}">Add a related clip</button></details>
     ${w.clips.filter(c=>c.role!=='followup').map(c=>{const s=c.source,p=c.process;return `<article class="task-card"><h3>${c.role==='baseline'?'Original work':'Additional footage'} · ${esc(s.stage.replaceAll('_',' '))}</h3>
       ${s.media?`<video controls preload="metadata" src="/media/${encodeURIComponent(s.media)}" aria-label="Original work video"></video>`:''}
       <p>Recording time: ${esc(s.recorded_at||'unknown')} · ${esc(s.time_uncertainty)}</p>
       ${s.error?`<p>Analysis failed: ${esc(s.error)}</p>`:''}
       ${s.processing?'<p>Analysis was started. If it was interrupted, retry the retained clip.</p>':''}
       ${!p||s.processing||s.stage==='failed_retryable'?`<button class="ghost" type="button" data-journey-retry="${esc(s.id)}">Resume / retry retained clip</button>`:''}
-      ${p?`<p>${esc(s.interpretations.find(i=>i.id===c.interpretation_id)?.origin||'unknown')} interpretation · ${p.rev===c.reviewed_revision?'Confirmed review':'Needs review'} · coverage: ${esc(p.coverage.coverage_note||'Sampled instants; unseen work is unknown')}</p>
-        <ol>${p.steps.map(step=>`<li><p><strong>${esc(step.label)}</strong> — ${step.observed_order===null?'Suggested / unobserved':'Observed in footage'} · ${esc(step.claim)}</p><p>${[...step.tools,...step.materials,...step.inputs,...step.outputs].map(esc).join(' · ')||'Tools and materials not yet specified'} · ${esc(step.location||'Location unknown')}</p><button class="ghost" type="button" data-linkprocess="${esc(p.id)}" data-linkstep="${esc(step.id)}">Link work location</button>${step.evidence.spans.map(span=>`<button type="button" class="ghost" data-seek="${span.start_s}">View source at ${span.start_s}s</button>`).join('')}
+      ${p?`<details><summary>Edit task name and inferred outcome</summary><form class="run" data-jcommand="summary" data-source="${esc(s.id)}"><label>Task name<input name="title" value="${esc(p.title)}" required></label><label>Outcome interpretation (not verified success)<input name="outcome" value="${esc(p.stage||'')}" placeholder="Unknown unless supported by the clip"></label>${reason}<button class="btn">Save interpretation</button></form></details><p><strong>${esc(p.title)}</strong> · Outcome interpretation: ${esc(p.stage||'Unknown')}</p><p>${esc(s.interpretations.find(i=>i.id===c.interpretation_id)?.origin||'unknown')} interpretation · ${p.rev===c.reviewed_revision?'Confirmed review':'Needs review'} · coverage: ${esc(p.coverage.coverage_note||'Sampled instants; unseen work is unknown')}</p>
+        <ol>${p.steps.map(step=>`<li><p><strong>${esc(step.label)}</strong> — ${step.observed_order===null?'Suggested / unobserved':'Observed in footage'} · ${esc(step.claim)}</p>${step.unknowns.length?`<p class="hint"><strong>Still unknown for this step:</strong> ${step.unknowns.map(esc).join(' · ')}. Review these limits before confirming.</p>`:''}<p>${[...step.tools,...step.materials,...step.inputs,...step.outputs].map(esc).join(' · ')||'Tools and materials not yet specified'} · ${esc(step.location||'Location unknown')}</p><button class="ghost" type="button" data-linkprocess="${esc(p.id)}" data-linkstep="${esc(step.id)}">Link work location</button>${step.evidence.spans.map(span=>`<button type="button" class="ghost" data-seek="${span.start_s}">View source at ${span.start_s}s</button>`).join('')}
           <details><summary>Correct this interpretation</summary><form class="run" data-jcommand="correct" data-source="${esc(s.id)}" data-step="${esc(step.id)}" data-draft="step-${esc(step.id)}"><label>What happened?<input name="label" value="${esc(step.label)}" required></label><label>Tools (comma separated)<input name="tools" value="${esc(step.tools.join(', '))}"></label><label>Materials (comma separated)<input name="materials" value="${esc(step.materials.join(', '))}"></label><label>Location<input name="place" value="${esc(step.location||'')}"></label><label>Still unknown<input name="unknowns" value="${esc(step.unknowns.join('; '))}"></label>${reason}<button class="btn">Save correction</button></form></details></li>`).join('')}</ol>
         <details><summary>Add an omitted step</summary><form class="run" data-jcommand="addstep" data-source="${esc(s.id)}"><label>Missing action<input name="label" required></label><label>What remains uncertain?<input name="unknowns" required></label>${reason}<button class="btn">Add human-reported step</button></form></details>
         <p>${[...p.unknowns,...p.gaps,...p.order_notes].map(esc).join(' · ')||'No additional gaps recorded.'}</p>
         <form class="run" data-jcommand="review" data-source="${esc(s.id)}">${reason}<button class="btn">Confirm review, keeping unknowns explicit</button></form>`:'<p>Your clip is saved. Analysis is needed before process review.</p>'}</article>`;}).join('')}
     </section>
-    ${w.baseline_reviewed?`<section><h2>What are you trying to accomplish?</h2><p>Visible activity does not establish your desired quantity, deadline, quality standard or priority.</p>${w.goals.map(g=>`<p><button class="ghost" data-goaldetail="${esc(g.id)}">${esc(g.text)}</button> · ${esc(g.success_criteria||'Success criteria need clarification')}</p>`).join('')}
-      <details ${!j.intent_confirmed?'open':''}><summary>Confirm or change purpose</summary><form class="run" data-jcommand="goal"><label>Goal<select name="goal_id"><option value="">Create a goal</option>${planningState.goals.map(g=>`<option value="${esc(g.id)}">${esc(g.text)}</option>`).join('')}</select></label><label>Desired outcome (for a new goal)<input name="text"></label><label>Success criteria (for a new goal)<input name="criteria"></label><label>Deadline (optional)<input type="date" name="deadline"></label><label>Priority<select name="weight"><option>3</option><option>1</option><option>2</option><option>4</option><option>5</option></select></label><label>What would you like to improve? (or “None for now”)<input name="desire" value="${esc(j.desired_improvement)}" required></label>${reason}<button class="btn">Confirm purpose</button></form>
+    ${w.baseline_reviewed?`<section><h2>What are you trying to accomplish?</h2>${!j.task_ids.length?`<div class="journey-guidance"><p>${j.observation_only?'This observation is saved. You can leave now or continue with a goal.':'You can keep this as a documented observation. Planning future work is optional.'}</p><form class="run" data-jcommand="${j.observation_only?'resume_planning':'save_observation'}"><input type="hidden" name="reason" value="${j.observation_only?'Resume planning from saved observation':'Save reviewed observation without future work'}"><button class="${j.observation_only?'btn':'ghost'}">${j.observation_only?'Continue to goals and planning':'Save observation only'}</button></form></div>`:''}<p>Visible activity does not establish your desired quantity, deadline, quality standard or priority.</p>${w.goals.map(g=>`<p><button class="ghost" data-goaldetail="${esc(g.id)}">${esc(g.text)}</button> · ${esc(g.success_criteria||'Success criteria need clarification')}</p>`).join('')}
+      <details ${j.observation_only?'hidden':!j.intent_confirmed?'open':''}><summary>Confirm or change purpose</summary><form class="run" data-jcommand="goal"><label>Goal<select name="goal_id"><option value="">Create a goal</option>${planningState.goals.map(g=>`<option value="${esc(g.id)}">${esc(g.text)}</option>`).join('')}</select></label><label>Desired outcome (for a new goal)<input name="text"></label><label>Success criteria (for a new goal)<input name="criteria"></label><label>Deadline (optional)<input type="date" name="deadline"></label><label>Priority<select name="weight"><option>3</option><option>1</option><option>2</option><option>4</option><option>5</option></select></label><label>What would you like to improve? (or “None for now”)<input name="desire" value="${esc(j.desired_improvement)}" required></label>${reason}<button class="btn">Confirm purpose</button></form>
       <form class="run" data-jcommand="unassigned"><label>Desired improvement or “Unknown for now”<input name="desire" required></label>${reason}<button class="ghost">Keep goals unresolved and organize work</button></form></details></section>`:''}
     ${w.baseline_reviewed&&j.intent_confirmed?`<section><h2>Choose how to do the work</h2><p>${esc(j.desired_improvement)}</p><p>${w.method_current?'Current choice: '+esc(j.method.decision==='retain'?'Retain current practice':j.method.reason):'Choose a method, or review the choice after observations or goals changed.'}</p>
       ${w.improvements.length?w.improvements.flatMap(r=>r.assessments.map(a=>`<article class="task-card"><h3>${esc(a.candidate.change)}</h3><p>${esc(a.decision)} · ${esc(a.feasibility)}${r.stale?' · Stale review':''}</p><p>${a.comparisons.map(c=>esc(c.status)+': '+(c.reduction_percent===null?'unknown':Number(c.reduction_percent.toFixed(1))+'%')+' '+esc(c.unit)).join(' · ')}</p><p>${[...a.blocked,...a.unvalidated].map(esc).join(' · ')}</p><button class="ghost" type="button" data-journey-plan="outcomeregister" data-journey-candidate="${esc(r.id+'~'+a.candidate.id)}">Open improvement evidence and trial review</button>${a.decision==='accepted'&&a.feasibility==='eligible'&&!r.stale?`<form class="run" data-jcommand="method" data-review="${esc(r.id)}" data-candidate="${esc(a.candidate.id)}">${reason}<button class="btn">Use this accepted intervention</button></form>`:''}</article>`)).join(''):'<p>No supported improvement comparison exists for this workflow. You can organize current practice now. Generating advice requires reviewed process evidence and resource constraints.</p>'}
@@ -1411,7 +1434,8 @@ $('journeydetail').addEventListener('input',e=>saveJourneyDraft(e.target.form));
 $('journeydetail').addEventListener('change',e=>saveJourneyDraft(e.target.form));
 $('journeydetail').addEventListener('submit',e=>{e.preventDefault();const f=e.target,w=journeyEntry(),command=f.dataset.jcommand;journeyAction(async()=>{
   const input={command,reason:f.reason.value};
-  if(['correct','addstep','review'].includes(command)){const c=w.clips.find(c=>c.source_id===f.dataset.source);input.source_id=c.source_id;input.process_revision=c.process.rev;
+  if(['correct','addstep','review','summary'].includes(command)){const c=w.clips.find(c=>c.source_id===f.dataset.source);input.source_id=c.source_id;input.process_revision=c.process.rev;
+    if(command==='summary'){input.command='correct';input.patch={title:f.title.value,stage:f.outcome.value||null};}
     if(command==='correct')input.patch={steps:{[f.dataset.step]:{label:f.label.value,tools:commaList(f.tools.value),materials:commaList(f.materials.value),location:f.place.value||null,unknowns:f.unknowns.value?[f.unknowns.value]:[]}}};
     if(command==='addstep'){input.command='correct';f.dataset.stepId ||= 'human-'+crypto.randomUUID();input.patch={add_steps:[{id:f.dataset.stepId,label:f.label.value,claim:'corrected',execution:'unknown',inputs:[],outputs:[],tools:[],materials:[],actors:[],preconditions:[],completion_criteria:[],criteria_evidence:{},requires:[],requires_unknown:true,observed_order:null,repeat:null,location:null,evidence:{media:null,spans:[],coverage_note:'Human report of omitted step; no footage asserted'},unknowns:[f.unknowns.value]}]};}
   }else if(command==='goal'){input.desired_improvement=f.desire.value;if(f.goal_id.value)input.goal_id=f.goal_id.value;else input.goal={text:f.text.value,success_criteria:f.criteria.value,deadline:f.deadline.value||null,weight:Number(f.weight.value)};
@@ -1426,7 +1450,7 @@ $('journeycaptureform').addEventListener('submit',e=>{e.preventDefault();const f
   $('capturestatus').textContent='Uploading and interpreting. The source is retained before analysis; you can resume its review if interrupted.';
   const result=await api(context.standalone?'/api/reconcile-video':'/api/journey-video',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...context,revision:workflow?.revision,videoData:await fileData(f.file),frames:Number(f.frames.value),recorded_at:f.recorded_at.value||null})});
   if(context.standalone){selectedUpdate=result.source.id;setDestination('space');journeyRoute('space','update',selectedUpdate);await loadPlanning();$('capturedialog').close();$('updatedetail').focus();return;}
-  selectedJourney=result.workflow.id;uiState.stage=null;setDestination('space');journeyRoute('space','workflow',selectedJourney);await loadJourneys();$('capturedialog').close();$('capturestatus').textContent=journeyEntry()?.clips.some(c=>c.source.stage==='failed_retryable')?'Clip saved; analysis failed. Retry the retained clip below.':'Clip saved. Review what was understood below.';f.file.value='';$('journeydetail').focus();
+  selectedJourney=result.workflow.id;uiState.stage=null;setDestination('space');journeyRoute('space','workflow',selectedJourney);await loadJourneys();$('capturedialog').close();$('capturestatus').textContent=journeyEntry()?.clips.some(c=>c.source.stage==='failed_retryable')?'Clip saved; analysis failed. Retry the retained clip below.':'Clip saved. Review what was understood below.';f.file.value='';$('journeydetail').focus({preventScroll:true});$('journeydetail .journey-guidance')?.scrollIntoView({block:'start'});
  }catch(error){$('capturestatus').textContent=error.message;throw error;}finally{b.disabled=false;await loadJourneys();}});});
 async function chooseJourneyCapture(value='new'){
   uiState.returnFocus=document.activeElement;try{await loadJourneys();}catch(e){setStatus(e.message,true);return;}$('journeycaptureform').context.value=value;
@@ -1443,7 +1467,7 @@ $('journeycaptureform').camera.addEventListener('change',e=>{if(e.target.files.l
 $('journeycaptureform').file.addEventListener('change',e=>$('capturefilename').textContent=e.target.files[0]?.name||'No video selected.');
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.journeyRefresh)readAction(loadJourneys);
-  if(b.dataset.journey){selectedJourney=b.dataset.journey;uiState.stage=null;setDestination('space');journeyRoute('space','workflow',selectedJourney);renderJourney();$('journeydetail').focus();}
+  if(b.dataset.journey){selectedJourney=b.dataset.journey;uiState.stage=null;setDestination('space');journeyRoute('space','workflow',selectedJourney);renderJourney();$('journeydetail').focus({preventScroll:true});$('journeydetail .journey-guidance')?.scrollIntoView({block:'start'});}
   if(b.dataset.journeyAdd)chooseJourneyCapture(JSON.stringify({workflow_id:b.dataset.journeyAdd,role:'additional'}));
   if(b.dataset.journeyFollowup)chooseJourneyCapture(JSON.stringify({workflow_id:selectedJourney,role:'followup',task_id:b.dataset.journeyFollowup}));
   if(b.dataset.seek){const v=b.closest('article').querySelector('video');if(v){v.currentTime=Number(b.dataset.seek);v.focus();}}
@@ -1471,3 +1495,4 @@ restoreJourneyRoute();
 </script>
 </body>
 </html>
+
