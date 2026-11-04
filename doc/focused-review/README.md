@@ -18,21 +18,28 @@ Each preview is capped at eight seconds, and failed GIF extraction does not disc
 successful analysis. These are sampled video intervals, not verified action
 boundaries or SAM object masks.
 
-Older recordings: open **Questions and recording details**, then **Reanalyze and
-generate segment GIFs**. This explicitly creates a new interpretation and requires
-review again; previous interpretations/corrections remain retained.
+Older recordings automatically generate missing GIFs from the retained video when
+review opens. This does not call the model, append an interpretation, change process
+revisions, or invalidate human confirmation. Previews are cached separately by source
+checksum and interpretation, and missing files are regenerated. Concurrent requests
+for the same interpretation share one generation job.
+
+The step panel displays a preparation state, then its matching looping GIF. On
+failure it offers **Retry segment previews**. The complete MP4 is available only
+under recording details; it is never substituted into every step panel.
 
 ## Verification
 
-- 326 tests: 314 passed, 12 skipped, zero failures.
+- 327 tests: 315 passed, 12 skipped, zero failures.
 - Real FFmpeg test creates portrait video and indexed GIFs; the existing scanner
   integration test verifies GIF extraction with injected model output.
-- Review browser smoke uses a generated test-pattern video and real FFmpeg GIFs.
+- Review browser smoke starts with a generated test-pattern video and **no GIF metadata**; opening review automatically creates real FFmpeg GIFs.
   Checks GIF loading/switching, hidden unrelated tools, corrections, save-only,
   reload/resume, returning to the directory, and opening one supporting activity.
 - Desktop default review fits 1440×900 without page scrolling. Responsive checks
   include 390×844 and 320×844 without horizontal page overflow. On phones, details
   may scroll; confirmation stays above the bottom navigation.
+- Preview backfill tests verify concurrent requests, cache reuse, deleted-file recovery, and unchanged interpretation/process/review state.
 - Full journey browser smoke passes through calendar acceptance, partial progress,
   follow-up and replan. No listening server is needed: tests drive real handlers
   and SQLite through Playwright request interception.

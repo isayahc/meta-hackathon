@@ -1,3 +1,4 @@
+import { ensureReviewPreviews } from './lib/review-previews.js';
 import { journeyCommand, journeyView, captureJourney } from './lib/journey.js';
 // Field Ops app server: serves dashboard/index.html plus a JSON API that
 // runs the sibling CLIs as jobs (scan, compare, briefing, optimizer) and
@@ -327,6 +328,14 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
           else if(url.searchParams.has('scene_id'))json(200,{inspection:await inspectSpatialTarget(root,{kind:'oi',scene_id:url.searchParams.get('scene_id'),revision:Number(url.searchParams.get('revision')),entity_kind:'scene',entity_id:'scene'},spatialReader)});
           else json(200,await spatialEvidenceView(root,spatialReader));
         }catch(error){const e=error as Error & {code?:string};json(e.code?.startsWith('STALE')?409:400,{error:e.message,code:e.code??'SPATIAL_FAILED'});}
+        return;
+      }
+      if (url.pathname === '/api/review-previews' && req.method === 'POST') {
+        try {
+          const input=await readBody(req);
+          if(typeof input.source_id!=='string'||typeof input.interpretation_id!=='string')throw new Error('Choose a retained interpretation.');
+          json(200,{segments:await ensureReviewPreviews(root,input.source_id,input.interpretation_id)});
+        }catch(error){json(400,{error:(error as Error).message});}
         return;
       }
       if (url.pathname === '/api/journeys' && req.method === 'GET') { json(200, journeyView(root)); return; }
@@ -770,3 +779,4 @@ if (invokedAsMain) {
     }
   });
 }
+

@@ -161,6 +161,7 @@ img { max-width:100%; height:auto; }
 #journeydetail .review-workbench { margin:0; padding:16px; }
 .review-workbench h2 { font-size:20px; }
 .review-workbench .review-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; }
+.preview-placeholder { display:grid; place-content:center; min-height:180px; padding:20px; background:var(--soft); border-radius:10px; }
 .segment-preview img,.segment-preview video { display:block; width:100%; height:min(36vh,320px); object-fit:contain; border-radius:10px; background:#14241d; }
 .review-step { min-width:0; }
 .review-step>h3 { font-size:20px; }
@@ -1253,12 +1254,38 @@ function focusWorkspace(id='workflowsection'){
   }
   let back=$('workspaceback');if(!back){back=document.createElement('button');back.id='workspaceback';back.type='button';back.className='ghost workspace-back';back.dataset.workspaceHome='true';back.textContent='← All workflows';workspace.prepend(back);}back.hidden=home;
 }
+const reviewPreviews=new Map();
+function previewKey(clip){return clip.source_id+':'+clip.interpretation_id;}
+/** Derive missing GIFs from saved media; never rerun interpretation to obtain a preview. */
+function ensureClipPreviews(clip,retry=false){
+  if(!clip?.interpretation_id||!clip.source.media)return;
+  const key=previewKey(clip);if(reviewPreviews.has(key)&&!retry)return;
+  reviewPreviews.set(key,{pending:true});
+  api('/api/review-previews',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source_id:clip.source_id,interpretation_id:clip.interpretation_id})})
+    .then(result=>reviewPreviews.set(key,{segments:result.segments}))
+    .catch(error=>reviewPreviews.set(key,{error:error.message}))
+    .finally(()=>refreshClipPreview(key));
+}
+/** Refresh media alone so an arriving GIF cannot close an editor or reset another stage. */
+function refreshClipPreview(key){
+  const clips=journeyEntry()?.clips.filter(c=>c.role!=='followup')||[];
+  const clip=clips[Math.min(uiState.reviewClip||0,Math.max(0,clips.length-1))];
+  const target=$('journeydetail').querySelector('.segment-visual');
+  if(!clip||previewKey(clip)!==key||!target)return;
+  const steps=clip.process?.steps.filter(s=>s.observed_order!==null)||[];
+  target.innerHTML=previewMarkup(clip,steps[Math.min(uiState.reviewStep||0,Math.max(0,steps.length-1))]);
+}
+function previewMarkup(clip,step){
+  const gif=stepGif(clip,step),preview=reviewPreviews.get(previewKey(clip));
+  return gif?`<img src="/media/${encodeURIComponent(gif.file)}" alt="Looping video segment for ${esc(step.label)}"><small>${gif.start_s.toFixed(1)}–${gif.end_s.toFixed(1)}s · sampled interval, not a verified action boundary</small>`:`<div class="preview-placeholder" role="status"><p>${esc(preview?.error||(preview?.segments?'This step’s preview is unavailable. Retry segment previews.':'Preparing the looping preview for this step…'))}</p>${preview?.error||preview?.segments?'<button class="ghost" data-retry-previews="true">Retry segment previews</button>':''}</div>`;
+}
 /** Resolve visual evidence only from the selected interpretation and observed frame. */
 function stepGif(clip,step){
   if(!step||step.observed_order===null)return null;
+  if(reviewPreviews.get(previewKey(clip))?.error)return null;
   const raw=clip.source.interpretations.find(i=>i.id===clip.interpretation_id)?.raw;
   const frame=step.evidence.spans.find(s=>Number.isInteger(s.frame))?.frame??step.observed_order;
-  const gif=raw?.gif_segments?.find(g=>g.frame===frame);
+  const gif=(reviewPreviews.get(previewKey(clip))?.segments||raw?.gif_segments)?.find(g=>g.frame===frame);
   return gif&&Number.isFinite(gif.start_s)&&Number.isFinite(gif.end_s)&&gif.start_s>=0&&gif.end_s>gif.start_s&&typeof gif.file==='string'&&/^[a-zA-Z0-9_.-]+\.gif$/.test(gif.file)?gif:null;
 }
 /** A single clip and observed step occupy the review surface. Suggestions are separate. */
@@ -1267,16 +1294,16 @@ function reviewWorkbench(w,reason){
   const ci=Math.min(uiState.reviewClip||0,Math.max(0,clips.length-1)),c=clips[ci];if(!c)return '<section><h2>No recording yet</h2></section>';
   const s=c.source,p=c.process,observed=p?.steps.filter(x=>x.observed_order!==null)||[],suggested=p?.steps.filter(x=>x.observed_order===null)||[];
   const index=Math.min(uiState.reviewStep||0,Math.max(0,observed.length-1)),step=observed[index],gif=stepGif(c,step),reviewed=p&&p.rev===c.reviewed_revision;
+  const preview=reviewPreviews.get(previewKey(c));
   const video=s.media?`<video controls preload="metadata" src="/media/${encodeURIComponent(s.media)}" aria-label="Original recording"></video>`:'';
   return `<section class="review-workbench"><h2>${esc(p?.title||w.workflow.title)}</h2>
     ${clips.length>1?`<div class="observation-nav">${clips.map((v,i)=>`<button class="ghost" data-review-clip="${i}" aria-pressed="${i===ci}">Clip ${i+1}</button>`).join('')}</div>`:''}
-    <article><div class="review-grid"><div class="segment-preview">${gif?`<img src="/media/${encodeURIComponent(gif.file)}" alt="Looping video segment for ${esc(step.label)}"><small>${gif.start_s.toFixed(1)}–${gif.end_s.toFixed(1)}s · sampled interval, not a verified action boundary</small>`:video||'<p>No playable recording.</p>'}
-    ${!gif?'<small>No segment GIF saved. Original recording shown.</small>':''}
+    <article><div class="review-grid"><div class="segment-preview"><div class="segment-visual">${previewMarkup(c,step)}</div>
     <div class="review-pager"><button class="ghost" data-review-step="${index-1}" ${index===0?'disabled':''}>Previous</button><span>${observed.length?`${index+1} / ${observed.length}`:'No observed steps'}</span><button class="ghost" data-review-step="${index+1}" ${index>=observed.length-1?'disabled':''}>Next</button></div></div>
     <div class="review-step">${step?`<p class="eyebrow">Observed step ${index+1}</p><h3>${esc(step.label)}</h3>${step.unknowns.length?`<p>${step.unknowns.map(esc).join(' · ')}</p>`:''}
     <details><summary>Correct this interpretation</summary><form class="run" data-jcommand="correct" data-source="${esc(s.id)}" data-step="${esc(step.id)}" data-draft="step-${esc(step.id)}"><label>What happened?<input name="label" value="${esc(step.label)}" required></label><label>Tools<input name="tools" value="${esc(step.tools.join(', '))}"></label><label>Materials<input name="materials" value="${esc(step.materials.join(', '))}"></label><label>Location<input name="place" value="${esc(step.location||'')}"></label><label>Still unknown<input name="unknowns" value="${esc(step.unknowns.join('; '))}"></label>${reason}<button class="btn">Save correction</button></form></details>`:'<p>No step-level observation was extracted. Review the original recording or retry analysis.</p>'}
     <details><summary>Outcome and task name</summary><p>Inferred outcome: ${esc(p?.stage||'Unknown')}. Not verified success.</p>${p?`<form class="run" data-jcommand="summary" data-source="${esc(s.id)}"><label>Task name<input name="title" value="${esc(p.title)}" required></label><label>Outcome interpretation<input name="outcome" value="${esc(p.stage||'')}"></label>${reason}<button class="btn">Save interpretation</button></form>`:''}</details>
-    <details><summary>Questions and recording details</summary><p>${esc(s.recorded_at||'Recording time unknown')}</p><p>${esc(s.time_uncertainty)}</p><p>${(p?.unknowns||[]).map(esc).join(' · ')||'No additional questions recorded.'}</p><p>Only sampled instants were analyzed. Unseen work remains unknown.</p>${step?`<button class="ghost" type="button" data-linkprocess="${esc(p.id)}" data-linkstep="${esc(step.id)}">Link work location</button>`:''}${gif?video:''}${s.error?`<p>${esc(s.error)}</p>`:''}<button class="ghost" data-journey-retry="${esc(s.id)}">Reanalyze and generate segment GIFs</button><p class="hint">Creates a new interpretation and requires another review.</p></details>
+    <details><summary>Questions and recording details</summary><p>${esc(s.recorded_at||'Recording time unknown')}</p><p>${esc(s.time_uncertainty)}</p><p>${(p?.unknowns||[]).map(esc).join(' · ')||'No additional questions recorded.'}</p><p>Only sampled instants were analyzed. Unseen work remains unknown.</p>${step?`<button class="ghost" type="button" data-linkprocess="${esc(p.id)}" data-linkstep="${esc(step.id)}">Link work location</button>`:''}${video}${s.error?`<p>${esc(s.error)}</p>`:''}<button class="ghost" data-journey-retry="${esc(s.id)}">Reanalyze recording</button><p class="hint">Creates a new interpretation and requires another review.</p></details>
     ${suggested.length?`<details><summary>Other reported or suggested steps (${suggested.length})</summary><p>These have no observed video segment. Keep reported steps and suggestions separate from recorded evidence.</p><ul>${suggested.map(x=>`<li>${esc(x.label)}</li>`).join('')}</ul></details>`:''}
     ${p?`<details><summary>Add an omitted step</summary><form class="run" data-jcommand="addstep" data-source="${esc(s.id)}"><label>Missing action<input name="label" required></label><label>What remains uncertain?<input name="unknowns" required></label>${reason}<button class="btn">Add human-reported step</button></form></details>`:''}</div></div>
     ${p?`<div class="review-footer"><form class="run" data-jcommand="review" data-source="${esc(s.id)}"><label>Review note<input name="reason" value="Reviewed the recording; unknowns remain explicit" required></label><button class="btn">${reviewed?'Review confirmed':'Confirm review'}</button></form></div>`:`<button class="btn" data-journey-retry="${esc(s.id)}">Retry analysis</button>`}</article></section>`;
@@ -1322,6 +1349,7 @@ document.querySelector('nav.tabs').addEventListener('keydown',e=>{
 });
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.reveal)revealTarget(b.dataset.reveal);
+  if(b.dataset.retryPreviews){const clips=journeyEntry()?.clips.filter(c=>c.role!=='followup')||[];ensureClipPreviews(clips[Math.min(uiState.reviewClip||0,Math.max(0,clips.length-1))],true);renderJourney();}
   if(b.dataset.workspaceHome){uiState.workspaceTarget='workflowsection';focusWorkspace('workflowsection');journeyRoute('space');}
   if(b.dataset.reviewStep!==undefined){uiState.reviewStep=Number(b.dataset.reviewStep);renderJourney();}
   if(b.dataset.reviewClip!==undefined){uiState.reviewClip=Number(b.dataset.reviewClip);uiState.reviewStep=0;renderJourney();}
@@ -1462,7 +1490,7 @@ function renderJourney(){
       ${w.outcomes.map(o=>`<p>${esc(o.result.status)}: ${esc(o.result.next_action)}</p>`).join('')||`<p>${esc(w.outcome_status)}</p>`}
       <button class="ghost" type="button" data-journey-plan="outcomes">Review improvement outcomes</button><button class="ghost" type="button" data-journey-plan="humanplan">Review / replan remaining work</button>
       <details><summary>Workflow history</summary><ul>${j.history.map(h=>`<li>${esc(h.at)} · ${esc(h.action)}: ${esc(h.reason)}</li>`).join('')}</ul></details></section>`;
-  restoreJourneyDrafts();presentJourneyStages(w);focusWorkspace(uiState.workspaceTarget||'journeydetail');
+  restoreJourneyDrafts();presentJourneyStages(w);const clips=w.clips.filter(c=>c.role!=='followup');if(!$('journeydetail').querySelector('.review-workbench')?.hidden)ensureClipPreviews(clips[Math.min(uiState.reviewClip||0,Math.max(0,clips.length-1))]);focusWorkspace(uiState.workspaceTarget||'journeydetail');
 }
 $('journeydetail').addEventListener('input',e=>saveJourneyDraft(e.target.form));
 $('journeydetail').addEventListener('change',e=>saveJourneyDraft(e.target.form));
