@@ -87,7 +87,7 @@ export async function spatialCommand(root: string, raw: unknown): Promise<Spatia
       const existing=doc<SpatialAssociation>(db,'spatial-association:'+id);
       check(input.id===undefined||existing,'Association not found.');
       if(existing)check(existing.revision===input.revision,'Stale association revision. Reload before reviewing.','STALE_ASSOCIATION');
-      if(source){const latest=db.prepare('SELECT MAX(rev) AS rev FROM processes WHERE id=?').get(source.process_id);check(latest?.rev===source.process_revision,'Stale process revision. Reload before linking.','STALE_PROCESS');}
+      if(source){const latest=db.prepare('SELECT MAX(rev) AS rev FROM processes WHERE id=?').get(source.process_id) as {rev:number|null}|undefined;check(latest?.rev===source.process_revision,'Stale process revision. Reload before linking.','STALE_PROCESS');}
       if(target?.kind==='spot')check(db.prepare('SELECT id FROM spots WHERE id=?').get(target.spot_id),'Work area no longer exists.');
       const now=new Date().toISOString();
       const result:SpatialAssociation={schema:'spatial-evidence/1',id,revision:(existing?.revision??0)+1,source:source??existing!.source,target:target??existing!.target,origin:existing?.origin??origin as 'human'|'model',review,reason,created_at:existing?.created_at??now,updated_at:now,

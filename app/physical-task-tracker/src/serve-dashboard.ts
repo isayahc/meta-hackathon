@@ -13,7 +13,7 @@ import { execFile } from 'node:child_process';
 import { readFile, writeFile, readdir, rm, mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { listGoals, setGoalStatus, addGoal } from './lib/goals.js';
 import { listStoredEvents, getStoredEvent, addEvent, dayOf, isDay, type CalendarEvent } from './lib/events.js';
 import { listActions, syncActions, setActionStatus } from './lib/actions.js';
@@ -736,7 +736,7 @@ function flagValue(args: string[], name: string, def: string | null): string | n
   return i >= 0 && args[i + 1] && !args[i + 1]?.startsWith('--') ? (args[i + 1] as string) : def;
 }
 
-const invokedAsMain = import.meta.url === `file:///${process.argv[1]?.replace(/\\/g, '/')}`;
+const invokedAsMain = !!process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
 if (invokedAsMain) {
   // .env (cwd, then app root) fills gaps; children inherit it. Real env wins.
   loadEnvSync();
