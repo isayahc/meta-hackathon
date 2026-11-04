@@ -99,3 +99,11 @@ test('GIF selection follows observed frame identity and rejects unsupported sugg
  new Script('step.observed_order=null').runInContext(ctx);assert.equal(new Script('stepGif(clip,step)').runInContext(ctx),null);
  new Script("step.observed_order=2;clip.source.interpretations[0].raw.gif_segments[0].file='../bad.gif'").runInContext(ctx);assert.equal(new Script('stepGif(clip,step)').runInContext(ctx),null);
 });
+
+test('video calendar observations use recording time or explicitly labeled upload time in the configured timezone',()=>{
+ const context=createContext({Intl,Date});new Script(definition('observationCalendarEntries')).runInContext(context);
+ const state={planning:{schedule:{config:{timezone:'America/New_York'}}},workflows:[{workflow:{id:'w',title:'Bottle'},clips:[
+ {source:{id:'recorded',recorded_at:'2026-11-04T01:00:00Z',uploaded_at:'2026-11-05T12:00:00Z',time_uncertainty:'Verify camera clock'},process:{title:'Corrected title'}},
+ {source:{id:'uploaded',recorded_at:null,uploaded_at:'2026-11-05T12:00:00Z',time_uncertainty:'Unknown'}}]}]};
+ const entries=context.observationCalendarEntries(state);assert.equal(entries.length,2);assert.equal(entries[0].date,'2026-11-03');assert.equal(entries[0].time,'20:00');assert.equal(entries[0].title,'Corrected title');assert.match(entries[0].detail,/Recording timestamp/);assert.equal(entries[1].date,'2026-11-05');assert.match(entries[1].detail,/recording time unknown/);assert.equal(entries[1].workflow_id,'w');
+});

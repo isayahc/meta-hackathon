@@ -34,12 +34,24 @@ try{
  const summary=page.locator('[data-jcommand=summary]');await summary.locator('[name=title]').fill('Test spray bottle');await summary.locator('[name=outcome]').fill('Mist visible; durability untested');await summary.locator('[name=reason]').fill('Limit outcome to visible evidence');await summary.getByRole('button').click();
  await page.locator('#journeystatus').filter({hasText:'Saved.'}).waitFor({state:'attached'});
  const review=page.locator('[data-jcommand=review]');await review.locator('[name=reason]').fill('Reviewed visible evidence and limits');await review.getByRole('button').click();
- await page.getByRole('button',{name:'Save observation only',exact:true}).click();await page.getByRole('heading',{name:'Observation saved',exact:true}).waitFor();
- await page.reload();await page.getByRole('heading',{name:'Observation saved',exact:true}).waitFor();
+ await page.getByRole('button',{name:'Finish here',exact:true}).click();await page.getByRole('heading',{name:'Saved — you can stop here',exact:true}).waitFor();
+ await page.reload();await page.getByRole('heading',{name:'Saved — you can stop here',exact:true}).waitFor();
  assert.equal(journeyView(root).planning.tasks.length,0);assert.equal(journeyView(root).planning.goals.length,0);
  assert.equal(journeyView(root).planning.schedule.blocks.length,0);
- await page.getByRole('button',{name:'Continue to goals and planning',exact:true}).click();await page.locator('[data-jcommand=goal]').waitFor();
+ await page.getByRole('button',{name:'Revisit next action',exact:true}).click();await page.getByRole('heading',{name:'What next?',exact:true}).waitFor();
+ for(const [width,height] of [[1440,900],[390,844],[320,844]]){await page.setViewportSize({width,height});await page.screenshot({path:join(out,`next-${width}.png`)});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);const bounds=await page.getByRole('button',{name:'Finish here',exact:true}).boundingBox();assert.ok(bounds.y+bounds.height<height,'Next choice above fold');}
+ await page.setViewportSize({width:1440,height:900});
+ await page.getByRole('button',{name:'View on calendar',exact:true}).click();await page.getByText('Video observation',{exact:true}).waitFor();await page.locator('[data-eid^="observation-"]').click();await page.getByRole('button',{name:'Open recording and next action',exact:true}).click();
+ await page.getByRole('button',{name:'Do next',exact:true}).click();await page.getByRole('button',{name:'Open task',exact:true}).waitFor();assert.equal(journeyView(root).planning.tasks.length,1);assert.equal(journeyView(root).planning.schedule.blocks.length,0);
+ await page.reload();await page.getByRole('button',{name:'Open task',exact:true}).waitFor();
  assert.equal(journeyView(root).workflows[0].clips[0].source.interpretations.length,1,'Preview generation never reruns analysis');
  await page.getByRole('button',{name:'← All workflows',exact:true}).click();await page.locator('#workflowsection').waitFor();assert.equal(await page.locator('#journeydetail').isVisible(),false);await page.getByRole('button',{name:'Work areas',exact:true}).click();await page.locator('#areassection').waitFor();assert.equal(await page.locator('#updatessection').isVisible(),false);
- assert.deepEqual(errors,[]);console.log('PASS: compact review, step navigation, summary correction, save-only reload, resume planning; synthetic inference with real FFmpeg segment GIFs.');
+ for(const [i,label] of ['Do next','Later','Already done','Finish here'].entries()){
+  await page.locator('#globalrecordwork').click();await page.locator('#journeycaptureform [name=context]').selectOption('new');
+  await page.locator('#journeycaptureform input[name=file]').setInputFiles({name:`fresh-${i}.mp4`,mimeType:'video/mp4',buffer:Buffer.concat([await readFile(fixture),Buffer.from(`case-${i}`)])});
+  await page.getByRole('button',{name:'Upload and review work'}).click();await page.locator('[data-jcommand=review] button').click();
+  await page.getByRole('button',{name:label,exact:true}).click();await page.getByRole('heading',{name:'Saved — you can stop here',exact:true}).waitFor();
+  await page.reload();await page.getByRole('heading',{name:'Saved — you can stop here',exact:true}).waitFor();
+ }
+ assert.deepEqual(errors,[]);console.log('PASS: step GIFs, optional corrections, zero-typing upload → review → all four choices, reload persistence, dated calendar navigation; synthetic inference with real FFmpeg.');
 }finally{await browser?.close();await rm(root,{recursive:true,force:true});}
