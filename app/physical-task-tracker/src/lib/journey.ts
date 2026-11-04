@@ -70,7 +70,7 @@ export function syncJourneySource(root: string, workflowId: string, sourceId: st
     const id = `journey-process-${hash({ source: s.id, interpretation: interpretation.id }).slice(0, 32)}`;
     const raw = object(interpretation.raw ?? {});
     const p = normalizeProcess(validateProcess(buildProcessFromScan({ id, media: s.media, model: interpretation.model, promptVersion: interpretation.prompt_version, recordedAt: s.recorded_at, duration_s: s.duration_s,
-      analysis: { ...raw, per_frame: interpretation.observations.map(o => o.text), frame_times_s: interpretation.observations.map(o => o.start_s) } })));
+      analysis: { ...raw, per_frame: Array.isArray(raw.per_frame) ? raw.per_frame : interpretation.observations.map(o => o.text), frame_times_s: Array.isArray(raw.frame_times_s) ? raw.frame_times_s : interpretation.observations.map(o => o.start_s) } })));
     db.prepare('INSERT OR IGNORE INTO processes(id,rev,body,author,created) VALUES(?,?,?,?,?)').run(id, p.rev, JSON.stringify(p), interpretation.origin, p.created_at);
     const before = structuredClone(clip);
     if (clip.process_id && clip.process_id !== id) put(db, `superseded-process:${clip.process_id}`, { by: id, source_id: sourceId, reason: 'Explicit source reanalysis requires a new process review.' });
@@ -182,4 +182,3 @@ export function journeyView(root: string, at = new Date().toISOString()) {
   const workflowWarnings = workflows.filter(w => w.tasks.some(t => t.id === nextTask?.id) && (!w.baseline_reviewed || !w.method_current));
   return { schema:'work-journey-view/1' as const, now, workflows, planning, today:{ next: workflowWarnings.length ? {action:'inspect',task_id:null,reason:'The workflow’s observations, goal or method changed. Resume its review before acting.'} : preview.next, task:workflowWarnings.length ? null : nextTask, block:nextBlock, accepted, goals:nextTask ? planning.goals.filter(g=>nextTask.links.some(l=>l.goal_id===g.id&&l.review==='confirmed')) : [], conflicts:preview.conflicts, deferred:preview.deferred, agenda:planning.schedule.blocks.filter(b=>b.status==='accepted'&&localParts(b.start,planning.schedule.config.timezone).day===localParts(now,planning.schedule.config.timezone).day), commitments:planning.events.filter(e=>e.timing&&localParts(e.timing.start,planning.schedule.config.timezone).day===localParts(now,planning.schedule.config.timezone).day) } };
 }
-

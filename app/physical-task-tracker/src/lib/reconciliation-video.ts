@@ -17,7 +17,7 @@ export async function reconcileVideo(root: string, input: VideoFollowupInput, ru
   const token = source.processing!.token;
   try {
     const task = source.baseline.find(t => t.id === source!.context.task_ids[0]);
-    const args = [join(root, 'media', source.media!), '--frames', String(Math.min(12, Math.max(1, Number(input.frames) || 4)))];
+    const args = [join(root, 'media', source.media!), '--frames', String(Math.min(12, Math.max(1, Number(input.frames) || 4))), '--gifs', join(root, 'media'), '--gif-prefix', `review-${source.id}-${token}`];
     if (task) args.push('--task-context', JSON.stringify({ id: task.id, text: task.text, quantity: task.quantity, completion_criteria: task.completion_criteria, location: task.location }));
     const raw = await run('task-scan-video.js', args) as Record<string, unknown>;
     const lines = Array.isArray(raw.per_frame) ? raw.per_frame : [], times = Array.isArray(raw.frame_times_s) ? raw.frame_times_s : [];
@@ -47,3 +47,4 @@ export async function reconcileVideo(root: string, input: VideoFollowupInput, ru
     throw error;
   }
 }
+

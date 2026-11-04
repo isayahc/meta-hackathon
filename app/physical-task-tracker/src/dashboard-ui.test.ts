@@ -90,3 +90,12 @@ test('location evidence filters keep process and named-area context separate',()
   const associations=[{association:{source:{process_id:'p1'},target:{kind:'spot',spot_id:'bench'}}},{association:{source:{process_id:'p2'},target:{kind:'spot',spot_id:'bench'}}},{association:{source:{process_id:'p1'},target:{kind:'oi'}}}];
   const ctx=context(['renderSpatialLinks'],{$:(id:string)=>nodes[id],spatialState:{associations},spatialCard:()=>'<article>match</article>'});new Script('renderSpatialLinks()').runInContext(ctx);assert.equal(nodes.spatiallinks.innerHTML,'<article>match</article>');nodes.spatialspotfilter.value='';new Script('renderSpatialLinks()').runInContext(ctx);assert.equal(nodes.spatiallinks.innerHTML,'<article>match</article><article>match</article>');
 });
+
+
+test('GIF selection follows observed frame identity and rejects unsupported suggestions or unsafe paths',()=>{
+ const ctx=context(['stepGif']);ctx.clip={interpretation_id:'i',source:{interpretations:[{id:'i',raw:{gif_segments:[{frame:2,file:'segment-2.gif',start_s:4,end_s:6}]}}]}};
+ ctx.step={observed_order:2,evidence:{spans:[{frame:2}]}};
+ assert.equal(new Script('stepGif(clip,step).file').runInContext(ctx),'segment-2.gif');
+ new Script('step.observed_order=null').runInContext(ctx);assert.equal(new Script('stepGif(clip,step)').runInContext(ctx),null);
+ new Script("step.observed_order=2;clip.source.interpretations[0].raw.gif_segments[0].file='../bad.gif'").runInContext(ctx);assert.equal(new Script('stepGif(clip,step)').runInContext(ctx),null);
+});

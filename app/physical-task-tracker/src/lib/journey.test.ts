@@ -145,3 +145,13 @@ test('summary corrections preserve original inference and invalidate saved revie
  assert.equal((await readProcess(root,clip.process!.id)).stage,'Spraying observed; full functionality unknown');
  j=review(root,j);assert.equal(journeyView(root).workflows[0].stage,'saved');
 });
+
+test('journey requests GIFs and preserves frame identity across blank observations', async t => {
+ const root=project(t);let args:string[]=[];
+ await captureJourney(root,{media:'synthetic.mp4'},async(_file,input)=>{args=input;return {...raw,per_frame:['Fill tray','', 'Carry tray'],frame_times_s:[1,3,5],gif_segments:[{frame:2,file:'review-2.gif',start_s:4,end_s:6}]};});
+ assert.ok(args.includes('--gifs'));assert.ok(args.includes('--gif-prefix'));
+ const c=journeyView(root).workflows[0].clips[0];
+ assert.deepEqual(c.process!.steps.filter(s=>s.observed_order!==null).map(s=>s.observed_order),[0,2]);
+ assert.equal(c.process!.steps.find(s=>s.observed_order===2)!.evidence.spans[0].frame,2);
+ assert.deepEqual((c.source.interpretations[0].raw as any).gif_segments,[{frame:2,file:'review-2.gif',start_s:4,end_s:6}]);
+});
