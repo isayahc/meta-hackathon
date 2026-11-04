@@ -190,6 +190,8 @@
         <label>Video file (mp4/webm/mov)
           <input type="file" name="file" accept="video/mp4,video/webm,video/quicktime">
         </label>
+        <label>Update existing work (optional)<select id="followuptask" name="task_id"><option value="">Initial discovery / new workflow</option></select></label>
+        <label>Recording time, if known (include timezone offset)<input name="recorded_at" type="text" placeholder="2026-11-03T09:00:00-05:00"></label>
         <label>Frames
           <select name="frames">
             <option value="4" selected>4 frames</option>
@@ -301,6 +303,14 @@
       <p id="planningstatus" class="planning-status" role="status"></p>
       <div id="planningtasks"></div>
       <div id="planningtaskdetail" tabindex="-1"></div>
+      <section aria-label="Follow-up evidence"><h2>What this changes</h2><p>Follow-up clips and human reports update existing work through review. Accepted calendar blocks remain in place until you review a new plan.</p>
+        <button class="ghost" type="button" id="refreshupdates">Refresh updates</button>
+        <p role="status" id="updatestatus"></p><div id="updatequeue"></div><div id="updatedetail" tabindex="-1"></div>
+        <form class="run" id="manualupdateform"><h3>Report current progress or a correction</h3><label>Task<select name="task_id" required></select></label>
+        <label>What changed?<input name="report" required></label><label>Current status<select name="execution"><option value="">Keep status</option><option value="open">Ready</option><option value="paused">Paused</option><option value="blocked">Blocked</option><option value="done">Completion criteria verified</option></select></label>
+        <label>Remaining quantity (current total, optional)<input name="remaining" type="number" min="0" step="any"></label><label>Remaining active minutes (optional)<input name="minutes" type="number" min="0" step="any"></label>
+        <button class="btn" type="submit">Save my update</button></form>
+      </section>
     </section>
     <section aria-label="Work availability and commitments">
       <h2>Your time and resources</h2>
@@ -665,6 +675,11 @@ $('videoform').addEventListener('submit', (e) => {
   busy(f.querySelector('button'), async () => {
     const videoData = await fileData(f.file);
     if (!videoData) throw new Error('Pick a video file first.');
+    if (f.task_id.value) {
+      const { source } = await api('/api/reconcile-video', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({videoData,task_id:f.task_id.value,recorded_at:f.recorded_at.value||null,frames:Number(f.frames.value)||4}) });
+      selectedUpdate = source.id; showPlanningTab(); await loadPlanning(); await loadUpdates(); $('updatedetail').focus();
+      return source;
+    }
     const { analysis } = await api('/api/scan-video', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ videoData, frames: Number(f.frames.value) || 4 }),
@@ -1016,7 +1031,11 @@ async function loadPlanning() {
   $('savedavailability').innerHTML = '<p>Saved working intervals:</p><ul>' + config.availability.map(w => `<li>${esc(formatPlanningTime(w.start))} – ${esc(formatPlanningTime(w.end))}</li>`).join('') + '</ul>';
   $('commitmentform').existing.innerHTML = '<option value="">New commitment</option>' + planningState.events.filter(e => e.timing).map(e => `<option value="${esc(e.id.replace(/^commitment-/, ''))}">${esc(e.title)}</option>`).join('');
   $('caltimezone').textContent = `Task times use ${config.timezone}. Fixed commitments remain visible with every goal filter.`;
-  renderPlanningTasks(); renderHumanPlan();
+  const followup = $('followuptask'), previousFollowup = followup.value;
+  followup.innerHTML = '<option value="">Initial discovery / new workflow</option>' + planningState.tasks.map(t => `<option value="${esc(t.id)}">${esc(t.text)}</option>`).join(''); followup.value = previousFollowup;
+  const manualTask = $('manualupdateform').task_id, previousManual = manualTask.value;
+  manualTask.innerHTML = planningState.tasks.map(t => `<option value="${esc(t.id)}">${esc(t.text)}</option>`).join(''); if(previousManual)manualTask.value=previousManual;
+  renderPlanningTasks(); renderHumanPlan(); await loadUpdates();
   if (selectedPlanningTask) renderTaskDetail(selectedPlanningTask);
 }
 function renderPlanningTasks() {
@@ -1042,7 +1061,7 @@ async function showPlanningGoal(id) {
 function renderTaskDetail(id) {
   const t = planningState.tasks.find(t => t.id === id); if (!t) return;
   const opts = (values, current) => values.map(v => `<option value="${v}" ${v === current ? 'selected' : ''}>${v.replaceAll('_',' ')}</option>`).join('');
-  $('planningtaskdetail').innerHTML = `<article class="task-card"><h3>${esc(t.text)}</h3><p>Revision ${t.revision} · Original active estimate: ${t.original_minutes ?? 'unknown'} minutes</p>
+  $('planningtaskdetail').innerHTML = `<article class="task-card"><h3>${esc(t.text)}</h3><button type="button" class="ghost" data-followup="${esc(t.id)}">Record follow-up evidence</button><p>Revision ${t.revision} · Original active estimate: ${t.original_minutes ?? 'unknown'} minutes</p>
     <form class="run" id="taskeditform" data-id="${esc(t.id)}" data-revision="${t.revision}">
       <label>Task<input name="text" type="text" value="${esc(t.text)}" required></label>
       <label>Done when<input name="criteria" type="text" value="${esc(t.completion_criteria)}" required></label>
@@ -1127,6 +1146,66 @@ $('planningtaskdetail').addEventListener('submit', e => {
   });
 });
 $('humanplan').addEventListener('submit', e => { e.preventDefault(); const f=e.target; planningAction(async () => { if(f.id==='plandecisionform') await planningPost({command:'decide',id:planningState.latest_plan.id,decision:e.submitter.value,reason:f.reason.value}); else if(f.matches('.blockform')) await planningPost({command:'block',id:f.dataset.id,revision:planningState.schedule.revision,action:e.submitter.value,reason:f.reason.value}); await loadPlanning(); }); });
+
+let updateState = {sources:[]}, selectedUpdate = null;
+function updatePost(body) { return api('/api/reconciliation', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); }
+async function updateAction(fn) { try { $('updatestatus').textContent='Saving…'; await fn(); $('updatestatus').textContent='Saved. Evidence review and schedule acceptance are separate.'; } catch(e) { $('updatestatus').textContent=e.message; } }
+async function loadUpdates() {
+  updateState = await api('/api/reconciliation');
+  $('updatequeue').innerHTML = updateState.sources.map(s=>`<article class="task-card"><button class="ghost" data-update="${esc(s.id)}">${esc(s.kind==='video'?'Follow-up video':'Human progress report')} · ${esc(s.stage.replaceAll('_',' '))}</button><p>${esc(s.next_action)}</p><small>Received ${esc(formatPlanningTime(s.uploaded_at))}</small></article>`).join('')||'<p>No follow-up evidence yet. Open a task to record work, or save a progress report below.</p>';
+  if(selectedUpdate) renderUpdate(selectedUpdate);
+}
+function prettyChange(p) { return Object.entries(p).map(([k,v])=> k==='quantity'?`Remaining: ${v?.remaining ?? 'unknown'} of ${v?.total ?? '?'} ${v?.unit ?? ''}`: k==='preconditions'?`Prerequisites: ${(v||[]).map(x=>x.text+' ('+x.status+')').join('; ')}`: k==='dependencies'?`Prerequisites: ${(v||[]).map(id=>planningState.tasks.find(t=>t.id===id)?.text||id).join(', ')}`: `${k.replaceAll('_',' ')}: ${v??'unknown'}`).join(' · '); }
+function renderUpdate(id) {
+  const s=updateState.sources.find(x=>x.id===id); if(!s)return;
+  const tasks=planningState?.tasks||[], options=tasks.map(t=>`<option value="${esc(t.id)}" ${t.id===s.context.task_ids[0]?'selected':''}>${esc(t.text)}</option>`).join('');
+  const observations=s.interpretations.flatMap(r=>r.observations.map(o=>({...o,run:r.id,origin:r.origin})));
+  $('updatedetail').innerHTML=`<article class="task-card"><h3>Review what this evidence changes</h3><p>${esc(s.next_action)}</p><p>Recorded: ${esc(s.recorded_at||'unknown')} · ${esc(s.time_uncertainty)}. Uploaded: ${esc(s.uploaded_at)}</p>
+    ${s.media?`<video controls preload="metadata" style="width:100%;max-height:320px" src="/media/${encodeURIComponent(s.media)}"></video>`:''}
+    ${s.error?`<p role="alert">Analysis failed: ${esc(s.error)}</p>`:''}
+    ${s.kind==='video'?`<button type="button" class="ghost" data-retryupdate="${esc(s.id)}">${s.processing?'Restart interrupted analysis':'Analyze retained clip again'}</button>`:''}
+    <h4>Which existing task occurrence?</h4><p>Capture context: ${esc(s.context.task_ids.map(id=>tasks.find(t=>t.id===id)?.text||id).join(", ")||"Unassigned")}. Confirm identity; similar work may be a different batch.</p><p>${s.associations.map(a=>`${esc(tasks.find(t=>t.id===a.task_id)?.text||a.task_id)}: ${esc(a.decision)} (${esc(a.reason)})`).join('<br>')||'Not confirmed. A similar action may be a different occurrence.'}</p>
+    <form class="run" data-associate><label>Task<select name="task_id">${options}</select></label><label>Why is this the same occurrence, or unrelated?<input name="reason" required></label><button class="btn" name="decision" value="confirmed">Confirm task</button><button class="ghost" name="decision" value="rejected">Reject match</button></form>
+    <form class="run" data-retain><label>Why no operational change?<input name="reason" required></label><button class="ghost">Retain evidence without changes</button></form><h4>Source observations</h4>${observations.map(o=>`<p><strong>${esc(o.origin)}</strong> · ${o.start_s===null?'time unknown':`${o.start_s}s`} · ${esc(o.confidence)}: ${esc(o.text)}<br><small>${esc(o.uncertainty)}</small></p>`).join('')||'<p>Analysis has not produced observations yet.</p>'}
+    <h4>Proposed changes</h4>${s.changes.map(c=>{const impact=s.review.find(r=>r.change_id===c.id);return `<section class="task-card"><h4>${esc(tasks.find(t=>t.id===c.task_id)?.text||c.task_id)} · ${esc(c.status)}</h4><p>Before: ${esc(prettyChange(c.before))}</p><p>Proposed: ${esc(prettyChange(c.patch))}</p><p>${esc(c.reason)} · ${esc(c.uncertainty)}</p><p>Affects ${impact.affected_tasks.length} task(s), ${impact.goal_ids.length} goal(s), ${impact.block_ids.length} accepted calendar block(s).</p><ul>${impact.warnings.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>
+      ${['accepted','corrected'].includes(c.status)?'<p>Applied; goal outcome and accepted schedule remain separate.</p>':`<form class="run" data-review="${esc(c.id)}"><label>Reason for decision<input name="reason" required></label><label>Correct remaining quantity (optional, same unit)<input name="remaining" type="number" min="0" step="any"></label><label>Correct remaining minutes (optional)<input name="minutes" type="number" min="0" step="any"></label><label><input type="checkbox" name="current"> I confirm this describes current work; for completion, the criteria are satisfied.</label><label>Possible overlap<select name="overlap"><option value="">Unresolved / not applicable</option><option value="distinct">Different work occurrence / nonoverlapping work</option><option value="same">Same work — use a remaining total</option></select></label><label>Overlap explanation<input name="overlap_reason"></label><div class="task-buttons"><button class="btn" name="decision" value="accepted">Accept</button><button class="ghost" name="decision" value="corrected">Apply correction</button><button class="ghost" name="decision" value="rejected">Reject</button><button class="ghost" name="decision" value="deferred">Defer</button><button class="ghost" name="decision" value="rebase">Rebase on current task</button></div></form>`}
+      <details><summary>Decision history</summary>${c.decisions.map(d=>`<p>${esc(d.at)} · ${esc(d.decision)}: ${esc(d.reason)}</p>`).join('')||'No decision yet.'}</details></section>`}).join('')||'<p>No supported operational change proposed. Preserve these observations, or confirm a quantity/status below.</p>'}
+    ${observations.length?`<details><summary>Propose a supported change</summary><form class="run" data-propose><label>Existing task<select name="task_id">${options}</select></label><label>Supporting observation<select name="observation">${observations.map((o,i)=>`<option value="${i}">${esc(o.text.slice(0,100))}</option>`).join('')}</select></label><label>Status<select name="execution"><option value="">Keep status</option><option value="paused">Partial work / paused</option><option value="blocked">Blocked</option><option value="done">Propose completion</option><option value="open">Ready</option></select></label><label>Remaining quantity (total still to do)<input name="remaining" type="number" min="0" step="any"></label><label>Remaining active minutes (operator estimate)<input name="minutes" type="number" min="0" step="any"></label><label>Evidence and explanation<input name="reason" required></label><button class="btn">Save proposal for review</button></form></details>`:''}
+    ${observations.length?`<details><summary>Record a friction or spatial finding</summary><form class="run" data-finding><label>Task<select name="task_id">${options}</select></label><label>Observation<select name="observation">${observations.map((o,i)=>`<option value="${i}">${esc(o.text.slice(0,100))}</option>`).join('')}</select></label><label>Finding kind<select name="kind"><option value="friction">Friction / alternative method</option><option value="spatial">Spatial check needed</option></select></label><label>What was observed?<input name="summary" required></label><label>Reason and uncertainty<input name="reason" required></label><button class="btn">Save finding for review</button></form></details>`:''}
+    ${(s.related||[]).map(c=>`<section class="task-card"><h4>${esc(c.kind.replaceAll('_',' '))} · ${esc(c.status)}</h4><p>${esc(c.reason)}</p><p>${c.kind==='process_revision'?`Before: ${esc(c.before.title)} (revision ${c.base_revision}) → ${esc(c.proposal.title)} (revision ${c.proposal.rev})`:esc(c.proposal.summary)}</p>
+      ${c.kind==='process_revision'?`<p>Proposed steps: ${c.proposal.steps.map(step=>esc(step.label)+' ('+esc(step.execution)+')').join('; ')}</p><details><summary>Full process before and proposed values</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(JSON.stringify({before:c.before,proposed:c.proposal},null,2))}</pre></details>`:''}
+      <p>${c.kind==='spatial'?'Spatial operations remain pending the supported OI handoff; accepting here does not change the scene.':c.kind==='friction'?'This is evidence for an improvement review, not measured savings.':'Accepted process corrections retain old revisions; linked tasks need process review before planning.'}</p>
+      ${['proposed','deferred','rejected'].includes(c.status)?`<form class="run" data-related="${esc(c.id)}"><label>Decision reason<input name="reason" required></label><label><input type="checkbox" name="current"> This describes the current process.</label><button class="btn" name="decision" value="accepted">Accept</button><button class="ghost" name="decision" value="rejected">Reject</button><button class="ghost" name="decision" value="deferred">Defer</button></form>`:''}</section>`).join('')}
+    <button type="button" class="ghost" id="previewupdateplan">Preview effects on today’s plan</button><div id="updateplanpreview"></div>
+    <details><summary>Evidence history</summary>${s.history.map(h=>`<p>${esc(h.at)} · ${esc(h.action)}: ${esc(h.reason)}</p>`).join('')}</details></article>`;
+}
+$('refreshupdates').addEventListener('click',()=>updateAction(loadUpdates));
+$('updatequeue').addEventListener('click',e=>{const b=e.target.closest('[data-update]');if(b){selectedUpdate=b.dataset.update;renderUpdate(selectedUpdate);$('updatedetail').focus();}});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-followup]');if(b) { $('followuptask').value=b.dataset.followup; document.querySelector('[data-view="run"]').click(); $('videoform').file.focus(); }});
+document.querySelector('[data-view="run"]').addEventListener('click',()=>planningAction(loadPlanning));
+$('updatedetail').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.retryupdate) updateAction(async()=>{const s=updateState.sources.find(s=>s.id===selectedUpdate);b.disabled=true;try{await api('/api/reconcile-video',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source_id:s.id,revision:s.revision,retry:true})});await loadUpdates();}finally{b.disabled=false;}});
+  if(b.id==='previewupdateplan') updateAction(async()=>{const zone=planningState.schedule.config.timezone, day=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());const result=await updatePost({command:'plan',day,now:new Date().toISOString()});$('updateplanpreview').innerHTML=`<p>${esc(result.next_action.reason)}</p><p>${result.comparison.preserved.length} accepted blocks preserved; ${result.plan.blocks.length} new proposed blocks. Nothing has been moved or accepted.</p><ul>${[...result.comparison.conflicts,...result.plan.deferred.map(d=>(planningState.tasks.find(t=>t.id===d.task_id)?.text||'Task')+': '+d.reason)].map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p>Use the day-plan controls to review/release conflicting blocks and propose a revised schedule.</p>`;});
+});
+$('updatedetail').addEventListener('submit',e=>{e.preventDefault();const f=e.target, decision=e.submitter?.value;updateAction(async()=>{
+  const s=updateState.sources.find(s=>s.id===selectedUpdate);f.dataset.requestId ||= crypto.randomUUID();
+  if(f.hasAttribute('data-associate')) await updatePost({command:'associate',id:s.id,revision:s.revision,task_id:f.task_id.value,decision,reason:f.reason.value});
+  else if(f.hasAttribute('data-finding')) {const observations=s.interpretations.flatMap(r=>r.observations.map(o=>({...o,run:r.id}))),o=observations[Number(f.observation.value)];await updatePost({command:'propose_related',id:s.id,revision:s.revision,change:{kind:f.kind.value,task_id:f.task_id.value,interpretation_id:o.run,observation_id:o.id,reason:f.reason.value,proposal:{summary:f.summary.value}}});}
+  else if(f.dataset.related) await updatePost({command:'review_related',id:s.id,revision:s.revision,review:{change_id:f.dataset.related,decision,reason:f.reason.value,current_confirmed:f.current.checked}});
+  else if(f.hasAttribute('data-retain')) await updatePost({command:'retain',id:s.id,revision:s.revision,reason:f.reason.value});
+  else if(f.hasAttribute('data-propose')) {
+    const task=planningState.tasks.find(t=>t.id===f.task_id.value), observations=s.interpretations.flatMap(r=>r.observations.map(o=>({...o,run:r.id}))),o=observations[Number(f.observation.value)],patch={};
+    if(f.execution.value)patch.execution=f.execution.value;if(f.minutes.value!==''){patch.remaining_minutes=Number(f.minutes.value);patch.estimate_source='Operator estimate: '+(f.reason?.value||f.report?.value||'manual review');}
+    await updatePost({command:'propose',id:s.id,revision:s.revision,change:{task_id:task.id,observation_id:o.id,interpretation_id:o.run,kind:f.execution.value==='done'?'completion':f.execution.value==='blocked'?'blocker':'progress',patch,reason:f.reason.value,uncertainty:o.uncertainty,...(f.remaining.value!==''?{quantity_mode:'remaining',quantity_value:Number(f.remaining.value),unit:task.quantity?.unit}: {})}});
+  } else if(f.dataset.review) {
+    if(decision==='rebase') await updatePost({command:'rebase',id:s.id,revision:s.revision,change_id:f.dataset.review,reason:f.reason.value});
+    else {const c=s.changes.find(c=>c.id===f.dataset.review), task=planningState.tasks.find(t=>t.id===c.task_id),correction={...c.patch};if(f.remaining.value!==''){if(!task.quantity)throw Error('Task has no defined quantity/unit.');correction.quantity={...task.quantity,remaining:Number(f.remaining.value)};}if(f.minutes.value!==''){correction.remaining_minutes=Number(f.minutes.value);correction.estimate_source='Operator estimate: '+f.reason.value;}
+      await updatePost({command:'review',id:s.id,revision:s.revision,request_id:f.dataset.requestId,decisions:[{change_id:c.id,decision,reason:f.reason.value,current_confirmed:f.current.checked,overlap:f.overlap.value||undefined,overlap_reason:f.overlap_reason.value,...(decision==='corrected'?{correction}:{})}]}); }
+  }
+  delete f.dataset.requestId; await loadPlanning();
+});});
+$('manualupdateform').addEventListener('submit',e=>{e.preventDefault();const f=e.target;updateAction(async()=>{const task=planningState.tasks.find(t=>t.id===f.task_id.value);if(!task)throw Error('Choose a task.');const patch={};if(f.execution.value)patch.execution=f.execution.value;if(f.remaining.value!==''){if(!task.quantity)throw Error('Set the task quantity and unit first.');patch.quantity={...task.quantity,remaining:Number(f.remaining.value)};}if(f.minutes.value!==''){patch.remaining_minutes=Number(f.minutes.value);patch.estimate_source='Operator estimate: '+(f.reason?.value||f.report?.value||'manual review');}f.dataset.requestId ||= crypto.randomUUID();const s=await updatePost({command:'manual',request_id:f.dataset.requestId,task_id:task.id,task_revision:task.revision,report:f.report.value,patch});delete f.dataset.requestId;selectedUpdate=s.id;f.reset();await loadPlanning();});});
+
 </script>
 </body>
 </html>

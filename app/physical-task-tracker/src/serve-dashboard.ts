@@ -23,6 +23,9 @@ import { improvementPlan, readWorkflowContext, writeWorkflowContext, Improvement
 import { getDoc } from './lib/db.js';
 import { WalkthroughError, captureWalkthrough, listWalkthroughs, readWalkthrough, reviewWalkthrough, walkthroughHandoff, walkthroughImage } from './lib/walkthrough.js';
 import { planningCommand, planningView, planningCalendar } from './lib/task-planning.js';
+import { reconciliationCommand, reconciliationView } from './lib/reconciliation.js';
+import { reconcileVideo } from './lib/reconciliation-video.js';
+import { randomUUID } from 'node:crypto';
 import { localParts } from './lib/planning-time.js';
 import { loadEnvSync } from './lib/env.js';
 
@@ -312,6 +315,28 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
         const html = await readFile(join(HERE, 'dashboard', 'index.html'), 'utf8');
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(html);
+        return;
+      }
+      if (url.pathname === '/api/reconciliation' && req.method === 'GET') {
+        json(200, reconciliationView(root)); return;
+      }
+      if (url.pathname === '/api/reconciliation' && req.method === 'POST') {
+        try { json(200, reconciliationCommand(root, await readBody(req))); }
+        catch (error) { const message = (error as Error).message; json(/Stale/.test(message) ? 409 : 400, { error: message }); }
+        return;
+      }
+      if (url.pathname === '/api/reconcile-video' && req.method === 'POST') {
+        const input = await readBody(req, 200 * 1024 * 1024);
+        let media: string | undefined;
+        if (!input.source_id) {
+          const dir = join(root, 'media'); await mkdir(dir, { recursive: true });
+          const path = await materializeVideo(input, dir, `followup-${randomUUID()}`);
+          media = path.split(/[\\/]/).pop();
+        }
+        try {
+          const source = await reconcileVideo(root, { media, task_id: input.task_id, recorded_at: input.recorded_at, source_id: input.source_id, revision: input.revision, retry: input.retry, frames: input.frames }, runScript);
+          json(200, { source });
+        } catch (error) { const message = (error as Error).message; json(/Stale/.test(message) ? 409 : 400, { error: message }); }
         return;
       }
       if (url.pathname === '/api/task-planning' && req.method === 'GET') {
