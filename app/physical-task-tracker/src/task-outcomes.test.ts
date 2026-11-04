@@ -45,6 +45,6 @@ test('measurement correction during model generation flags stale narrative and p
 
 test('retained compare images are accessible through the real media handler with the correct MIME',async t=>{
   const root=await mkdtemp(join(tmpdir(),'outcome-media-'));t.after(()=>rm(root,{recursive:true,force:true}));const original=join(root,'test.png'),bytes=Buffer.from('synthetic image bytes');await writeFile(original,bytes);const {retainVisitEvidence}=await import('./lib/visit-evidence.js');const retained=await retainVisitEvidence(root,original,[`data:image/png;base64,${bytes.toString('base64')}`]);
-  const handler=createServer(root).listeners('request')[0];let status=0,headers:Record<string,string>={};let body:Buffer=Buffer.alloc(0);await handler({method:'GET',url:'/media/'+retained.source!.media},{writeHead(c:number,h:Record<string,string>){status=c;headers=h;},end(v:Buffer){body=v;}});assert.equal(status,200);assert.equal(headers['Content-Type'],'image/png');assert.deepEqual(body,bytes);
+  const handler=createServer(root).listeners('request')[0];let status=0,headers:Record<string,string>={};let body:Buffer=Buffer.alloc(0);await handler({method:'GET',url:'/media/'+retained.source!.media},{writeHead(c:number,h:Record<string,string>){status=c;headers=h;},write(v:Buffer){body=Buffer.concat([body,v]);return true;},end(v?:Buffer){if(v)body=Buffer.concat([body,v]);}});assert.equal(status,200);assert.equal(headers['Content-Type'],'image/png');assert.deepEqual(body,bytes);
 });
 

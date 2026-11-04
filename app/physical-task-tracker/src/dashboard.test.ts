@@ -26,6 +26,7 @@ interface MockRes {
   status: number | null;
   body: string;
   writeHead(s: number): void;
+  write(chunk: Buffer): boolean;
   end(b?: string): void;
 }
 
@@ -62,6 +63,7 @@ function mockRes(): MockRes {
     status: null,
     body: '',
     writeHead(s: number) { this.status = s; },
+    write(chunk: Buffer) { this.body += chunk.toString(); return true; },
     end(b?: string) { this.body += b ?? ''; },
   };
 }

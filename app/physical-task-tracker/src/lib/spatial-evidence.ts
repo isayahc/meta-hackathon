@@ -1,3 +1,4 @@
+import { assetInfo } from './assets.js';
 /** Reviewed links between immutable process/video evidence and external spatial identities. */
 import { createHash, randomUUID } from 'node:crypto';
 import { lstat } from 'node:fs/promises';
@@ -53,9 +54,7 @@ export async function inspectSpatialTarget(root: string, raw: unknown, reader: O
 }
 /** Verify local media identity; never follow a caller-provided path outside project media. */
 async function mediaDigest(root: string, name: string): Promise<string> {
-  check(name===basename(name)&&!name.includes('\\')&&name!=='.'&&name!=='..','Invalid source media name.');
-  const path=join(root,'media',name),stat=await lstat(path);check(stat.isFile()&&!stat.isSymbolicLink(),'Source media must be a local regular file.');
-  const digest=createHash('sha256');for await(const chunk of createReadStream(path))digest.update(chunk);return digest.digest('hex');
+  return (await assetInfo(root,name)).sha256;
 }
 async function validateSource(root: string, raw: unknown): Promise<SpatialSource> {
   const s=object(raw),id=words(s.process_id,'Process'),rev=revision(s.process_revision),stepId=words(s.step_id,'Process step');

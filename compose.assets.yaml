@@ -1,0 +1,28 @@
+# Overlay: docker compose -f compose.mongo.yaml -f compose.assets.yaml ...
+services:
+  minio:
+    build:
+      context: .
+      dockerfile: docker/MinIO.Dockerfile
+    environment:
+      MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY:?Set STORAGE_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_KEY:?Set STORAGE_SECRET_KEY}
+    volumes: ["asset-objects:/data"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+  fieldops:
+    depends_on:
+      minio: {condition: service_healthy}
+    environment:
+      FIELDOPS_ASSET_BACKEND: s3
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: ${S3_BUCKET:-fieldops-media}
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY:?Set STORAGE_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${STORAGE_SECRET_KEY:?Set STORAGE_SECRET_KEY}
+volumes:
+  asset-objects:

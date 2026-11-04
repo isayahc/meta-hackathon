@@ -39,8 +39,8 @@ replayed, or mocked. A replay pass never proves live model quality or UI behavio
 - `lib/` owns shared logic; `task-*.ts` files are thin CLIs with pure-JSON
   stdout (notes go to stderr) because the server parses them.
 - Unconfigured projects use `<project>/fieldops.db`; explicitly activated projects
-  use MongoDB as their sole record authority (`record-store.json`). Media still
-  lives in `<project>/media/`. Use asynchronous `lib/records.ts` APIs for live
+  use MongoDB as their sole record authority (`record-store.json`). Media defaults to `<project>/media/`; `asset-store.json` selects versioned S3
+  storage. Use `lib/assets.ts` for media retention, streaming and tool staging. Use asynchronous `lib/records.ts` APIs for live
   records; `lib/db.ts` is only the SQLite adapter and migration/test boundary.
   Domain transaction callbacks are synchronous and side-effect-free so retries
   are safe. Never bypass the authority marker or silently fall back to SQLite.

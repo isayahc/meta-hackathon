@@ -1,3 +1,6 @@
+import { assetConfig, putAsset, withAssetWorkspace } from './lib/assets.js';
+import { serveAsset } from './lib/asset-http.js';
+import { scanRetainedVideo } from './lib/asset-video.js';
 import { ensureReviewPreviews } from './lib/review-previews.js';
 import { journeyCommand, journeyView, captureJourney } from './lib/journey.js';
 // Field Ops app server: serves dashboard/index.html plus a JSON API that
@@ -138,6 +141,14 @@ export async function materializeVideo(
   const path = join(dir, `${safe}.${ext}`);
   await writeFile(path, Buffer.from(m[3] as string, 'base64'));
   return path;
+}
+
+/** Retain uploaded bytes before recording or analyzing the work. */
+async function retainVideo(root:string,input:{videoUrl?:unknown;videoData?:unknown},prefix:string):Promise<string>{
+  return withAssetWorkspace(root,async directory=>{
+    const file=await materializeVideo(input,directory,prefix),name=file.split(/[\\/]/).pop()!;
+    await putAsset(root,file,name);return name;
+  });
 }
 
 function isBlockedIp(ip: string): boolean {
@@ -319,7 +330,7 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
     };
     try {
       if (req.method === 'GET' && url.pathname === '/healthz') {
-        await initRecords(root);
+        await initRecords(root); assetConfig(root);
         json(200, { status: 'ok', database_version: DATABASE_VERSION, record_backend: storageMarker(root)?.backend ?? 'sqlite' });
         return;
       }
@@ -356,8 +367,7 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
           const input = await readBody(req, 200 * 1024 * 1024);
           let media: string | undefined;
           if (!input.source_id) {
-            const dir = join(root, 'media'); await mkdir(dir, { recursive: true });
-            const path = await materializeVideo(input, dir, `work-${randomUUID()}`); media = path.split(/[\\/]/).pop();
+            media = await retainVideo(root,input,`work-${randomUUID()}`);
           }
           json(200, { workflow: await captureJourney(root, { ...input, media }, scanRunner) });
         } catch (error) { const message = (error as Error).message; json(/Stale/.test(message) ? 409 : 400, { error: message }); }
@@ -381,9 +391,7 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
         const input = await readBody(req, 200 * 1024 * 1024);
         let media: string | undefined;
         if (!input.source_id) {
-          const dir = join(root, 'media'); await mkdir(dir, { recursive: true });
-          const path = await materializeVideo(input, dir, `followup-${randomUUID()}`);
-          media = path.split(/[\\/]/).pop();
+          media = await retainVideo(root,input,`followup-${randomUUID()}`);
         }
         try {
           const source = await reconcileVideo(root, { media, task_id: input.task_id, recorded_at: input.recorded_at, source_id: input.source_id, revision: input.revision, retry: input.retry, frames: input.frames }, runScript);
@@ -493,35 +501,16 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
         return;
       }
       if (req.method === 'POST' && url.pathname === '/api/scan-video') {
-        // Uploads persist under <project>/media so calendar entries can play
-        // the referenced clip later. URL inputs reference nothing local.
         const { videoUrl, videoData, frames = 4 } = await readBody(req, 200 * 1024 * 1024);
         const n = Math.min(12, Math.max(1, Number(frames) || 4));
-        let src: string;
-        let media: string | null = null;
-        let gifPrefix: string | null = null;
-        let mediaDir = '';
-        if (typeof videoUrl === 'string' && videoUrl) {
-          mediaDir = join(root, 'media');
-          await mkdir(mediaDir, { recursive: true });
-          gifPrefix = `clip-${new Date().toISOString().replace(/[:.]/g, '-')}`;
-          src = await materializeVideo({ videoUrl }, mediaDir, gifPrefix);
-          media = src.split(/[\\/]/).pop() ?? null;
-        } else {
-          mediaDir = join(root, 'media');
-          await mkdir(mediaDir, { recursive: true });
-          const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-          gifPrefix = `clip-${stamp}`;
-          src = await materializeVideo({ videoUrl, videoData }, mediaDir, gifPrefix);
-          media = src.split(/[\\/]/).pop() ?? null;
-        }
-        const scanArgs = [src, '--frames', String(n)];
-        if (gifPrefix) scanArgs.push('--gifs', mediaDir, '--gif-prefix', gifPrefix);
-        const analysis = await runScript('task-scan-video.js', scanArgs);
+        const gifPrefix = `clip-${randomUUID()}`;
+        const media = await retainVideo(root,{videoUrl,videoData},gifPrefix);
+        const mediaDir = join(root,'media');
+        const analysis = await scanRetainedVideo(root,media,n,gifPrefix,runScript);
         let eventId: string | null = null;
         try {
           const a = (analysis ?? {}) as { observed_task?: unknown; stage?: unknown; recorded_at?: unknown; gifs?: unknown };
-          if (gifPrefix) {
+          if (gifPrefix && !assetConfig(root)) {
             try {
               a.gifs = (await readdir(mediaDir))
                 .filter((f) => f.startsWith(`${gifPrefix}-`) && f.endsWith('.gif'))
@@ -561,22 +550,10 @@ export function createServer(rootArg: string, { eco = null, scanRunner = runScri
         json(200, { ok: true, analysis });
         return;
       }
-      if (req.method === 'GET' && url.pathname.startsWith('/media/')) {
-        const name = decodeURIComponent(url.pathname.slice('/media/'.length));
-        if (!name || name.includes('/') || name.includes('\\') || !/\.(mp4|webm|mov|gif|png|jpg|jpeg|webp|bin)$/i.test(name)) {
-          json(404, { ok: false, error: 'not found' });
-          return;
-        }
-        try {
-          const data = await readFile(join(root, 'media', name));
-          const extension = name.split('.').pop()!.toLowerCase();
-          const type = ({ webm: 'video/webm', mov: 'video/quicktime', mp4: 'video/mp4', gif: 'image/gif', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', bin: 'application/octet-stream' } as Record<string, string>)[extension];
-          res.writeHead(200, { 'Content-Type': type, 'X-Content-Type-Options': 'nosniff' });
-          res.end(data);
-        } catch {
-          json(404, { ok: false, error: 'not found' });
-        }
-        return;
+      if (['GET','HEAD'].includes(req.method ?? '') && url.pathname.startsWith('/media/')) {
+        const name=decodeURIComponent(url.pathname.slice('/media/'.length));
+        if(!name||name.includes('/')||name.includes('\\')||name.includes('..')){json(404,{error:'not found'});return;}
+        await serveAsset(root,name,req,res);return;
       }
       if (req.method === 'GET' && url.pathname === '/api/events') {
         const stored = await listStoredEvents(root);
@@ -772,7 +749,7 @@ if (invokedAsMain) {
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Port must be an integer from 1 to 65535.');
   const eco = flagValue(args, '--eco', null);
   const open = args.includes('--open');
-  await initRecords(root); // Refuse incompatible or failed migrations before accepting requests.
+  await initRecords(root); assetConfig(root); // Refuse incompatible or failed migrations before accepting requests.
   const server = createServer(root, { eco });
   let stopping = false;
   const stop = () => {

@@ -16,6 +16,8 @@ jobs:
       - run: docker compose -f compose.storage.yaml --profile tools build
       - run: docker builder prune --all --force
       - run: docker compose -f compose.storage.yaml run --rm transfer
+      - run: docker compose -f compose.storage.yaml run --rm -e FIELDOPS_TEST_ASSETS=1 transfer node --test app/physical-task-tracker/dist/lib/s3-assets.test.js
+      - run: FIELDOPS_MONGO_PASSWORD=test-compose-only docker compose -f compose.mongo.yaml -f compose.assets.yaml config --quiet
       - if: failure()
         run: docker compose -f compose.storage.yaml logs --tail 100
       - if: always()

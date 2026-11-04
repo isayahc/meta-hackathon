@@ -1,5 +1,5 @@
 /** Video follow-up adapter. Model output is evidence/proposals, never an accepted task mutation. */
-import { join } from 'node:path';
+import { scanRetainedVideo } from './asset-video.js';
 import { ingestEvidence, beginInterpretation, finishInterpretation, failInterpretation, proposeChange, reconciliationView, type EvidenceSource, type Observation } from './reconciliation.js';
 export interface VideoFollowupInput { media?: string; task_id?: string; recorded_at?: string | null; source_id?: string; revision?: number; retry?: boolean; frames?: number }
 export type ScanRunner = (file: string, args: string[]) => Promise<unknown>;
@@ -17,9 +17,9 @@ export async function reconcileVideo(root: string, input: VideoFollowupInput, ru
   const token = source.processing!.token;
   try {
     const task = source.baseline.find(t => t.id === source!.context.task_ids[0]);
-    const args = [join(root, 'media', source.media!), '--frames', String(Math.min(12, Math.max(1, Number(input.frames) || 4))), '--gifs', join(root, 'media'), '--gif-prefix', `review-${source.id}-${token}`];
-    if (task) args.push('--task-context', JSON.stringify({ id: task.id, text: task.text, quantity: task.quantity, completion_criteria: task.completion_criteria, location: task.location }));
-    const raw = await run('task-scan-video.js', args) as Record<string, unknown>;
+    const extra: string[] = [];
+    if (task) extra.push('--task-context', JSON.stringify({ id: task.id, text: task.text, quantity: task.quantity, completion_criteria: task.completion_criteria, location: task.location }));
+    const raw = await scanRetainedVideo(root,source.media!,Math.min(12,Math.max(1,Number(input.frames)||4)),`review-${source.id}-${token}`,run,extra);
     const lines = Array.isArray(raw.per_frame) ? raw.per_frame : [], times = Array.isArray(raw.frame_times_s) ? raw.frame_times_s : [];
     const observations: Observation[] = lines.flatMap((line, i) => typeof line === 'string' && line.trim() ? [{ id: `frame-${i}`, text: line.slice(0, 4000), start_s: typeof times[i] === 'number' && Number.isFinite(times[i]) && times[i] >= 0 ? times[i] : null,
       end_s: typeof times[i] === 'number' && Number.isFinite(times[i]) && times[i] >= 0 ? times[i] : null,
