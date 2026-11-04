@@ -17,4 +17,7 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm test
       - run: docker compose config --quiet
-      - run: python3 docker/smoke.py
+      - name: Exercise container startup and recovery from a Windows build context
+        run: |
+          sed -i 's/$/\r/' docker/entrypoint.sh
+          python3 docker/smoke.py
