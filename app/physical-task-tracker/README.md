@@ -201,6 +201,17 @@ node dist/task-process.js correct --root ./my-farm --id <pid> --set '{"steps":{"
 ```
 
 Tests: `node --test dist/lib/processes.test.js dist/task-process.test.js`.
+## Workflow improvements
+
+The optimizer can diagnose evidence-backed friction, propose human workflow
+changes, and compare supplied measurements per workload. Deterministic checks
+separate feasible trials from blocked or unvalidated ideas; farmer decisions
+and rationales persist, and process or constraint changes invalidate old advice.
+
+Run `node scripts/replay-improvements.mjs ./tray-workflow-demo` after building
+for a synthetic, offline example. See [workflow improvements](doc/workflow-improvements.md)
+for operator inputs, CLI/API decisions, transparent calculations, and OI limits.
+
 ## Resume briefing
 
 `src/task-briefing.ts` reads every spot's state and briefs the operator —

@@ -19,6 +19,7 @@ import { listActions, syncActions, setActionStatus } from './lib/actions.js';
 import { buildProcessFromScan, saveRevision } from './lib/processes.js';
 import { listSpotBriefs, recentSessions } from './lib/spot-state.js';
 import { readOiLinks } from './lib/oi-links.js';
+import { improvementPlan, readWorkflowContext, writeWorkflowContext, ImprovementError, decideImprovement, listImprovementReviews, readImprovementReview } from './lib/improvements.js';
 import { getDoc } from './lib/db.js';
 import { loadEnvSync } from './lib/env.js';
 
@@ -313,9 +314,38 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
       if (req.method === 'GET' && url.pathname === '/api/overview') {
         const spots = await loadSpots(root);
         const goals = await listGoals(root);
-        const plan = await getDoc(root, 'plan');
+        const plan = getDoc(root, 'plan') as Record<string, unknown> | null;
+        if (typeof plan?.improvement_review_id === 'string') {
+          const review = readImprovementReview(root, plan.improvement_review_id);
+          plan.improvements = review;
+          plan.plan = improvementPlan(review);
+          if (review.stale) { plan.stale = true; plan.stale_reason = review.stale_reasons.join(' '); }
+        }
         const ecoDoc = (await getDoc(root, 'eco')) as { summary?: string } | null;
         json(200, { spots, goals, plan, eco: ecoDoc?.summary ?? null, feed: buildFeed(spots) });
+        return;
+      }
+      if (url.pathname === '/api/improvement-context' && req.method === 'GET') {
+        json(200, { context: readWorkflowContext(root) });
+        return;
+      }
+      if (url.pathname === '/api/improvement-context' && req.method === 'POST') {
+        const { context } = await readBody(req);
+        json(200, { context: writeWorkflowContext(root, context) });
+        return;
+      }
+      if (req.method === 'GET' && url.pathname === '/api/improvements') {
+        json(200, { reviews: listImprovementReviews(root) });
+        return;
+      }
+      const improvementMatch = /^\/api\/improvements\/([^/]+)$/.exec(url.pathname);
+      if (improvementMatch && req.method === 'GET') {
+        json(200, { review: readImprovementReview(root, decodeURIComponent(improvementMatch[1]!)) });
+        return;
+      }
+      if (improvementMatch && req.method === 'POST') {
+        const { candidate_id, status, rationale } = await readBody(req);
+        json(200, { review: decideImprovement(root, decodeURIComponent(improvementMatch[1]!), candidate_id, status, rationale) });
         return;
       }
       if (req.method === 'POST' && url.pathname === '/api/goals') {
@@ -563,7 +593,7 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
       json(404, { ok: false, error: 'not found' });
     } catch (err) {
       const msg = (err as Error).message;
-      const code = /No goal|No action|Event title|Bad event|Bad status|Bad URL|Only http|credentials|non-public|Refusing|Too many redirects|Could not resolve|Bad spot|Provide \{|not JSON|over \d+|Bad assumeHeight|Bad assumeSize|Bad --eco|Bad location|No spots|Nothing to optimize|Set META_API_KEY|Empty key|required/i.test(msg)
+      const code = err instanceof ImprovementError ? 400 : /No goal|No action|Event title|Bad event|Bad status|Bad URL|Only http|credentials|non-public|Refusing|Too many redirects|Could not resolve|Bad spot|Provide \{|not JSON|over \d+|Bad assumeHeight|Bad assumeSize|Bad --eco|Bad location|No spots|Nothing to optimize|Set META_API_KEY|Empty key|required/i.test(msg)
         ? 400
         : /task-\w+\.m?js:|timed out/i.test(msg)
           ? 502

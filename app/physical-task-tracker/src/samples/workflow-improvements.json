@@ -1,0 +1,44 @@
+{
+  "description": "Synthetic tray-staging replay, not a real farmer observation or measured savings claim.",
+  "scan": {
+    "id": "trays",
+    "analysis": {
+      "observed_task": "Prepare seed trays without reducing fill quality",
+      "per_frame": ["Fetch a scoop from the shelf", "Fill a tray", "Fetch the scoop from the shelf again"],
+      "frame_times_s": [5, 15, 25]
+    },
+    "duration_s": 30
+  },
+  "context": {
+    "measurements": [
+      { "id": "existing-scoop", "metric": "cost", "value": 0, "unit": "USD", "kind": "measured", "source": "Synthetic fixture: existing scoop, no purchase required", "workload": null },
+      { "id": "one-worker", "metric": "labor", "value": 1, "unit": "people", "kind": "measured", "source": "Synthetic fixture: one operator", "workload": null },
+      { "id": "baseline-time", "metric": "time", "value": 20, "unit": "min", "kind": "measured", "source": "Synthetic fixture stopwatch total; not inferred from sparse frames", "workload": { "amount": 10, "unit": "tray", "context": "72-cell trays, same soil and fill depth" } },
+      { "id": "staged-time", "metric": "time", "value": 12, "unit": "min", "kind": "estimated", "source": "Synthetic trial hypothesis, requires a follow-up recording", "workload": { "amount": 10, "unit": "tray", "context": "72-cell trays, same soil and fill depth" } }
+    ],
+    "observations": [
+      { "id": "scoop-trips", "process_id": "trays", "rev": 2, "category": "repeated_trips", "statement": "The operator confirms separate returns to the shelf for the same scoop.", "step_ids": ["trays-o0", "trays-o2"], "basis": "farmer_confirmed", "source": "Synthetic farmer statement for replay; no actual adoption claim" }
+    ],
+    "conditions": [
+      { "id": "maintain-fill-depth", "status": "met", "source": "Synthetic farmer review: same scoop and fill method" },
+      { "id": "existing-tool-holder", "status": "met", "source": "Synthetic farmer review: use existing holder; no furniture or access change" }
+    ],
+    "constraints": { "budget_usd": 25, "available_people": 1, "required_conditions": ["maintain-fill-depth"], "forbidden_changes": ["move-bench"], "notes": [] },
+    "spatial_options": []
+  },
+  "candidates": [
+    {
+      "id": "keep-scoop-at-station", "process_id": "trays", "process_rev": 2, "goal_ids": ["trays-g0"],
+      "diagnosis": { "category": "repeated_trips", "claim": "Returning for the same scoop interrupts tray preparation.", "step_ids": ["trays-o0", "trays-o2"], "observation_ids": ["scoop-trips"], "evidence_request": "Confirm these are separate trips for the same scoop, not repeated frames of one trip." },
+      "change": "Return the scoop to the existing station holder between trays.",
+      "mechanism": "Keeps the needed tool with the operator and may eliminate shelf trips.",
+      "change_tags": ["tool-return-policy"],
+      "requirements": { "cost_id": "existing-scoop", "labor_id": "one-worker", "condition_ids": ["existing-tool-holder"] },
+      "tradeoffs": { "cost": "No new purchase; uses existing holder.", "quality": "Keep the same fill depth and inspect every tray.", "effort": "Small: change where the scoop is returned; no worker-effort score inferred." },
+      "uncertainty": ["The 12-minute trial duration is an estimate; savings have not been demonstrated."],
+      "verification": { "action": "Time a comparable 10-tray run, count separate trips, inspect fill quality, and ask the operator about effort.", "workload": "10 trays, 72 cells each, same operator, soil and fill depth", "success": "Lower minutes per tray with unchanged fill quality and no increase in reported effort", "stop_if": "Tool placement obstructs work or fill quality worsens" },
+      "comparisons": [{ "baseline_id": "baseline-time", "proposed_id": "staged-time" }],
+      "spatial_change": false, "spatial_option_id": null
+    }
+  ]
+}
