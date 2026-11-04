@@ -313,6 +313,16 @@ Dashboard: the Space tab posts to `/api/floorplan`. Tests: `node --test
 dist/task-floorplan.test.js dist/lib/oi-connector.test.js
 dist/lib/oi-links.test.js dist/lib/oi-integration.test.js` (live-OI tests
 run when `OI_ROOT` is pinned, else skip).
+## Walkthrough capture and review
+
+The Space tab accepts a short walkthrough video or overlapping photos, saves
+selected frames, and supports reviewing station proposals from a local
+MapAnything/SAM 3 worker. Capture runs without model weights; live inference is
+opt-in and requires pinned local code and cached checkpoints. Explicit replay is
+always labeled. Scale and OI import remain unverified in this increment.
+Setup, CLI/API, evidence format, and outstanding #45 acceptance gates:
+[walkthrough adapter](../../doc/walkthrough-adapter.md).
+
 ## Sample
 
 "Harvesting carrots" — agricultural workers harvesting carrots into crates,

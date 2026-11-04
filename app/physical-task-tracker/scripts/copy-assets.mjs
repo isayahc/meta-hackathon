@@ -7,8 +7,8 @@ import { fileURLToPath } from 'node:url';
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const distDir = join(appDir, 'dist');
 await mkdir(distDir, { recursive: true });
-for (const entry of ['dashboard', 'samples']) {
-  await cp(join(appDir, 'src', entry), join(distDir, entry), { recursive: true });
+for (const entry of ['dashboard', 'samples', 'workers']) {
+  await cp(join(appDir, 'src', entry), join(distDir, entry), { recursive: true, filter: (source) => !source.includes('__pycache__') });
 }
 // Plain-JS OI runner (runs inside the OI checkout, not compiled by tsc).
 await mkdir(join(distDir, 'lib'), { recursive: true });

@@ -21,6 +21,7 @@ import { listSpotBriefs, recentSessions } from './lib/spot-state.js';
 import { readOiLinks } from './lib/oi-links.js';
 import { improvementPlan, readWorkflowContext, writeWorkflowContext, ImprovementError, decideImprovement, listImprovementReviews, readImprovementReview } from './lib/improvements.js';
 import { getDoc } from './lib/db.js';
+import { WalkthroughError, captureWalkthrough, listWalkthroughs, readWalkthrough, reviewWalkthrough, walkthroughHandoff, walkthroughImage } from './lib/walkthrough.js';
 import { loadEnvSync } from './lib/env.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -311,6 +312,37 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
         res.end(html);
         return;
       }
+      if (url.pathname === '/api/walkthroughs' && req.method === 'GET') {
+        json(200, { runs: listWalkthroughs(root) }); return;
+      }
+      if (url.pathname === '/api/walkthroughs' && req.method === 'POST') {
+        const input = await readBody(req, 160 * 1024 * 1024);
+        const imagesData = input.imagesData ?? [];
+        if (!Array.isArray(imagesData) || imagesData.length > 36 || (!!input.videoData === !!imagesData.length)) throw new WalkthroughError('Choose one video or 2–36 overlapping images.');
+        if (input.mode !== 'capture' && input.mode !== 'live') throw new WalkthroughError('Choose capture or live mode.');
+        const work = await mkdtemp(join(tmpdir(), 'walkthrough-upload-'));
+        try {
+          const images = [];
+          for (const [index, imageData] of imagesData.entries()) images.push(await materializeImage({ imageData }, work, `image-${index}`));
+          const video = input.videoData ? await materializeVideo({ videoData: input.videoData }, work) : undefined;
+          json(200, { run: await captureWalkthrough(root, { images, video, mode: input.mode, max_frames: input.frames ?? 6, prompts: input.prompts }) });
+        } finally { await rm(work, { recursive: true, force: true }); }
+        return;
+      }
+      const walkthrough = /^\/api\/walkthroughs\/([a-f0-9-]+)(?:\/(handoff|review|images)(?:\/([^/]+))?)?$/.exec(url.pathname);
+      if (walkthrough) {
+        const id = walkthrough[1]!;
+        if (req.method === 'GET' && walkthrough[2] === 'images') {
+          const bytes = await walkthroughImage(root, id, walkthrough[3] ?? '');
+          res.writeHead(200, { 'Content-Type': 'image/png', 'X-Content-Type-Options': 'nosniff' }); res.end(bytes); return;
+        }
+        if (req.method === 'GET' && walkthrough[2] === 'handoff') { json(200, walkthroughHandoff(root, id)); return; }
+        if (req.method === 'GET' && !walkthrough[2]) { json(200, { run: readWalkthrough(root, id) }); return; }
+        if (req.method === 'POST' && walkthrough[2] === 'review') {
+          const { revision, patch } = await readBody(req);
+          json(200, { run: reviewWalkthrough(root, id, revision, patch) }); return;
+        }
+      }
       if (req.method === 'GET' && url.pathname === '/api/overview') {
         const spots = await loadSpots(root);
         const goals = await listGoals(root);
@@ -593,7 +625,7 @@ export function createServer(rootArg: string, { eco = null }: { eco?: string | n
       json(404, { ok: false, error: 'not found' });
     } catch (err) {
       const msg = (err as Error).message;
-      const code = err instanceof ImprovementError ? 400 : /No goal|No action|Event title|Bad event|Bad status|Bad URL|Only http|credentials|non-public|Refusing|Too many redirects|Could not resolve|Bad spot|Provide \{|not JSON|over \d+|Bad assumeHeight|Bad assumeSize|Bad --eco|Bad location|No spots|Nothing to optimize|Set META_API_KEY|Empty key|required/i.test(msg)
+      const code = err instanceof WalkthroughError ? (/Stale review/.test(msg) ? 409 : 400) : err instanceof ImprovementError ? 400 : /No goal|No action|Event title|Bad event|Bad status|Bad URL|Only http|credentials|non-public|Refusing|Too many redirects|Could not resolve|Bad spot|Provide \{|not JSON|over \d+|Bad assumeHeight|Bad assumeSize|Bad --eco|Bad location|No spots|Nothing to optimize|Set META_API_KEY|Empty key|required/i.test(msg)
         ? 400
         : /task-\w+\.m?js:|timed out/i.test(msg)
           ? 502

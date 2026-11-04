@@ -221,6 +221,23 @@
     </section>
   </div>
   <div class="view" id="view-space">
+    <section aria-label="Walkthrough mapping">
+      <h2>Map a work area from a walkthrough</h2>
+      <p class="hint">Record overlapping views of the same stations. Keep moving people separate from the space you want to map.</p>
+      <form class="run" id="walkthroughform">
+        <label>Walkthrough video (up to 2 minutes)<input name="video" type="file" accept="video/mp4,video/webm,video/quicktime"></label>
+        <label>Or overlapping photos (2–36)<input name="images" type="file" accept="image/png,image/jpeg,image/webp" multiple></label>
+        <label>What to find<input name="prompts" value="workbench, tray, container, person" required></label>
+        <label>Selected views<input name="frames" type="number" min="2" max="12" value="6" required></label>
+        <label>Capture option<select name="mode"><option value="capture">Prepare views for review</option><option value="live">Run installed Meta models</option></select></label>
+        <p class="hint">Preparing views does not reconstruct a space. Model inference requires the local models to be installed.</p>
+        <button class="btn" type="submit">Start walkthrough</button>
+      </form>
+      <p id="walkthroughstatus" role="status"></p>
+      <button class="btn" id="reloadwalkthroughs" type="button">Reload saved walkthroughs</button>
+      <div id="walkthroughruns"></div>
+    </section>
+
     <section aria-label="Build a space from a floor plan">
       <h2>Floor plan to OpenIndustries space</h2>
       <form class="run" id="spaceform">
@@ -830,6 +847,72 @@ $('brief').addEventListener('click', (e) => {
 
 tick();
 setInterval(() => tick(), 5000);
+
+// Walkthrough review keeps model evidence separate from an accepted OI scene.
+let walkthroughRuns = [];
+function renderWalkthroughs() {
+  $('walkthroughruns').innerHTML = walkthroughRuns.map(run => {
+    const r = run.report;
+    const latest = new Map(run.reviews.map(review => [review.observation_id, review]));
+    return `<article style="border-top:1px solid var(--line);margin-top:18px;padding-top:12px">
+      <h3>${esc(r.source === 'replay' ? 'Replay — not fresh inference' : r.source === 'live' ? 'Fresh local model run' : 'Prepared capture')} · ${esc(r.status)}</h3>
+      <p>${r.frames.length} views · revision ${run.revision} · Scale unverified · No OI scene imported</p>
+      ${r.error ? `<p class="err">${esc(r.error)}</p>` : ''}
+      <p class="hint">${r.warnings.map(esc).join(' ')}</p>
+      <div style="display:flex;gap:8px;overflow:auto">${r.frames.map(f => `<figure style="margin:0;flex:0 0 140px"><img style="width:140px;height:100px;object-fit:contain" src="/api/walkthroughs/${run.id}/images/${f.file}" alt="Selected view ${f.source_index}"><figcaption>Frame ${f.source_index}${f.timestamp_s === null ? ' · time unknown' : ` · ${f.timestamp_s.toFixed(2)}s`}</figcaption></figure>`).join('')}</div>
+      ${r.observations.length ? '' : '<p>No object observations yet. Prepared captures are not model results.</p>'}
+      ${r.observations.map(o => `<div style="margin-top:16px">
+        <h4>${esc(o.prompt)} · ${esc(o.frame_id)}</h4>
+        <img style="width:100%;max-width:360px" src="/api/walkthroughs/${run.id}/images/${o.overlay}" alt="Proposed ${esc(o.prompt)} mask">
+        <p>Confidence ${(o.score * 100).toFixed(0)}% · ${esc(o.geometry_status)} · ${esc(latest.get(o.id)?.decision ?? 'Needs review')}</p>
+        <form class="run stationreview" data-run="${run.id}" data-observation="${o.id}" data-revision="${run.revision}">
+          <label>Station name<input name="station" value="${esc(latest.get(o.id)?.station ?? '')}" placeholder="e.g. Tray filling station"></label>
+          <label><input name="static" type="checkbox" ${latest.get(o.id)?.static_confirmed ? 'checked' : ''}> I confirm this is a stationary work area or object</label>
+          <label>Reason<input name="rationale" required placeholder="What confirms or contradicts this observation?"></label>
+          <div><button class="btn" name="decision" value="confirmed" ${o.motion === 'dynamic' || o.predicted_centroid === null ? 'disabled' : ''}>Confirm station</button>
+          <button class="btn" name="decision" value="rejected">Reject observation</button></div>
+        </form>
+      </div>`).join('')}
+      <p><a href="/api/walkthroughs/${run.id}/handoff" target="_blank" rel="noopener">View reviewed evidence for OI integration</a></p>
+      <p class="hint">Coordinates and distances remain unverified until spatial import and calibration checks are completed.</p>
+    </article>`;
+  }).join('') || '<p>No walkthroughs saved yet.</p>';
+}
+async function loadWalkthroughs() {
+  try { walkthroughRuns = (await api('/api/walkthroughs')).runs; renderWalkthroughs(); }
+  catch (e) { $('walkthroughstatus').textContent = e.message; }
+}
+$('reloadwalkthroughs').addEventListener('click', loadWalkthroughs);
+document.querySelector('nav.tabs button[data-view="space"]').addEventListener('click', loadWalkthroughs);
+$('walkthroughform').addEventListener('submit', async e => {
+  e.preventDefault(); const f = e.currentTarget; const button = f.querySelector('button'); button.disabled = true;
+  $('walkthroughstatus').textContent = 'Preparing walkthrough…';
+  try {
+    if (!!f.video.files.length === !!f.images.files.length) throw new Error('Choose one video or overlapping photos.');
+    const files = [...f.images.files];
+    if (files.length && (files.length < 2 || files.length > 36)) throw new Error('Choose 2–36 photos.');
+    if ([...files, ...f.video.files].reduce((n, file) => n + file.size, 0) > 100 * 1024 * 1024) throw new Error('Choose files totaling at most 100 MB.');
+    const read = file => new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
+    const body = { mode: f.mode.value, frames: Number(f.frames.value), prompts: f.prompts.value.split(',').map(p => p.trim()).filter(Boolean),
+      imagesData: await Promise.all(files.map(read)), videoData: f.video.files[0] ? await read(f.video.files[0]) : null };
+    const result = await api('/api/walkthroughs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    $('walkthroughstatus').textContent = result.run.report.status === 'failed' ? 'Capture saved; model inference failed. See the diagnostic below.' : 'Walkthrough saved for review.';
+    await loadWalkthroughs();
+  } catch (error) { $('walkthroughstatus').textContent = error.message; }
+  finally { button.disabled = false; }
+});
+$('walkthroughruns').addEventListener('submit', async e => {
+  if (!e.target.matches('.stationreview')) return;
+  e.preventDefault(); const f = e.target;
+  try {
+    await api(`/api/walkthroughs/${f.dataset.run}/review`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+      revision: Number(f.dataset.revision), patch: { observation_id: f.dataset.observation, decision: e.submitter.value,
+        station: f.station.value, static_confirmed: f.static.checked, rationale: f.rationale.value }
+    }) });
+    $('walkthroughstatus').textContent = 'Review saved. Earlier evidence exports now reference an older revision.';
+    await loadWalkthroughs();
+  } catch (error) { $('walkthroughstatus').textContent = error.message; }
+});
 </script>
 </body>
 </html>
