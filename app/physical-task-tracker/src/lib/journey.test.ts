@@ -155,3 +155,35 @@ test('journey requests GIFs and preserves frame identity across blank observatio
  assert.equal(c.process!.steps.find(s=>s.observed_order===2)!.evidence.spans[0].frame,2);
  assert.deepEqual((c.source.interpretations[0].raw as any).gif_segments,[{frame:2,file:'review-2.gif',start_s:4,end_s:6}]);
 });
+
+test('one-click next actions preserve uncertainty and create no booking or inferred goal', async t => {
+ for (const choice of ['do','later','done','finish']) {
+  const root=project(t);let j=await captured(root);
+  let proposal=journeyView(root).workflows[0].proposal;
+  assert.equal(proposal.text,'Seed trays');assert.equal(proposal.current,'Carry filled tray');
+  assert.throws(()=>send(root,j,{command:'next_decide',choice,basis:proposal.basis}),/Review/);
+  j=review(root,j);proposal=journeyView(root).workflows[0].proposal;
+  const input={id:j.id,revision:j.revision,request_id:'next',reason:'Operator chose '+choice,command:'next_decide',choice,basis:proposal.basis};
+  j=journeyCommand(root,input) as Journey;journeyCommand(root,input);
+  const state=journeyView(root);assert.equal(state.workflows[0].proposal.decision?.choice,choice);
+  assert.equal(state.planning.goals.length,0);assert.equal(state.planning.schedule.blocks.length,0);
+  assert.equal(state.planning.tasks.length,['do','later'].includes(choice)?1:0);
+  if(state.planning.tasks.length){assert.equal(state.planning.tasks[0].active_minutes,null);assert.equal(state.planning.tasks[0].completion_criteria,'');assert.equal(state.planning.tasks[0].execution,'open');}
+  assert.throws(()=>send(root,j,{command:'next_decide',choice,basis:proposal.basis}),/already has a decision/);
+ }
+});
+
+test('corrected proposals survive reload and reject stale analysis without duplicating future work',async t=>{
+ const root=project(t);let j=review(root,await captured(root));let w=journeyView(root).workflows[0];
+ j=send(root,j,{command:'next_correct',basis:w.proposal.basis,text:'Inspect tray drainage',outcome:'Drainage checked'});
+ w=journeyView(root).workflows[0];assert.equal(w.proposal.text,'Inspect tray drainage');assert.equal(w.proposal.origin,'human');
+ assert.throws(()=>send(root,j,{command:'next_decide',choice:'do',basis:'old'}),/proposal changed/);
+ j=send(root,j,{command:'next_decide',choice:'do',basis:w.proposal.basis});
+ assert.equal(planningView(root).tasks[0].text,'Inspect tray drainage');
+ const c=w.clips[0];j=send(root,j,{command:'correct',source_id:c.source_id,process_revision:c.process!.rev,patch:{stage:'Corrected outcome'}});
+ assert.equal(journeyView(root).workflows[0].proposal.decision,null);
+ assert.equal(journeyView(root).workflows[0].proposal.text,'Inspect tray drainage');
+ assert.equal(journeyView(root).workflows[0].proposal.correction_needs_review,true);
+ assert.throws(()=>send(root,j,{command:'next_decide',choice:'do',basis:w.proposal.basis}),/Review/);
+ assert.equal(planningView(root).tasks.length,1);
+});

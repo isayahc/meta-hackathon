@@ -21,6 +21,8 @@ export interface Journey {
   clips: JourneyClip[]; goal_ids: string[]; task_ids: string[]; desired_improvement: string;
   intent_confirmed: boolean;
   observation_only?: boolean;
+  next_draft?: { text: string; outcome: string; basis: string };
+  next_decision?: { choice: 'do' | 'later' | 'done' | 'finish'; text: string; at: string; basis: string; task_id: string | null };
   method: { decision: 'retain' | 'intervention'; reason: string; basis: string; review_id: string | null; candidate_id: string | null } | null;
   history: Array<{ at: string; action: string; reason: string; before: unknown }>;
 }
@@ -37,6 +39,18 @@ function source(db: DatabaseSync, id: string): EvidenceSource { const s = get<Ev
 function processDoc(db: DatabaseSync, id: string): ProcessDoc { const row = db.prepare('SELECT body FROM processes WHERE id=? ORDER BY rev DESC LIMIT 1').get(id) as { body: string } | undefined; check(row, 'Process not found.'); return JSON.parse(row.body); }
 function basis(db: DatabaseSync, j: Journey): string { return hash({ processes: j.clips.filter(c => c.role !== 'followup').map(c => ({ id: c.process_id, rev: c.process_id ? processDoc(db, c.process_id).rev : null, interpretation: source(db, c.source_id).interpretations.at(-1)?.id ?? null })), goals: j.goal_ids.map(id => db.prepare('SELECT * FROM goals WHERE id=?').get(id)), desire: j.desired_improvement }); }
 function reviewed(db: DatabaseSync, j: Journey): boolean { return j.clips.filter(c => c.role !== 'followup').every(c => c.process_id && c.reviewed_revision === processDoc(db, c.process_id).rev && c.interpretation_id === source(db, c.source_id).interpretations.at(-1)?.id && !source(db,c.source_id).processing); }
+/** A revisable suggestion, never a claim that unobserved work happened or a calendar booking. */
+function nextProposal(db: DatabaseSync, j: Journey) {
+  const stamp = basis(db, j);
+  const clip = [...j.clips].reverse().find(c => c.role !== 'followup' && c.process_id);
+  const p = clip?.process_id ? processDoc(db, clip.process_id) : null;
+  const draft = j.next_draft;
+  const suggested = p?.steps.find(s => s.observed_order === null && s.execution === 'not_started');
+  return { basis: stamp, current: p?.steps.filter(s => s.observed_order !== null).at(-1)?.label ?? 'No observed state yet',
+    outcome: draft?.outcome ?? p?.stage ?? 'Check the result of the recorded work',
+    text: draft?.text ?? suggested?.label ?? 'Check the result of the recorded work',
+    origin: draft ? 'human' : 'proposed', correction_needs_review: !!draft && draft.basis !== stamp, decision: j.next_decision?.basis === stamp ? j.next_decision : null };
+}
 function atomic<T>(root: string, fn: (db: DatabaseSync) => T): T { return withDb(root, db => { db.exec('BEGIN IMMEDIATE'); try { const result = fn(db); db.exec('COMMIT'); return result; } catch (error) { db.exec('ROLLBACK'); throw error; } }); }
 function save(db: DatabaseSync, j: Journey, action: string, reason: string, before: unknown): Journey { j.revision++; j.updated_at = new Date().toISOString(); j.history.push({ at: j.updated_at, action, reason, before }); put(db, `journey:${j.id}`, j); return j; }
 
@@ -108,12 +122,32 @@ export function journeyCommand(root: string, raw: unknown): unknown {
       check(p.rev === v.process_revision && clip.interpretation_id === s.interpretations.at(-1)?.id && !s.processing, 'Stale process or interpretation. Resume analysis first.');
       if (v.command === 'correct') { const corrected = correctProcessInDb(db, root, p.id, object(v.patch) as CorrectionPatch, reason, 'farmer', v.process_revision); if (clip.role === 'baseline' && v.patch.title !== undefined) j.title = corrected.doc.title; clip.reviewed_revision = null; }
       else clip.reviewed_revision = p.rev;
+    } else if (v.command === 'next_correct' || v.command === 'next_decide') {
+      check(reviewed(db,j), 'Review the observed work first.');
+      const proposal = nextProposal(db,j);
+      check(v.basis === proposal.basis, 'The proposal changed. Review it again.');
+      check(!proposal.decision, 'This proposal already has a decision. Resume it before changing it.');
+      if (v.command === 'next_correct') {
+        j.next_draft = { text: text(v.text,'Next action'), outcome: text(v.outcome,'Intended result'), basis: proposal.basis };
+      } else {
+        check(['do','later','done','finish'].includes(v.choice), 'Choose what to do next.');
+        let taskId: string | null = null;
+        if (v.choice === 'do' || v.choice === 'later') {
+          const task = createTaskInDb(db, { text: proposal.text, completion_criteria: '', links: [], review: 'confirmed', execution: 'open' }, `journey-next:${j.id}:${request}`);
+          taskId = task.id; j.task_ids.push(task.id);
+          // Accepting an action does not establish goals, durations, successful outcomes or a booking.
+        }
+        j.next_decision = { choice:v.choice, text:proposal.text, at:new Date().toISOString(), basis:proposal.basis, task_id:taskId };
+        j.observation_only = !j.task_ids.length;
+      }
     } else if (v.command === 'save_observation') {
       check(reviewed(db, j), 'Review all observed work before saving an observation.');
       check(!j.task_ids.length, 'Existing future work must remain in its planning workflow.');
       j.observation_only = true;
     } else if (v.command === 'resume_planning') {
+      check(!j.next_decision?.task_id, 'Open the existing task to change this accepted action.');
       j.observation_only = false;
+      j.next_decision = undefined;
     } else if (v.command === 'goal') {
       j.observation_only = false;
       check(reviewed(db, j), 'Review the observed work before clarifying intent.');
@@ -173,12 +207,14 @@ export function journeyView(root: string, at = new Date().toISOString()) {
     const pending = followups.filter(s => !['applied','no_material_change'].includes(s.stage));
     const blocks = planning.schedule.blocks.filter(b => j.task_ids.includes(b.task_id) && b.status === 'accepted');
     const stage = !baselineReviewed ? 'review' : j.observation_only && !currentTasks.length ? 'saved' : !j.intent_confirmed ? 'goals' : !methodCurrent ? 'improvements' : !currentTasks.length ? 'tasks' : pending.length ? 'followup' : blocks.length ? 'today' : 'schedule';
-    const next = ({saved:'Observation saved. No future work was created. Resume planning whenever you need it.',review:'Resume review: inspect the clip, correct observations and confirm what is known.',goals:'Confirm what you want to accomplish and what you want to improve.',improvements:'Compare supported improvements or explicitly retain current practice.',tasks:'Choose future work and confirm its contribution to your goals.',followup:'Review what the follow-up changes before adapting the plan.',schedule:'Review estimates and availability, then propose a day plan.',today:'Follow accepted work; record progress or review changed conditions.'} as Record<string,string>)[stage];
-    return { workflow:j, clips, tasks:currentTasks, goals:planning.goals.filter(g => j.goal_ids.includes(g.id)), stage, next, baseline_reviewed:baselineReviewed, method_current:methodCurrent, followups, pending_reviews:pending.length, blocks, improvements:reviews, outcomes:trials, outcome_status:trials.length ? null : 'Unknown: no intervention trial with comparable baseline and follow-up measurements is registered.' };
+    const proposal = nextProposal(db,j);
+    const next = baselineReviewed && !j.intent_confirmed ? (proposal.decision ? 'Next action saved. Open the workflow to continue.' : 'Choose the suggested next action, correct it, or finish here.') : ({saved:'Observation saved. No future work was created. Resume planning whenever you need it.',review:'Resume review: inspect the clip, correct observations and confirm what is known.',goals:'Confirm what you want to accomplish and what you want to improve.',improvements:'Compare supported improvements or explicitly retain current practice.',tasks:'Choose future work and confirm its contribution to your goals.',followup:'Review what the follow-up changes before adapting the plan.',schedule:'Review estimates and availability, then propose a day plan.',today:'Follow accepted work; record progress or review changed conditions.'} as Record<string,string>)[stage];
+    return { workflow:j, proposal, clips, tasks:currentTasks, goals:planning.goals.filter(g => j.goal_ids.includes(g.id)), stage, next, baseline_reviewed:baselineReviewed, method_current:methodCurrent, followups, pending_reviews:pending.length, blocks, improvements:reviews, outcomes:trials, outcome_status:trials.length ? null : 'Unknown: no intervention trial with comparable baseline and follow-up measurements is registered.' };
   }));
   const nextTask = planning.tasks.find(t => t.id === preview.next.task_id) ?? null;
   const nextBlock = nextTask ? [...preview.preserved,...preview.blocks].filter(b => b.task_id === nextTask.id).sort((a,b)=>a.start.localeCompare(b.start))[0] : null;
   const accepted = !!nextBlock && planning.schedule.blocks.some(b => b.id === nextBlock.id && b.status === 'accepted');
-  const workflowWarnings = workflows.filter(w => w.tasks.some(t => t.id === nextTask?.id) && (!w.baseline_reviewed || !w.method_current));
+  const workflowWarnings = workflows.filter(w => w.tasks.some(t => t.id === nextTask?.id) && (!w.baseline_reviewed || !w.method_current && w.proposal.decision?.task_id !== nextTask?.id));
   return { schema:'work-journey-view/1' as const, now, workflows, planning, today:{ next: workflowWarnings.length ? {action:'inspect',task_id:null,reason:'The workflow’s observations, goal or method changed. Resume its review before acting.'} : preview.next, task:workflowWarnings.length ? null : nextTask, block:nextBlock, accepted, goals:nextTask ? planning.goals.filter(g=>nextTask.links.some(l=>l.goal_id===g.id&&l.review==='confirmed')) : [], conflicts:preview.conflicts, deferred:preview.deferred, agenda:planning.schedule.blocks.filter(b=>b.status==='accepted'&&localParts(b.start,planning.schedule.config.timezone).day===localParts(now,planning.schedule.config.timezone).day), commitments:planning.events.filter(e=>e.timing&&localParts(e.timing.start,planning.schedule.config.timezone).day===localParts(now,planning.schedule.config.timezone).day) } };
 }
+
