@@ -1,6 +1,6 @@
 /** Evidence revisions and reviewed changes over canonical actions, never a second task store. */
 import { createHash, randomUUID } from 'node:crypto';
-import { readFileSync, existsSync } from 'node:fs';
+import { assetInfo, retainedMediaPresent } from './assets.js';
 import { basename, resolve, sep } from 'node:path';
 import type { RecordTransaction } from './record-model.js';
 import { withRecords } from './records.js';
@@ -74,7 +74,7 @@ export async function ingestEvidence(root: string, raw: unknown): Promise<Eviden
   if (v.kind === 'video') {
     media = text(v.media, 'Media filename'); ensure(basename(media) === media && !media.includes('\\') && !media.includes('..'), 'Use a persisted media filename.');
     const path = resolve(root, 'media', media); ensure(path.startsWith(resolve(root, 'media') + sep), 'Invalid media path.');
-    checksum = createHash('sha256').update(readFileSync(path)).digest('hex');
+    checksum = (await assetInfo(root,media)).sha256;
   } else checksum = digest({ request_id: text(v.request_id, 'Request ID'), report: text(v.report, 'Report') });
   const recordedAt = v.recorded_at ? instant(v.recorded_at) : null;
   const uncertainty = text(v.time_uncertainty ?? (recordedAt ? 'Operator supplied' : 'Recording time unknown'), 'Time uncertainty');
@@ -321,7 +321,7 @@ export async function reviewRelated(root: string, id: string, revision: number, 
         const current = ({ rev: db.first('processes', { where: { id: c.process_id! }, order: ["-rev"] })?.rev ?? null }) as { rev: number };
         ensure(current.rev === c.base_revision, 'Stale process revision. Submit a revised proposal.');
         const next = normalizeProcess(validateProcess(c.proposal));
-        validateCompletion(next, { mediaPresent: media => { if (!media) return false; const path = resolve(root, 'media', media); return path.startsWith(resolve(root, 'media') + sep) && existsSync(path); } });
+        validateCompletion(next, { mediaPresent: media => retainedMediaPresent(root,db,media) });
         // The accepted revision keeps provenance from earlier clips and points to this reconciliation decision.
         next.updated_at = now(); next.created_at = c.before!.created_at;
         next.corrections = [...c.before!.corrections, { rev: next.rev, at: next.updated_at, rationale: `${v.reason} (evidence ${s.id}, observation ${c.observation_id})`, paths: ['reviewed_process_revision'] }];

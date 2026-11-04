@@ -1,3 +1,4 @@
+import { assetInfo, assetConfig, withAssetWorkspace, stageAsset, retainGenerated } from './assets.js';
 import { createHash } from 'node:crypto';
 import { stat } from 'node:fs/promises';
 import { join, basename, resolve } from 'node:path';
@@ -10,7 +11,7 @@ async function usable(root: string, value: unknown, count: number): Promise<Vide
   if (!Array.isArray(value) || value.length !== count) return null;
   const segments = value as VideoSegment[];
   if (new Set(segments.map(s=>s.frame)).size !== count || segments.some(s=>!Number.isInteger(s.frame)||s.frame<0||s.frame>=count||typeof s.file!=='string'||!/^[a-zA-Z0-9_.-]+\.gif$/.test(s.file)||!Number.isFinite(s.start_s)||!Number.isFinite(s.end_s)||s.start_s<0||s.end_s<=s.start_s)) return null;
-  for (const s of segments) { try { if (!(await stat(join(root,'media',s.file))).size) return null; } catch { return null; } }
+  for (const s of segments) { try { if (!(await assetInfo(root,s.file)).size) return null; } catch { return null; } }
   return segments;
 }
 /** Backfill previews for one immutable interpretation without changing evidence or human review. */
@@ -28,7 +29,11 @@ export async function ensureReviewPreviews(root: string, sourceId: string, inter
   const work=(async()=>{
     const cached=await usable(root,await getDoc(root,key),count) || await usable(root,raw.gif_segments,count);
     if(cached)return cached;
-    const segments=await generateSegmentGifs(join(root,'media',source.media!),join(root,'media'),`preview-${digest}`,count,duration);
+    const segments=assetConfig(root) ? await withAssetWorkspace(root,async directory=>{
+      const input=await stageAsset(root,source.media!,directory);
+      const generated=await generateSegmentGifs(input,directory,`preview-${digest}`,count,duration);
+      await retainGenerated(root,directory,[source.media!]);return generated;
+    }) : await generateSegmentGifs(join(root,'media',source.media!),join(root,'media'),`preview-${digest}`,count,duration);
     if(!segments.length)throw new Error('Could not generate segment GIFs. Check FFmpeg and the retained recording, then retry previews.');
     await setDoc(root,key,segments);return segments;
   })();

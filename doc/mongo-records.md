@@ -4,8 +4,8 @@ This stage of #80 makes MongoDB the live authority for goals, spots, sessions,
 events, actions/tasks, process revisions, OI links and documents (including
 workflow decisions, corrections, calendar plans and operation receipts).
 The dashboard and CLIs use the same asynchronous record APIs. Video/GIF bytes
-remain on the project volume; live MinIO playback and memory behavior (#72/#73)
-are separate work.
+default to the project volume; [S3 asset setup](s3-assets.md) enables live MinIO
+playback. Memory behavior (#72/#73) remains separate work.
 
 ## New project with Docker
 

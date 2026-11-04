@@ -69,3 +69,9 @@ Goals, tasks, workflow reviews, process revisions and calendar decisions can now
 use MongoDB as their sole record authority. See [setup and explicit import](doc/mongo-records.md)
 for the authenticated Docker replica set, `npm start` settings and recovery limits.
 Existing projects remain on SQLite until explicitly imported; videos/GIFs remain local.
+
+### MinIO videos and step GIFs (optional)
+
+[Live asset setup and recovery](doc/s3-assets.md) connects original videos,
+step GIFs and compared visit images to private versioned MinIO storage. The
+same media links support streaming and video seeking after application restart.

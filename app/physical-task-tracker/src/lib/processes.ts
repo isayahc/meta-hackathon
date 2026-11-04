@@ -11,7 +11,7 @@
 // they were built from and go stale when a correction lands.
 // Persistence uses the selected project record backend (lib/records).
 import type { RecordTransaction } from './record-model.js';
-import { existsSync } from 'node:fs';
+import { retainedMediaPresent } from './assets.js';
 import { join } from 'node:path';
 import { withRecords, getDoc, setDoc } from './records.js';
 
@@ -385,15 +385,6 @@ export function validateCompletion(doc: ProcessDoc, ctx: SourceContext): void {
   }
 }
 
-function mediaFilePresent(root: string, media: string | null): boolean {
-  if (typeof media !== 'string' || !media || media.includes('/') || media.includes('\\')) return false;
-  try {
-    return existsSync(join(root, 'media', media));
-  } catch {
-    return false;
-  }
-}
-
 // Occurrences a repeated step stands for: a fixed count, or null when the
 // repeat runs until a condition (count unknowable upfront).
 export function occurrencesOf(step: ProcessStep): number | null {
@@ -560,8 +551,8 @@ interface ProcessRow {
 
 export async function saveRevision(root: string, doc: ProcessDoc, author = 'model'): Promise<ProcessDoc> {
   const clean = normalizeProcess(validateProcess(doc));
-  validateCompletion(clean, { mediaPresent: (m) => mediaFilePresent(root, m) });
   return await withRecords(root, (db) => {
+    validateCompletion(clean, { mediaPresent: (m) => retainedMediaPresent(root, db, m) });
     const prior = db.first('processes', { where: { id: clean.id, rev: clean.rev }, fields: ["rev"] }) as
       | { rev: number }
       | undefined;
@@ -693,7 +684,7 @@ export function correctProcessInDb(db: RecordTransaction, root: string, id: stri
   // correction (cycle, bad timestamp, unevidenced completion) must leave
   // the stored revisions untouched.
   validateProcess(next);
-  validateCompletion(next, { mediaPresent: (m) => mediaFilePresent(root, m) });
+  validateCompletion(next, { mediaPresent: (m) => retainedMediaPresent(root, db, m) });
   next.rev = current.rev + 1;
   next.updated_at = new Date().toISOString();
   next.corrections = [...next.corrections, { rev: next.rev, at: next.updated_at, rationale: rationale.trim(), paths }];
